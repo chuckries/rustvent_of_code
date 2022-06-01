@@ -25,11 +25,25 @@ fn file_lines_as<T>(path: &str) -> impl Iterator<Item = T>
 fn adjacent(p: (usize, usize), bounds: (usize, usize)) -> Vec<(usize, usize)> {
     let mut adj: Vec<(usize, usize)> = Vec::with_capacity(4);
 
-    if p.0 > 0 { adj.push((p.0 - 1, p.1)); }
-    if p.0 < bounds.0 - 1 { adj.push((p.0 + 1, p.1)); }
-    if p.1 > 0 { adj.push((p.0, p.1 - 1)); }
-    if p.1 < bounds.1 - 1 { adj.push((p.0, p.1 + 1)); }
+    if p.0 > 0              { adj.push((p.0 - 1, p.1    )); }
+    if p.0 < bounds.0 - 1   { adj.push((p.0 + 1, p.1    )); }
+    if p.1 > 0              { adj.push((p.0    , p.1 - 1)); }
+    if p.1 < bounds.1 - 1   { adj.push((p.0    , p.1 + 1)); }
     adj
+}
+
+fn surrouding(p: (usize, usize), bounds: (usize, usize)) -> Vec<(usize, usize)> {
+    let mut sur: Vec<(usize, usize)> = Vec::with_capacity(8);
+
+    if p.0 > 0 && p.1 > 0                       { sur.push((p.0 - 1, p.1 - 1)); }
+    if p.0 > 0                                  { sur.push((p.0 - 1, p.1    )); }
+    if p.0 > 0 && p.1 < bounds.1 - 1            { sur.push((p.0 - 1, p.1 + 1)); }
+    if p.1 > 0                                  { sur.push((p.0    , p.1 - 1)); }
+    if p.1 < bounds.1 - 1                       { sur.push((p.0    , p.1 + 1)); }
+    if p.0 < bounds.0 - 1 && p.1 > 0            { sur.push((p.0 + 1, p.1 - 1)); }
+    if p.0 < bounds.0 - 1                       { sur.push((p.0 + 1, p.1    )); }
+    if p.0 < bounds.0 - 1 && p.1 < bounds.1 -1  { sur.push((p.0 + 1, p.1 + 1)); }
+    sur
 }
 
 mod day1 {
@@ -623,7 +637,7 @@ mod day10 {
 }
 
 mod day11 {
-    use crate::file_lines;
+    use crate::{file_lines, surrouding};
 
     fn input() -> Vec<Vec<i32>> {
         file_lines("inputs/day11.txt")
@@ -633,9 +647,10 @@ mod day11 {
 
     fn run(map: &mut Vec<Vec<i32>>) -> usize {
         let mut to_flash: Vec<(usize, usize)> = Vec::new();
+        let bounds = (map[0].len(), map.len());
             
-        for j in 0..map.len() {
-            for i in 0..map[0].len() {
+        for j in 0..bounds.1 {
+            for i in 0..bounds.0 {
                 map[j][i] += 1;
                 if map[j][i] == 10 {
                     to_flash.push((i, j));
@@ -645,34 +660,9 @@ mod day11 {
 
         let mut i = 0;
         while i < to_flash.len() {
-            let (x, y) = to_flash[i];
-            let mut adj: Vec<(usize, usize)> = Vec::new();
-            if x > 0 && y > 0 {
-                adj.push((x - 1, y - 1));
-            }
-            if y > 0 {
-                adj.push((x, y - 1));
-            }
-            if x < map[0].len() - 1 && y > 0 {
-                adj.push((x + 1, y - 1));
-            }
-            if x > 0 { 
-                adj.push((x - 1, y));
-            }
-            if x < map[0].len() - 1 {
-                adj.push((x + 1, y));
-            }
-            if x > 0 && y < map.len() - 1 {
-                adj.push((x - 1, y + 1));
-            }
-            if y < map.len() - 1 {
-                adj.push((x, y + 1));
-            }
-            if x < map[0].len() - 1 && y < map.len() - 1 {
-                adj.push((x + 1, y + 1));
-            }
+            let p = to_flash[i];
 
-            for (u, v) in adj {
+            for (u, v) in surrouding(p, bounds) {
                 map[v][u] += 1;
                 if map[v][u] == 10 {
                     to_flash.push((u, v));

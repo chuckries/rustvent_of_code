@@ -1,53 +1,8 @@
+
 #![cfg(test)]
 
-use std::fmt::Debug;
-use std::fs::File;
-use std::io::{BufReader, BufRead, Read};
-use std::str::FromStr;
-
-fn file_string(path: &str) -> String {
-    let mut buf = String::new();
-    File::open(path).unwrap().read_to_string(&mut buf).unwrap();
-    buf
-}
-
-fn file_lines(path: &str) -> impl Iterator<Item = String> {
-    let reader = BufReader::new(File::open(path).unwrap());
-    return reader.lines().map(|l| l.unwrap());
-}
-
-fn file_lines_as<T>(path: &str) -> impl Iterator<Item = T> 
-    where T: FromStr, <T as FromStr>::Err: Debug
-{
-    file_lines(path).map(|l| l.parse().expect("failed to parse line from file"))
-}
-
-fn adjacent(p: (usize, usize), bounds: (usize, usize)) -> Vec<(usize, usize)> {
-    let mut adj: Vec<(usize, usize)> = Vec::with_capacity(4);
-
-    if p.0 > 0              { adj.push((p.0 - 1, p.1    )); }
-    if p.0 < bounds.0 - 1   { adj.push((p.0 + 1, p.1    )); }
-    if p.1 > 0              { adj.push((p.0    , p.1 - 1)); }
-    if p.1 < bounds.1 - 1   { adj.push((p.0    , p.1 + 1)); }
-    adj
-}
-
-fn surrouding(p: (usize, usize), bounds: (usize, usize)) -> Vec<(usize, usize)> {
-    let mut sur: Vec<(usize, usize)> = Vec::with_capacity(8);
-
-    if p.0 > 0 && p.1 > 0                       { sur.push((p.0 - 1, p.1 - 1)); }
-    if p.0 > 0                                  { sur.push((p.0 - 1, p.1    )); }
-    if p.0 > 0 && p.1 < bounds.1 - 1            { sur.push((p.0 - 1, p.1 + 1)); }
-    if p.1 > 0                                  { sur.push((p.0    , p.1 - 1)); }
-    if p.1 < bounds.1 - 1                       { sur.push((p.0    , p.1 + 1)); }
-    if p.0 < bounds.0 - 1 && p.1 > 0            { sur.push((p.0 + 1, p.1 - 1)); }
-    if p.0 < bounds.0 - 1                       { sur.push((p.0 + 1, p.1    )); }
-    if p.0 < bounds.0 - 1 && p.1 < bounds.1 -1  { sur.push((p.0 + 1, p.1 + 1)); }
-    sur
-}
-
 mod day1 {
-    use crate::file_lines_as;
+    use aoc_common::file_lines_as;
 
     fn input() -> Vec<i32> {
         file_lines_as("inputs/day1.txt").collect()
@@ -75,7 +30,7 @@ mod day1 {
 }
 
 mod day2 {
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     fn input() -> Vec<(String, i32)> {
         file_lines("inputs/day2.txt").map(|l| {
@@ -125,7 +80,7 @@ mod day2 {
 }
 
 mod day3 {
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     fn input() -> Vec<Vec<char>> {
         file_lines("inputs/day3.txt").map(|l| l.chars().collect()).collect()
@@ -189,7 +144,7 @@ mod day3 {
 }
 
 mod day4 {
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     struct Board {
         numbers: Vec<Vec<i32>>,
@@ -310,7 +265,7 @@ mod day4 {
 mod day5 {
     use std::collections::HashMap;
 
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     type Point = (i32, i32);
 
@@ -385,7 +340,7 @@ mod day5 {
 }
 
 mod day6 {
-    use crate::file_string;
+    use aoc_common::file_string;
 
     fn run(iterations: usize) -> usize {
         let input: Vec<usize> = file_string("inputs/day6.txt").split(',').map(|s| s.parse().unwrap()).collect();
@@ -423,7 +378,7 @@ mod day6 {
 }
 
 mod day7 {
-    use crate::file_string;
+    use aoc_common::file_string;
 
     fn input() -> (Vec<i32>, i32, i32) {
         let input: Vec<i32> = file_string("inputs/day7.txt").split(',').map(|s| s.parse().unwrap()).collect();
@@ -452,9 +407,7 @@ mod day7 {
         }).sum()
     }
 
-    fn search<T>(fuel: T) -> i32 
-        where T: Fn(i32, &[i32]) -> i32
-    {
+    fn search(fuel: fn(i32, &[i32]) -> i32) -> i32 {
         let (input, min, max) = input();
         let mut min_fuel = i32::MAX;
 
@@ -486,7 +439,7 @@ mod day8 {
 mod day9 {
     use std::{collections::{HashSet, VecDeque}};
 
-    use crate::{file_lines, adjacent};
+    use aoc_common::{file_lines, Vec2us};
 
     fn input() -> Vec<Vec<i32>> {
         file_lines("inputs/day9.txt")
@@ -495,25 +448,25 @@ mod day9 {
             }).collect()
     }
 
-    fn basins(map: &Vec<Vec<i32>>) -> Vec<(usize, usize)> {
+    fn basins(map: &Vec<Vec<i32>>) -> Vec<Vec2us> {
         let mut basins = Vec::new();
-        let bounds = (map[0].len(), map.len());
-        for j in 0..map.len() {
-            for i in 0..map[0].len() {
-                if adjacent((i, j), bounds).iter().all(|adj| {
-                    map[adj.1][adj.0] > map[j][i]
-                }) {
-                    basins.push((i, j));
-                }
+        let bounds: Vec2us = (map[0].len(), map.len()).into();
+
+        for p in bounds.iter() {
+            if p.adjacent_bounded(&bounds).all(|adj| {
+                map[adj.y][adj.x] > map[p.y][p.x]
+            }) {
+                basins.push(p);
             }
         }
+
         basins
     }
 
     #[test]
     fn part1() {
         let map = input();
-        let risk: i32 = basins(&map).iter().map(|b| map[b.1][b.0] + 1).sum();
+        let risk: i32 = basins(&map).iter().map(|b| map[b.y][b.x] + 1).sum();
 
         assert_eq!(risk, 486);
     }
@@ -521,12 +474,12 @@ mod day9 {
     #[test]
     fn part2() {
         let map = input();
-        let mut visited: HashSet<(usize, usize)> = HashSet::new();
-        let mut to_visit: VecDeque<(usize, usize)> = VecDeque::new();
+        let mut visited: HashSet<Vec2us> = HashSet::new();
+        let mut to_visit: VecDeque<Vec2us> = VecDeque::new();
 
         let mut sizes: Vec<usize> = Vec::new();
 
-        let bounds = (map[0].len(), map.len());
+        let bounds = Vec2us::new(map[0].len(), map.len());
 
         for basin in basins(&map) {
             visited.clear();
@@ -540,7 +493,7 @@ mod day9 {
 
                 visited.insert(current.clone());
 
-                for adj in adjacent(current, bounds).into_iter().filter(|adj| map[adj.1][adj.0] != 9) {
+                for adj in current.adjacent_bounded(&bounds).filter(|adj| map[adj.y][adj.x] != 9) {
                     to_visit.push_back(adj);
                 }
             }
@@ -548,12 +501,10 @@ mod day9 {
             sizes.push(visited.len());
         }
 
-        sizes.sort();
+        sizes.sort_by(|a, b| b.cmp(a));
         let answer = sizes
-            .iter()
-            .rev()
+            .into_iter()
             .take(3)
-            .copied()
             .reduce(|accum, item| accum * item)
             .unwrap();
 
@@ -562,7 +513,7 @@ mod day9 {
 }
 
 mod day10 {
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     fn input() -> Vec<String> {
         file_lines("inputs/day10.txt").collect()
@@ -637,7 +588,7 @@ mod day10 {
 }
 
 mod day11 {
-    use crate::{file_lines, surrouding};
+    use aoc_common::{file_lines, Vec2us};
 
     fn input() -> Vec<Vec<i32>> {
         file_lines("inputs/day11.txt")
@@ -646,15 +597,13 @@ mod day11 {
     }
 
     fn run(map: &mut Vec<Vec<i32>>) -> usize {
-        let mut to_flash: Vec<(usize, usize)> = Vec::new();
-        let bounds = (map[0].len(), map.len());
-            
-        for j in 0..bounds.1 {
-            for i in 0..bounds.0 {
-                map[j][i] += 1;
-                if map[j][i] == 10 {
-                    to_flash.push((i, j));
-                }
+        let mut to_flash: Vec<Vec2us> = Vec::new();
+        let bounds = Vec2us::new(map[0].len(), map.len());
+
+        for p in bounds.iter() { 
+            map[p.y][p.x] += 1;
+            if map[p.y][p.x] == 10 {
+                to_flash.push(p);
             }
         }
 
@@ -662,17 +611,17 @@ mod day11 {
         while i < to_flash.len() {
             let p = to_flash[i];
 
-            for (u, v) in surrouding(p, bounds) {
-                map[v][u] += 1;
-                if map[v][u] == 10 {
-                    to_flash.push((u, v));
+            for adj in p.surrouding_bounded(&bounds) {
+                map[adj.y][adj.x] += 1;
+                if map[adj.y][adj.x] == 10 {
+                    to_flash.push(adj);
                 }
             }
             i += 1;
         }
 
-        for (u, v) in &to_flash {
-            map[*v][*u] = 0;
+        for p in &to_flash {
+            map[p.y][p.x] = 0;
         }
 
         to_flash.len()
@@ -710,7 +659,7 @@ mod day11 {
 mod day12 {
     use std::{collections::{HashMap, HashSet}};
 
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     #[derive(Hash, PartialEq, Eq, Clone, Copy)]
     enum Node<'a> {
@@ -827,7 +776,7 @@ mod day12 {
 mod day13 {
     use std::{collections::HashSet, fmt::Write};
 
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     #[derive(Copy, Clone, PartialEq)]
     enum Fold {
@@ -950,7 +899,7 @@ mod day13 {
 mod day14 {
     use std::{collections::HashMap};
 
-    use crate::file_lines;
+    use aoc_common::file_lines;
 
     fn input() -> (Vec<u8>, HashMap<[u8; 2], u8>) {
         let mut lines = file_lines("inputs/day14.txt");
@@ -1021,7 +970,7 @@ mod day14 {
 mod day15 {
     use std::{collections::{BinaryHeap, HashSet}};
 
-    use crate::{file_lines, adjacent};
+    use aoc_common::{file_lines, Vec2us};
 
     fn input() -> Vec<Vec<usize>> {
         file_lines("inputs/day15.txt").map(|l| {
@@ -1030,7 +979,7 @@ mod day15 {
     }
 
     struct Search {
-        p: (usize, usize),
+        p: Vec2us,
         d: usize
     }
 
@@ -1056,11 +1005,12 @@ mod day15 {
 
     fn search(map: &Vec<Vec<usize>>) -> usize {
         let mut to_visit: BinaryHeap<Search> = BinaryHeap::new();
-        let mut visited: HashSet<(usize, usize)> = HashSet::new();
-        let bounds = (map[0].len(), map.len());
-        let target = (bounds.0 - 1, bounds.1 - 1);
+        let mut visited: HashSet<Vec2us> = HashSet::new();
 
-        to_visit.push(Search { p: (0, 0), d: 0 });
+        let bounds = Vec2us::new(map[0].len(), map.len());
+        let target = Vec2us::new(bounds.x - 1, bounds.y - 1);
+
+        to_visit.push(Search { p: (0, 0).into(), d: 0 });
 
         while !to_visit.is_empty() {
             let current = to_visit.pop().unwrap();
@@ -1074,11 +1024,11 @@ mod day15 {
             }
             visited.insert(current.p);
 
-            for adj in adjacent(current.p, bounds) {
+            for adj in current.p.adjacent_bounded(&bounds) {
                 if visited.contains(&adj) {
                     continue;
                 }
-                to_visit.push(Search { p: adj, d: current.d + map[adj.1][adj.0] + 1});
+                to_visit.push(Search { p: adj, d: current.d + map[adj.y][adj.x] + 1});
             }
         }
 
@@ -1116,7 +1066,7 @@ mod day15 {
 }
 
 mod day16 {
-    use crate::file_string;
+    use aoc_common::file_string;
 
     struct PacketReader {
         bytes: Vec<u8>,
@@ -1268,7 +1218,7 @@ mod day16 {
 mod day18 {
     use std::str::{Chars, FromStr};
 
-    use crate::{file_lines_as};
+    use aoc_common::{file_lines_as};
 
     type Tree = Box<TreeNode>;
 
@@ -1488,4 +1438,531 @@ mod day18 {
         assert_eq!(max, 4616);
     }
 
+}
+
+mod day19 {
+    use std::{collections::{HashMap, HashSet, VecDeque}};
+
+    use aoc_common::file_lines;
+
+    #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+    struct Point(i32, i32, i32);
+
+    impl Point {
+        fn rotate(&self, rot: i32) -> Self {
+            match rot {
+                0 =>  Point( self.0,  self.1,  self.2),
+                1 =>  Point(-self.2,  self.1,  self.0),
+                2 =>  Point(-self.0,  self.1, -self.2),
+                3 =>  Point( self.2,  self.1, -self.0),
+ 
+                4 =>  Point( self.0, -self.2,  self.1),
+                5 =>  Point(-self.1, -self.2,  self.0),
+                6 =>  Point(-self.0, -self.2, -self.1),
+                7 =>  Point( self.1, -self.2, -self.0),
+ 
+                8 =>  Point( self.0,  self.2, -self.1),
+                9 =>  Point( self.1,  self.2,  self.0),
+                10 => Point(-self.0,  self.2,  self.1),
+                11 => Point(-self.1,  self.2, -self.0),
+
+                12 => Point(-self.0, -self.1,  self.2),
+                13 => Point(-self.2, -self.1, -self.0),
+                14 => Point( self.0, -self.1, -self.2),
+                15 => Point( self.2, -self.1,  self.0),
+
+                16 => Point(-self.1,  self.0,  self.2),
+                17 => Point(-self.2,  self.0, -self.1),
+                18 => Point( self.1,  self.0, -self.2),
+                19 => Point( self.2,  self.0,  self.1),
+
+                20 => Point( self.1, -self.0,  self.2),
+                21 => Point(-self.2, -self.0,  self.1),
+                22 => Point(-self.1, -self.0, -self.2),
+                23 => Point( self.2, -self.0, -self.1),
+
+                _ => panic!()
+            }
+        }
+    }
+
+    impl std::ops::Add for Point {
+        type Output = Self;
+
+        fn add(self, rhs: Self) -> Self::Output {
+            Point(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+        }
+    }
+
+    impl std::ops::Add for &Point {
+        type Output = Point;
+
+        fn add(self, rhs: Self) -> Self::Output {
+            Point(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+        }
+    }
+
+    impl std::ops::Sub for Point {
+        type Output = Self;
+
+        fn sub(self, rhs: Self) -> Self::Output {
+            Point(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+        }
+    }
+
+    impl std::ops::Sub for &Point {
+        type Output = Point;
+
+        fn sub(self, rhs: Self) -> Self::Output {
+            Point(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+        }
+    }
+
+    struct Scanner(Vec<Point>);
+
+    impl Scanner {
+        fn rotate(&self, rot: i32) -> Self {
+            Scanner(self.0.iter().map(|p| p.rotate(rot)).collect())
+        }
+
+        fn is_match<'a>(&self, mut other: impl Iterator<Item = &'a Point>) -> Option<Point> {
+            let mut counts: HashMap<Point, i32> = HashMap::new();
+
+            for a in other.by_ref() {
+                for b in self.0.iter() {
+                    let offset = a - b;
+                    let count = counts.entry(offset).or_default();
+                    if *count == 11 {
+                        return Some(offset);
+                    } else {
+                        *count += 1;
+                    }
+                }
+            }
+
+            None
+        }
+    }
+
+    fn input() -> Vec<Scanner> {
+        let mut lines = file_lines("inputs/day19.txt");
+
+        let mut scanners: Vec<Scanner> = Vec::new();
+        let mut points: Vec<Point> = Vec::new();
+
+        lines.next().unwrap();
+        while let Some(line) = lines.next() {
+            if line.is_empty() {
+                scanners.push(Scanner(points.drain(..).collect()));
+                lines.next().unwrap();
+                continue;
+            }
+
+            let mut tok = line.split(',').map(|s| s.parse::<i32>().unwrap());
+            points.push(Point(tok.next().unwrap(), tok.next().unwrap(), tok.next().unwrap()));
+        }
+        scanners.push(Scanner(points));
+
+        scanners
+    }
+
+    fn run() -> (HashSet<Point>, Vec<Point>) {
+        let mut input = input();
+
+        let mut space: HashSet<Point> = HashSet::new();
+        space.extend(input.pop().unwrap().0.into_iter());
+
+        let mut candidates: VecDeque<Scanner> = input.into();
+        let mut offsets: Vec<Point> = Vec::new();
+        'outer: while !candidates.is_empty() {
+            let current = candidates.pop_front().unwrap();
+
+            for rot in 0..24 {
+                let rotated = current.rotate(rot);
+                if let Some(offset) = rotated.is_match(space.iter()) {
+                    space.extend(rotated.0.into_iter().map(|p| p + offset));
+                    offsets.push(offset);
+                    continue 'outer;
+                }
+            }
+
+            candidates.push_back(current);
+        }
+
+        (space, offsets)
+    }
+
+    #[test]
+    fn part1() {
+        let (space, _) = run();
+
+        let answer = space.len();
+        assert_eq!(answer, 440);
+    }
+
+    #[test]
+    fn part2() {
+        let (_, offsets) = run();
+
+        let mut max = 0;
+
+        for i in 0..offsets.len() - 1 {
+            for j in i + 1..offsets.len() {
+                let a = &offsets[i];
+                let b = &offsets[j];
+
+                let dist = i32::abs(a.0 - b.0) + i32::abs(a.1 - b.1) + i32::abs(a.2 - b.2);
+                if dist > max {
+                    max = dist
+                }
+            }
+        }
+
+        assert_eq!(max, 13382);
+    }
+}
+
+mod day20 {
+    use std::collections::HashSet;
+
+    use aoc_common::file_lines;
+
+    fn input() -> (Vec<char>, Vec<Vec<char>>) {
+        let mut lines = file_lines("inputs/day20.txt");
+
+        let algo: Vec<char> = lines.next().unwrap().chars().collect();
+
+        lines.next().unwrap();
+        let start: Vec<Vec<char>> = lines.map(|l| {
+            l.chars().collect()
+        }).collect();
+
+        (algo, start)
+    }
+
+    fn run(iterations: i32) -> usize {
+        let (algo, start) = input();
+
+        let mut bounds = ((0, 0), ((start[0].len() - 1) as i32, (start.len() - 1) as i32));
+
+        let mut canvas: HashSet<(i32, i32)> = HashSet::new();
+
+        for (j, cj) in start.into_iter().enumerate() {
+            for (i, ci) in cj.into_iter().enumerate() {
+                if ci == '#' {
+                    canvas.insert((i as i32, j as i32));
+                }
+            }
+        }
+
+        let is_toggle = algo[0] == '#';
+        let mut toggle = false;
+        for _ in 0..iterations {
+            let mut next: HashSet<(i32, i32)> = HashSet::new();
+
+            for j in bounds.0.1 - 1..=bounds.1.1 + 1 {
+                for i in bounds.0.0 - 1..=bounds.1.0 + 1 {
+                    let mut idx = 0;
+                    for v in j - 1..=j + 1 {
+                        for u in i - 1..=i + 1 {
+                            let is_set = if u < bounds.0.0 || u > bounds.1.0 || v < bounds.0.1 || v > bounds.1.1 {
+                                toggle
+                            } else {
+                                canvas.contains(&(u, v))
+                            };
+
+                            idx = (idx << 1) | if is_set { 1 } else { 0 };
+                        }
+                    }
+                    if algo[idx] == '#' {
+                        next.insert((i, j));
+                    }
+                }
+            }
+
+            std::mem::swap(&mut next, &mut canvas);
+            next.clear();
+
+            if is_toggle {
+                toggle = !toggle;
+            }
+
+            bounds = ((bounds.0.0 - 1, bounds.0.1 - 1), (bounds.1.0 + 1, bounds.1.1 + 1));
+        }
+
+        canvas.len()
+    }
+
+    #[test]
+    fn part1() {
+        let answer = run(2);
+
+        assert_eq!(answer, 5663);
+    }
+
+    #[test]
+    fn part2() {
+        let answer = run(50);
+
+        assert_eq!(answer, 19638);
+    }
+}
+
+mod day21 {
+    const A_START: usize = 8;
+    const B_START: usize = 5;
+
+    struct Dice {
+        current: usize
+    }
+
+    impl Dice {
+        fn new() ->Dice {
+            Dice {
+                current: 1
+            }
+        }
+    }
+
+    impl Iterator for Dice {
+        type Item = usize;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            let result = self.current;
+            self.current += 1;
+            if self.current > 100 {
+                self.current = 1;
+            }
+
+            Some(result)
+        }
+    }
+
+    #[test] 
+    fn part1() {
+        let mut dice = Dice::new();
+        let mut state = [(0usize, 0usize); 2];
+        state[0] = (A_START - 1, 0);
+        state[1] = (B_START - 1, 0);
+
+        let mut rolls = 0;
+        let answer;
+        'outer: loop {
+            for turn in 0..2 {
+                let roll: usize = dice.by_ref().take(3).sum();
+                rolls += 3;
+
+                let (pos, score) = &mut state[turn];
+                *pos += roll;
+                *pos %= 10;
+                *score += *pos + 1;
+
+                if *score >= 1000 {
+                    answer = state[turn ^ 1].1 * rolls;
+                    break 'outer;
+                }
+            }
+        }
+
+        assert_eq!(answer, 597600);
+    }
+
+    #[test]
+    fn part2() {
+        let mut wins = [0usize; 2];
+        let mut positions = [[[[[0usize; 2]; 10] ; 10]; 21]; 21];
+        positions[0][0][A_START - 1][B_START - 1][0] = 1;
+
+        for a_score in 0..21 {
+            for b_score in 0..21 {
+                for a_pos in 0..10 {
+                    for b_pos in 0..10 {
+                        for turn in 0..2 {
+                            for i in 1..=3 {
+                                for j in 1..=3 {
+                                    for k in 1..=3 {
+                                        let count = positions[a_score][b_score][a_pos][b_pos][turn];
+                                        if count == 0 {
+                                            continue;
+                                        }
+
+                                        let (mut pos, mut score) = if turn == 0 {
+                                            (a_pos, a_score)
+                                        } else {
+                                            (b_pos, b_score)
+                                        };
+
+                                        pos += i + j + k;
+                                        pos %= 10;
+
+                                        score += pos + 1;
+                                        if score >= 21 {
+                                            wins[turn] += count;
+                                        } else {
+                                            if turn == 0 {
+                                                positions[score][b_score][pos][b_pos][1] += count;
+                                            } else {
+                                                positions[a_score][score][a_pos][pos][0] += count;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        assert_eq!(usize::max(wins[0], wins[1]), 634769613696613);
+    }
+}
+
+mod day22 {
+    use std::str::FromStr;
+
+    use aoc_common::file_lines_as;
+
+    #[derive(Clone, Copy)]
+    struct Point(i64, i64, i64);
+
+    struct Cube {
+        points: (Point, Point),
+        status: bool
+    }
+
+    impl Cube {
+        fn new(status: bool, lo: Point, hi: Point) -> Cube {
+            Cube {
+                points: (lo, hi),
+                status
+            }
+        }
+
+        fn volume(&self) -> i64 {
+            (self.points.1.0 - self.points.0.0 + 1) *
+            (self.points.1.1 - self.points.0.1 + 1) *
+            (self.points.1.2 - self.points.0.2 + 1)
+        }
+
+        fn add_to_space(self, space: &mut Vec<Cube>) {
+
+            let existing: Vec<Cube> = space.drain(..).collect();
+
+            let (a_lo, a_hi) = self.points;
+            for mut cube in existing {
+                let (b_lo, b_hi) = &mut cube.points;
+
+                if a_lo.0 <= b_lo.0 && a_lo.1 <= b_lo.1 && a_lo.2 <= b_lo.2 && 
+                   a_hi.0 >= b_hi.0 && a_hi.1 >= b_hi.1 && a_hi.2 >= b_hi.2 {
+                       continue;
+                }
+
+                if a_hi.0 < b_lo.0 || a_lo.0 > b_hi.0 ||
+                   a_hi.1 < b_lo.1 || a_lo.1 > b_hi.1 ||
+                   a_hi.2 < b_lo.2 || a_lo.2 > b_hi.2 {
+                       space.push(cube);
+                       continue;
+                }
+
+                if b_lo.0 < a_lo.0 {
+                    space.push(Cube::new(cube.status, *b_lo, Point(a_lo.0 - 1, b_hi.1, b_hi.2)));
+                    b_lo.0 = a_lo.0;
+                }
+
+                if b_hi.0 > a_hi.0 {
+                    space.push(Cube::new(cube.status, Point(a_hi.0 + 1, b_lo.1, b_lo.2), *b_hi));
+                    b_hi.0 = a_hi.0;
+                }
+
+                if b_lo.1 < a_lo.1 {
+                    space.push(Cube::new(cube.status, *b_lo, Point(b_hi.0, a_lo.1 -1, b_hi.2)));
+                    b_lo.1 = a_lo.1;
+                }
+
+                if b_hi.1 > a_hi.1 {
+                    space.push(Cube::new(cube.status, Point(b_lo.0, a_hi.1 + 1, b_lo.2), *b_hi));
+                    b_hi.1 = a_hi.1;
+                }
+
+                if b_lo.2 < a_lo.2 {
+                    space.push(Cube::new(cube.status, *b_lo, Point(b_hi.0, b_hi.1, a_lo.2 - 1)));
+                    b_lo.2 = a_lo.2;
+                }
+
+                if b_hi.2 > a_hi.2 {
+                    space.push(Cube::new(cube.status, Point(b_lo.0, b_lo.1, a_hi.2 + 1), *b_hi));
+                    b_hi.2 = a_hi.2;
+                }
+            }
+
+            space.push(self);
+        }
+    }
+
+    impl FromStr for Cube {
+        type Err = ();
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            let tok: Vec<&str> = s.split(&[' ', '=', ',']).map(|s| s.split("..")).flatten().collect();
+
+            let status = if tok[0] == "on" { true } else { false };
+
+            let to_point = |a: &str, b: &str, c: &str| {
+                Point(a.parse::<i64>().unwrap(), b.parse::<i64>().unwrap(), c.parse::<i64>().unwrap())
+            };
+
+            let lo = to_point(tok[2], tok[5], tok[8]);
+            let hi = to_point(tok[3], tok[6], tok[9]);
+
+            Ok(Cube::new(status, lo, hi))
+        }
+    }
+
+    fn input() -> Vec<Cube> {
+        file_lines_as("inputs/day22.txt").collect()
+    }
+
+    #[test]
+    fn part1() {
+        let input = input();
+
+        let mut space: Vec<Cube> = Vec::new();
+        for cube in input.into_iter().filter(|c| {
+            c.points.0.0 >= -50 && c.points.0.1 >= -50 && c.points.0.2 >= -50 &&
+            c.points.1.0 <=  50 && c.points.1.1 <=  50 && c.points.1.2 <=  50
+        }) {
+            cube.add_to_space(&mut space);
+        }
+
+        let answer = space.into_iter().filter_map(|c| {
+            if c.status == true {
+                Some(c.volume())
+            } else {
+                None
+            }
+        }).sum::<i64>();
+
+        assert_eq!(answer, 588120);
+    }
+
+    #[test]
+    fn part2() {
+        let input = input();
+
+        let mut space: Vec<Cube> = Vec::new();
+        for cube in input {
+            cube.add_to_space(&mut space);
+        }
+
+        let answer = space.into_iter().filter_map(|c| {
+            if c.status == true {
+                Some(c.volume())
+            } else {
+                None
+            }
+        }).sum::<i64>();
+
+        assert_eq!(answer, 1134088247046731);
+    }
 }

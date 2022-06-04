@@ -26,6 +26,17 @@ impl<T: PrimInt> Vec2<T> {
         ].into_iter()
     }
 
+    pub fn adjacent_non_negative(&self) -> impl Iterator<Item = Self> {
+        let mut adj = Vec::with_capacity(4);
+
+        if self.x > T::zero() { adj.push(Self { x: self.x - T::one(), y: self.y            }) }
+        adj.push(Self { x: self.x + T::one(), y: self.y            });
+        if self.y > T::zero() { adj.push(Self { x: self.x           , y: self.y - T::one() }) }
+        adj.push(Self { x: self.x           , y: self.y + T::one() });
+
+        adj.into_iter()
+    }
+
     pub fn adjacent_bounded(&self, bounds: &Self) -> impl Iterator<Item = Self> {
         let mut adj = Vec::with_capacity(4);
 

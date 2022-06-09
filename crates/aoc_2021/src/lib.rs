@@ -774,9 +774,9 @@ mod day12 {
 }
 
 mod day13 {
-    use std::{collections::HashSet, fmt::Write};
+    use std::{collections::HashSet};
 
-    use aoc_common::file_lines;
+    use aoc_common::{file_lines, map_points_to_string, Vec2us};
 
     #[derive(Copy, Clone, PartialEq)]
     enum Fold {
@@ -784,10 +784,10 @@ mod day13 {
         Y(usize),
     }
 
-    fn input() -> (HashSet<(usize, usize)>, Vec<Fold>) {
+    fn input() -> (HashSet<Vec2us>, Vec<Fold>) {
         let mut lines = file_lines("inputs/day13.txt");
 
-        let mut paper: HashSet<(usize, usize)> = HashSet::new();
+        let mut paper: HashSet<Vec2us> = HashSet::new();
         let mut folds: Vec<Fold> = Vec::new();
         
         loop {
@@ -795,7 +795,7 @@ mod day13 {
             if line.is_empty() { break; }
 
             let mut nums = line.split(',').map(|n| n.parse::<usize>().unwrap());
-            paper.insert((nums.next().unwrap(), nums.next().unwrap()));
+            paper.insert((nums.next().unwrap(), nums.next().unwrap()).into());
         }
 
         while let Some(line) = lines.next() {
@@ -813,14 +813,14 @@ mod day13 {
         (paper, folds)
     }
 
-    fn fold_paper(paper: &mut HashSet<(usize, usize)>, fold: &Fold) {
-        let points: Vec<(usize, usize)> = paper.drain().collect();
+    fn fold_paper(paper: &mut HashSet<Vec2us>, fold: &Fold) {
+        let points: Vec<_> = paper.drain().collect();
 
         match fold {
             Fold::X(n) => {
                 for p in points {
-                    if p.0 > *n {
-                        let folded = (n - (p.0 - n), p.1);
+                    if p.x > *n {
+                        let folded = (n - (p.x - n), p.y).into();
                         paper.insert(folded);
                     } else {
                         paper.insert(p);
@@ -829,8 +829,8 @@ mod day13 {
             }
             Fold::Y(n) => {
                 for p in points {
-                    if p.1 > *n {
-                        let folded = (p.0, n - (p.1 - n));
+                    if p.y > *n {
+                        let folded = (p.x, n - (p.y - n)).into();
                         paper.insert(folded);
                     } else {
                         paper.insert(p);
@@ -856,35 +856,9 @@ mod day13 {
             fold_paper(&mut paper, &fold);
         }
 
-        let mut min = (usize::MAX, usize::MAX);
-        let mut max = (usize::MIN, usize::MIN);
-        for p in paper.iter() {
-            if p.0 < min.0 {
-                min.0 = p.0;
-            }
-            if p.0 > max.0 {
-                max.0 = p.0;
-            }
-            if p.1 < min.1 {
-                min.1 = p.1;
-            }
-            if p.1 > max.1 {
-                max.1 = p.1;
-            }
-        }
+        let answer = map_points_to_string(paper.iter().copied());
 
-        let mut buff = vec![vec![' '; max.0 - min.0 + 1]; max.1 - min.1 + 1];
-        for (x, y) in paper {
-            buff[y - min.1][x - min.0] = '█';
-        }
-
-        let mut s = String::new();
-        for line in buff {
-            writeln!(&mut s).unwrap();
-            write!(&mut s, "{}", line.into_iter().collect::<String>()).unwrap();
-        }
-
-        let answer = "
+        let known = "
 █  █ ████  ██  ███  ████ █  █ ███  ███ 
 █  █ █    █  █ █  █    █ █ █  █  █ █  █
 ████ ███  █    █  █   █  ██   █  █ █  █
@@ -892,7 +866,7 @@ mod day13 {
 █  █ █    █  █ █ █  █    █ █  █    █ █ 
 █  █ ████  ██  █  █ ████ █  █ █    █  █";
 
-        assert_eq!(s, answer);
+        assert_eq!(answer, known);
     }
 }
 
@@ -970,7 +944,7 @@ mod day14 {
 mod day15 {
     use std::{collections::{BinaryHeap, HashSet}};
 
-    use aoc_common::{file_lines, Vec2us};
+    use aoc_common::{file_lines, Vec2us, SearchNode};
 
     fn input() -> Vec<Vec<usize>> {
         file_lines("inputs/day15.txt").map(|l| {
@@ -978,57 +952,32 @@ mod day15 {
         }).collect()
     }
 
-    struct Search {
-        p: Vec2us,
-        d: usize
-    }
-
-    impl PartialEq for Search {
-        fn eq(&self, other: &Self) -> bool {
-            self.p.eq(&other.p)
-        }
-    }
-
-    impl Eq for Search { }
-
-    impl PartialOrd for Search {
-        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-            other.d.partial_cmp(&self.d)
-        }
-    }
-
-    impl Ord for Search {
-        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-            other.d.cmp(&self.d)
-        }
-    }
-
     fn search(map: &Vec<Vec<usize>>) -> usize {
-        let mut to_visit: BinaryHeap<Search> = BinaryHeap::new();
+        let mut to_visit: BinaryHeap<SearchNode<usize, Vec2us>> = BinaryHeap::new();
         let mut visited: HashSet<Vec2us> = HashSet::new();
 
         let bounds = Vec2us::new(map[0].len(), map.len());
         let target = Vec2us::new(bounds.x - 1, bounds.y - 1);
 
-        to_visit.push(Search { p: (0, 0).into(), d: 0 });
+        to_visit.push(SearchNode { dist: 0, data: Vec2us::zero() });
 
         while !to_visit.is_empty() {
             let current = to_visit.pop().unwrap();
 
-            if current.p == target {
-                return current.d;
+            if current.data == target {
+                return current.dist;
             }
 
-            if visited.contains(&current.p) {
+            if visited.contains(&current) {
                 continue;
             }
-            visited.insert(current.p);
+            visited.insert(current.data);
 
-            for adj in current.p.adjacent_bounded(&bounds) {
+            for adj in current.adjacent_bounded(&bounds) {
                 if visited.contains(&adj) {
                     continue;
                 }
-                to_visit.push(Search { p: adj, d: current.d + map[adj.y][adj.x] + 1});
+                to_visit.push(SearchNode { dist: current.dist + map[adj.y][adj.x] + 1, data: adj });
             }
         }
 

@@ -3,7 +3,7 @@
 mod day18 {
     use std::{collections::{BinaryHeap}};
 
-    use aoc_common::{Vec2us};
+    use aoc_common::{Vec2us, SearchNode};
 
     const ZERO: Vec2us = Vec2us::new(0, 0);
     const DEPTH: usize = 10689;
@@ -82,27 +82,6 @@ mod day18 {
         tool: usize,
         risk: usize,
         time: usize,
-        heuristic: usize,
-    }
-
-    impl PartialEq for Search {
-        fn eq(&self, other: &Self) -> bool {
-            self.heuristic.eq(&other.heuristic)
-        }
-    }
-
-    impl Eq for Search { }
-
-    impl PartialOrd for Search {
-        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-            other.heuristic.partial_cmp(&self.heuristic)
-        }
-    }
-
-    impl Ord for Search {
-        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-            other.heuristic.cmp(&self.heuristic)
-        }
     }
 
     #[inline]
@@ -128,7 +107,7 @@ mod day18 {
     }
 
     fn search() -> usize {
-        let mut to_visit: BinaryHeap<Search> = BinaryHeap::new();
+        let mut to_visit: BinaryHeap<SearchNode<usize, Search>> = BinaryHeap::new();
         let mut distances = [
             vec![vec![usize::MAX; TARGET.x * 2]; TARGET.y * 2],
             vec![vec![usize::MAX; TARGET.x * 2]; TARGET.y * 2],
@@ -141,10 +120,9 @@ mod day18 {
             tool: TORCH,
             risk: regions.risk((0, 0).into()),
             time: 0,
-            heuristic: TARGET.x + TARGET.y
         };
         distances[start.tool][0][0] = 0;
-        to_visit.push(start);
+        to_visit.push(SearchNode { dist: TARGET.x + TARGET.y, data: start });
 
         while let Some(current) = to_visit.pop() {
             if current.pos == TARGET && current.tool == TORCH {
@@ -155,12 +133,14 @@ mod day18 {
             let entry = get_distance(current.pos, other_tool, &mut distances);
             if current.time + 7 < *entry {
                 *entry = current.time + 7;
-                to_visit.push(Search {
-                    pos: current.pos,
-                    tool: other_tool,
-                    risk: current.risk,
-                    time: current.time + 7,
-                    heuristic: current.heuristic + 7,
+                to_visit.push(SearchNode {
+                    dist: current.dist + 7,
+                    data: Search {
+                        pos: current.pos,
+                        tool: other_tool,
+                        risk: current.risk,
+                        time: current.time + 7,
+                    }
                 });
             }
 
@@ -175,12 +155,14 @@ mod day18 {
                 let entry = get_distance(adj.0, current.tool, &mut distances);
                 if current.time + 1 < *entry {
                     *entry = current.time + 1;
-                    to_visit.push(Search {
-                        pos: adj.0,
-                        risk: adj.1,
-                        tool: current.tool,
-                        time: current.time + 1,
-                        heuristic: current.time + 1 + dist(adj.0, TARGET),
+                    to_visit.push(SearchNode {
+                        dist: current.time + 1 + dist(adj.0, TARGET),
+                        data: Search {
+                            pos: adj.0,
+                            risk: adj.1,
+                            tool: current.tool,
+                            time: current.time + 1,
+                        }
                     });
                 }
             }

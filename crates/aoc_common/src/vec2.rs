@@ -1,3 +1,5 @@
+use std::ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div};
+
 use num_traits::PrimInt;
 
 pub type Vec2us = Vec2<usize>;
@@ -6,7 +8,7 @@ pub type Vec2i64 = Vec2<i64>;
 pub type Vec2u32 = Vec2<u32>;
 pub type Vec2u64 = Vec2<u64>;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 pub struct Vec2<T: PrimInt> {
     pub x: T,
     pub y: T,
@@ -15,6 +17,22 @@ pub struct Vec2<T: PrimInt> {
 impl<T: PrimInt> Vec2<T> {
     pub const fn new(x: T, y: T) -> Self {
         Vec2 { x, y }
+    }
+
+    pub fn zero() -> Self {
+        Self { x: T::zero(), y: T::zero() }
+    }
+
+    pub fn unit_x() -> Self {
+        Self { x: T::one(), y: T::zero() }
+    }
+
+    pub fn unit_y() -> Self {
+        Self { x: T::zero(), y: T::one() }
+    }
+
+    pub fn is_in_bounds(&self, bounds: Self) -> bool {
+        self.x >= T::zero() && self.x < bounds.x && self.y >= T::zero() && self.y < bounds.y
     }
 
     pub fn adjacent(&self) -> impl Iterator<Item = Self> {
@@ -67,9 +85,104 @@ impl<T: PrimInt> Vec2<T> {
     }
 }
 
+impl <T: PrimInt + std::fmt::Display> std::fmt::Display for Vec2<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+impl <T: PrimInt + Neg<Output = T>> Vec2<T> {
+    pub fn rotate_left(&self) -> Self {
+        Self { x: self.y, y: -self.x }
+    }
+
+    pub fn rotate_right(&self) -> Self {
+        Self { x: -self.y, y: self. x }
+    }
+}
+
+impl<T: PrimInt + Neg<Output = T>> Neg for Vec2<T> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self { x: -self.x, y: -self.y }
+    }
+}
+
+impl <T: PrimInt> Add for Vec2<T> {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl <T: PrimInt> AddAssign for Vec2<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x = self.x + rhs.x;
+        self.y = self.y + rhs.y;
+    }
+}
+
+impl <T: PrimInt> Sub for Vec2<T> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl <T: PrimInt> SubAssign for Vec2<T> {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x = self.x - rhs.x;
+        self.y = self.y - rhs.y;
+    }
+}
+
+impl <T: PrimInt> Mul<T> for Vec2<T> {
+    type Output = Self;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        Self { x: self.x * rhs, y: self.y * rhs }
+    }
+}
+
+impl <T: PrimInt> MulAssign<T> for Vec2<T> {
+    fn mul_assign(&mut self, rhs: T) {
+        self.x = self.x * rhs;
+        self.y = self.y * rhs;
+    }
+}
+
+impl <T: PrimInt> Div<T> for Vec2<T> {
+    type Output = Self;
+
+    fn div(self, rhs: T) -> Self::Output {
+        Self { x: self.x / rhs, y: self.y / rhs }
+    }
+}
+
+impl From<Vec2<i64>> for Vec2<usize> {
+    fn from(v: Vec2<i64>) -> Self {
+        Self { x: v.x as usize, y: v.y as usize }
+    }
+}
+
+impl From<Vec2<usize>> for Vec2<i64> {
+    fn from(v: Vec2<usize>) -> Self {
+        Self { x: v.x as i64, y: v.y as i64 }
+    }
+}
+
 impl<T: PrimInt> From<(T, T)> for Vec2<T> {
-    fn from(p: (T, T)) -> Self {
-        Vec2 { x: p.0, y: p.1 }
+    fn from(v: (T, T)) -> Self {
+        Vec2 { x: v.0, y: v.1 }
+    }
+}
+
+impl<T: PrimInt> From<Vec2<T>> for (T, T) {
+    fn from(v: Vec2<T>) -> Self {
+        (v.x, v.y)
     }
 }
 

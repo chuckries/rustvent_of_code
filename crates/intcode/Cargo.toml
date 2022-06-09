@@ -1,5 +1,5 @@
 [package]
-name = "aoc_2019"
+name = "intcode"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,6 +7,3 @@ edition = "2021"
 
 [dependencies]
 aoc_common = { path = "../aoc_common" }
-intcode = { path = "../intcode" }
-regex = "1"
-lazy_static = "1.4"

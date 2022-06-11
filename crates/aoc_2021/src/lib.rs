@@ -1915,3 +1915,6 @@ mod day22 {
         assert_eq!(answer, 1134088247046731);
     }
 }
+
+mod day23;
+mod day23_fail;

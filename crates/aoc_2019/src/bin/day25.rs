@@ -1,5 +1,3 @@
-use std::io::Read;
-
 use intcode::*;
 
 fn main() {

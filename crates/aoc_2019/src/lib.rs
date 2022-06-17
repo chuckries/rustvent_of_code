@@ -628,9 +628,15 @@ mod day11 {
 }
 
 mod day12 {
-    use aoc_common::{Vec3i32, file_string, lcm, ToVec};
+    use aoc_common::{Vec3i32, file_string, lcm, ToVec, Selector, SelectorMut};
     use lazy_static::lazy_static;
     use regex::Regex;
+
+    const DIMS: [(Selector<i32>, SelectorMut<i32>); 3] = [
+        (Vec3i32::x, Vec3i32::x_mut),
+        (Vec3i32::y, Vec3i32::y_mut),
+        (Vec3i32::z, Vec3i32::z_mut),
+    ];
 
     fn input() -> Vec<Vec3i32> {
         lazy_static! {
@@ -651,7 +657,7 @@ mod day12 {
         let mut vels = vec![Vec3i32::zero(); moons.len()];
 
         #[inline]
-        fn update_gravity(idx_a: usize, idx_b: usize, moons: &[Vec3i32], vels: &mut [Vec3i32], moon_selector: fn(&Vec3i32) -> i32, vel_selector: fn(&mut Vec3i32) -> &mut i32) {
+        fn update_gravity(idx_a: usize, idx_b: usize, moons: &[Vec3i32], vels: &mut [Vec3i32], moon_selector: Selector<i32>, vel_selector: SelectorMut<i32>) {
             let a = moon_selector(&moons[idx_a]);
             let b = moon_selector(&moons[idx_b]);
 
@@ -664,16 +670,10 @@ mod day12 {
             }
         }
 
-        let dims: [(fn(&Vec3i32) -> i32, fn(&mut Vec3i32) -> &mut i32); 3] = [
-            (Vec3i32::x, Vec3i32::x_mut),
-            (Vec3i32::y, Vec3i32::y_mut),
-            (Vec3i32::z, Vec3i32::z_mut),
-        ];
-
         for _ in 0..iterations {
             for i in 0..moons.len() - 1 {
                 for j in i..moons.len() {
-                    for dim in dims {
+                    for dim in DIMS {
                         update_gravity(i, j, &moons, &mut vels, dim.0, dim.1);
                     }
                 }
@@ -1281,7 +1281,7 @@ mod day19 {
 
         let mut y = 40;
         let mut x_begin = 0;
-        let mut x_end = 0;
+        let mut x_end;
 
         while calc.get(x_begin, y) == 0 {
             x_begin +=1;
@@ -1292,7 +1292,7 @@ mod day19 {
             x_end += 1;
         }
 
-        let mut answer = Vec2i64::zero();
+        let answer: Vec2i64;
         loop {
             if x_end - x_begin >= 100 {
                 let cand_x = x_end - 100;
@@ -1382,9 +1382,7 @@ mod day23 {
 
     use crate::{IntCode, IntCodeResult};
 
-
-    #[test]
-    fn part1() {
+    fn input() -> (Vec<IntCode>, Vec<VecDeque<Vec2i64>>) {
         let computer = IntCode::from_file("inputs/day23.txt");
 
         let mut network = vec![computer; 50];
@@ -1392,9 +1390,14 @@ mod day23 {
             computer.push_input_back(address as i64);
         }
 
-        let mut queues: Vec<VecDeque<Vec2i64>> = vec![VecDeque::new(); 50];
+        let queues = vec![VecDeque::new(); network.len()];
+        (network, queues)
+    }
 
-        let mut answer = 0;
+    #[test]
+    fn part1() {
+        let (mut network, mut queues) = input();
+        let answer;
         'outer: loop {
             for (current, computer) in network.iter_mut().enumerate() {
                 if let Some(next) = queues[current].pop_front() {
@@ -1422,14 +1425,7 @@ mod day23 {
 
     #[test]
     fn part2() {
-        let computer = IntCode::from_file("inputs/day23.txt");
-
-        let mut network = vec![computer; 50];
-        for (address, computer) in network.iter_mut().enumerate() {
-            computer.push_input_back(address as i64);
-        }
-
-        let mut queues: Vec<VecDeque<Vec2i64>> = vec![VecDeque::new(); 50];
+        let (mut network, mut queues) = input();
         let mut nat = Vec2i64::zero();
         let mut answer = 0;
         'outer: loop {

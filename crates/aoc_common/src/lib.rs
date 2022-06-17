@@ -6,11 +6,9 @@ use std::str::FromStr;
 
 use num_traits::PrimInt;
 
-pub use map2::*;
 pub use vec2::*;
 pub use vec3::*;
 
-mod map2;
 mod vec2;
 mod vec3;
 

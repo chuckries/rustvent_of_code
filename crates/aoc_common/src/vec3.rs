@@ -6,6 +6,9 @@ pub type Vec3i64 = Vec3<i64>;
 pub type Vec3u32 = Vec3<u32>;
 pub type Vec3u64 = Vec3<u64>;
 
+pub type Selector<T> = fn(&Vec3<T>) -> T;
+pub type SelectorMut<T> = fn(&mut Vec3<T>) -> &mut T;
+
 #[derive(Copy, Clone, Hash, PartialEq, Eq, Default, Debug)]
 pub struct Vec3<T: PrimInt> {
     pub x: T,
@@ -59,6 +62,40 @@ impl<T: PrimInt> Vec3<T> {
     }
 }
 
+macro_rules! manhattan_unsigned {
+    ($unsigned:ty) => {
+        impl Vec3<$unsigned> {
+            pub fn manhattan(&self) -> $unsigned {
+                self.x + self.y + self.z
+            }
+
+            pub fn manhattan_from(&self, other: Self) -> $unsigned {
+                <$unsigned>::abs_diff(self.x, other.x) + <$unsigned>::abs_diff(self.y, other.y) + <$unsigned>::abs_diff(self.z, other.z)
+            }
+        }
+    };
+}
+
+macro_rules! manhattan_signed {
+    ($signed:ty) => {
+        impl Vec3<$signed> {
+            pub fn manhattan(&self) -> $signed {
+                <$signed>::abs(self.x) + <$signed>::abs(self.y) + <$signed>::abs(self.z)
+            }
+
+            pub fn manhattan_from(&self, other: Self) -> $signed {
+                <$signed>::abs(self.x - other.x) + <$signed>::abs(self.y - other.y) + <$signed>::abs(self.z - other.z)
+            }
+        }
+    };
+}
+
+manhattan_unsigned!(usize);
+manhattan_unsigned!(u32);
+manhattan_unsigned!(u64);
+manhattan_signed!(i32);
+manhattan_signed!(i64);
+
 impl <T: PrimInt + std::fmt::Display> std::fmt::Display for Vec3<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {}, {})", self.x, self.y, self.z)
@@ -86,5 +123,17 @@ impl<T: PrimInt> std::ops::AddAssign for Vec3<T> {
         self.x = self.x + rhs.x;
         self.y = self.y + rhs.y;
         self.z = self.z + rhs.z;
+    }
+}
+
+impl<T: PrimInt> From<(T, T, T)> for Vec3<T> {
+    fn from(v: (T, T, T)) -> Self {
+        Self::new(v.0, v.1, v.2)
+    }
+}
+
+impl <T: PrimInt> From<Vec3<T>> for (T, T, T) {
+    fn from(v: Vec3<T>) -> Self {
+        (v.x, v.y, v.z)
     }
 }

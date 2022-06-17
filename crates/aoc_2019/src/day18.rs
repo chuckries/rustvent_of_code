@@ -201,7 +201,7 @@ fn part1() {
 #[test]
 fn part2() {
     let mut map = parse_map();
-    let mut origin = Vec2us::default();
+    let mut origin = Vec2us::zero();
     for j in 0..map.len() {
         for i in 0..map[0].len() {
             if let Cell::Entry = map[j][i] {

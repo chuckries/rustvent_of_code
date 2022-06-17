@@ -156,7 +156,7 @@ mod day18 {
                 if current.time + 1 < *entry {
                     *entry = current.time + 1;
                     to_visit.push(SearchNode {
-                        dist: current.time + 1 + dist(adj.0, TARGET),
+                        dist: current.time + 1 + adj.0.manhattan_from(TARGET),
                         data: Search {
                             pos: adj.0,
                             risk: adj.1,
@@ -182,14 +182,7 @@ mod day18 {
 
     #[test]
     fn part2() {
-        let now = std::time::Instant::now();
         let answer = search();
-        let elapsed = std::time::Instant::now().duration_since(now);
-        println!("{:?}", elapsed.as_secs_f64());
         assert_eq!(answer, 999);
-    }
-
-    fn dist(a: Vec2us, b: Vec2us) -> usize {
-        usize::abs_diff(a.x, b.x) + usize::abs_diff(a.y, b.y)
     }
 }

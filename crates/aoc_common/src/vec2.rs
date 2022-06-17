@@ -1,6 +1,6 @@
 use std::ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div};
 
-use num_traits::PrimInt;
+use num_traits::{PrimInt};
 
 pub type Vec2us = Vec2<usize>;
 pub type Vec2i32 = Vec2<i32>;
@@ -84,6 +84,40 @@ impl<T: PrimInt> Vec2<T> {
         Iter::new(Self::new(T::zero(), T::zero()), *self)
     }
 }
+
+macro_rules! manhattan_unsigned {
+    ($unsigned:ty) => {
+        impl Vec2<$unsigned> {
+            pub fn manhattan(&self) -> $unsigned {
+                self.x + self.y
+            }
+
+            pub fn manhattan_from(&self, other: Self) -> $unsigned {
+                <$unsigned>::abs_diff(self.x, other.x) + <$unsigned>::abs_diff(self.y, other.y)
+            }
+        }
+    };
+}
+
+macro_rules! manhattan_signed {
+    ($signed:ty) => {
+        impl Vec2<$signed> {
+            pub fn manhattan(&self) -> $signed {
+                <$signed>::abs(self.x) + <$signed>::abs(self.y)
+            }
+
+            pub fn manhattan_from(&self, other: Self) -> $signed {
+                <$signed>::abs(self.x - other.x) + <$signed>::abs(self.y - other.y)
+            }
+        }
+    };
+}
+
+manhattan_unsigned!(usize);
+manhattan_unsigned!(u32);
+manhattan_unsigned!(u64);
+manhattan_signed!(i32);
+manhattan_signed!(i64);
 
 impl <T: PrimInt + std::fmt::Display> std::fmt::Display for Vec2<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

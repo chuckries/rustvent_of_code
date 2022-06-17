@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use aoc_common::ToVec;
 
 use Cell::*;
@@ -74,7 +72,8 @@ impl Board {
             Hall(None)
         ];
         
-        let sum_unsolved = rooms.iter().flat_map(|col| col.iter()).map(|p| p.weight()).sum();
+        let sum_unsolved = ((0..rooms[0].capacity).map(|i| i + 2).sum::<usize>() * 1111) +
+            rooms.iter().map(|r| r.iter().enumerate().map(|(i, p)| (r.capacity - i + 1) * p.weight()).sum::<usize>()).sum::<usize>();
 
         Board {
             board,
@@ -154,12 +153,15 @@ impl Board {
         let mut steps = next_move.steps;
         let pod = next_move.occupant;
         let weight = pod.weight();
+        let mut sum_unsolved_delta = 0;
 
         match &mut self.board[next_move.from] {
             Hall(hall) => *hall = None,
             Room(room) => {
                 let room = &mut self.rooms[*room];
-                steps += room.move_out_cost();
+                let move_out_cost = room.move_out_cost();
+                steps += move_out_cost;
+                sum_unsolved_delta += move_out_cost + 1;
                 room.move_out();
             }
         };
@@ -168,25 +170,26 @@ impl Board {
             Hall(hall) => *hall = Some(pod),
             Room(room) => {
                 let room = &mut self.rooms[*room];
-                steps += room.move_in_cost();
-                self.sum_unsolved -= weight;
+                let move_in_cost = room.move_in_cost();
+                steps += move_in_cost;
+                sum_unsolved_delta += move_in_cost + 1;
                 room.move_in(pod);
             }
         }
 
+        sum_unsolved_delta *= weight;
         let cost = steps * weight;
         self.cost += cost;
+        self.sum_unsolved -= sum_unsolved_delta;
 
         self.solve_recurse();
 
         self.cost -= cost;
+        self.sum_unsolved += sum_unsolved_delta;
 
         match &mut self.board[next_move.to] {
             Hall(hall) => *hall = None,
-            Room(room) => {
-                self.sum_unsolved += weight;
-                self.rooms[*room].move_out();
-            }
+            Room(room) => _ = self.rooms[*room].move_out(),
         }
 
         match &mut self.board[next_move.from] {
@@ -195,11 +198,9 @@ impl Board {
         }
     }
 
-   
-
     fn try_get_move_to_room(&mut self, idx: usize, occupant: Pod) -> Option<Move> {
-        let target_idx = occupant.get_home_idx();
-        let target_room = &mut self.rooms[occupant.room_id()];
+        let target_idx = occupant.home_board_idx();
+        let target_room = &mut self.rooms[occupant.home_room_idx()];
         if target_room.can_move_in() {
             let (lo, hi) = if idx < target_idx {
                 (idx, target_idx)
@@ -215,38 +216,6 @@ impl Board {
 
         None
     }
-
-    // fn get_move(from: usize, to: usize) -> Option<Move> {
-
-    // }
-
-    // fn print(&self) {
-    //     let mut canvas = [['#'; 13]; 5];
-
-    //     let mut i = 1;
-    //     let mut j = 1;
-
-    //     for cell in self.board.iter() {
-    //         match cell {
-    //             Hall(Some(p)) => canvas[j][i] = p.char(),
-    //             Hall(None) => canvas[j][i] = '.',
-    //             Room(room) => {
-    //                 canvas[j][i] = '.';
-    //                 for k in 0..room.capacity {
-    //                     canvas[j + k + 1][i] = if room.capacity - k <= room.occupants.len() {
-    //                         room.occupants[room.capacity - k - 1].char()
-    //                     } else {
-    //                         '.'
-    //                     };
-    //                 }
-    //             }
-    //         }
-    //         i += 1;
-    //     }
-
-    //     let string: String = canvas.iter().flat_map(|l| l.iter().chain(std::iter::once(&'\n'))).collect();
-    //     println!("{}", string);
-    // }
 }
 
 struct Room {
@@ -280,7 +249,7 @@ impl Room {
     }
 
     fn can_move_in(&mut self) -> bool {
-        self.occupants.is_empty() || self.occupants.iter().all(|p| p.room_id() == self.id)
+        self.occupants.is_empty() || self.occupants.iter().all(|p| p.home_room_idx() == self.id)
     }
 
     fn can_move_out(&mut self) -> bool {
@@ -309,7 +278,7 @@ enum Pod {
 }
 
 impl Pod {
-    fn room_id(&self) -> usize {
+    fn home_room_idx(&self) -> usize {
         match self {
             Pod::A => 0,
             Pod::B => 1,
@@ -318,7 +287,7 @@ impl Pod {
         }
     }
 
-    fn get_home_idx(&self) -> usize {
+    fn home_board_idx(&self) -> usize {
         match self {
             Pod::A => 2,
             Pod::B => 4,
@@ -334,20 +303,5 @@ impl Pod {
             Pod::C => 100,
             Pod::D => 1000,
         }
-    }
-
-    fn char(&self) -> char {
-        match self {
-            Pod::A => 'A',
-            Pod::B => 'B',
-            Pod::C => 'C',
-            Pod::D => 'D',
-        }
-    }
-}
-
-impl Display for Pod {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.char())
     }
 }

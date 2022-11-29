@@ -1,7 +1,7 @@
 use aoc_common::file_lines;
 
 fn input() -> Vec<(String, i32)> {
-    file_lines("inputs/day2.txt").map(|l| {
+    file_lines("inputs/day02.txt").map(|l| {
         let mut tok = l.split_whitespace();
         let dir = tok.next().unwrap().to_owned();
         let num = tok.next().unwrap().parse().unwrap();

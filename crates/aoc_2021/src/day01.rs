@@ -1,7 +1,7 @@
 use aoc_common::file_lines_as;
 
 fn input() -> Vec<i32> {
-    file_lines_as("inputs/day1.txt").collect()
+    file_lines_as("inputs/day01.txt").collect()
 }
 
 #[test]

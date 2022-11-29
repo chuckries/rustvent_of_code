@@ -1,7 +1,7 @@
 use aoc_common::file_string;
 
 fn run(iterations: usize) -> usize {
-    let input: Vec<usize> = file_string("inputs/day6.txt").split(',').map(|s| s.parse().unwrap()).collect();
+    let input: Vec<usize> = file_string("inputs/day06.txt").split(',').map(|s| s.parse().unwrap()).collect();
 
     let mut fish = [0; 9];
     let mut next = fish.clone();

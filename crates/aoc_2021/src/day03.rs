@@ -1,7 +1,7 @@
 use aoc_common::file_lines;
 
 fn input() -> Vec<Vec<char>> {
-    file_lines("inputs/day3.txt").map(|l| l.chars().collect()).collect()
+    file_lines("inputs/day03.txt").map(|l| l.chars().collect()).collect()
 }
 
 #[test]

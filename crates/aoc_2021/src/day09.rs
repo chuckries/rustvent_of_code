@@ -3,7 +3,7 @@ use std::{collections::{HashSet, VecDeque}};
 use aoc_common::{file_lines, Vec2us};
 
 fn input() -> Vec<Vec<i32>> {
-    file_lines("inputs/day9.txt")
+    file_lines("inputs/day09.txt")
         .map(|l| {
             l.bytes().map(|c| (c - b'0') as i32).collect()
         }).collect()

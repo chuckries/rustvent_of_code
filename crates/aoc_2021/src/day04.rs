@@ -60,7 +60,7 @@ impl Board {
 }
 
 fn input() -> (Vec<i32>, Vec<Board>) {
-    let mut lines = file_lines("inputs/day4.txt");
+    let mut lines = file_lines("inputs/day04.txt");
 
     let numbers: Vec<i32> = lines.next().unwrap().split(',').map(|s| s.parse().unwrap()).collect();
 

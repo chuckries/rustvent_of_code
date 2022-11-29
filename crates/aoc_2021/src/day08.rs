@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use aoc_common::{file_lines, ToVec};
 
 fn input() -> Vec<(Vec<u8>, Vec<u8>)> {
-    file_lines("inputs/day8.txt").map(|l| {
+    file_lines("inputs/day08.txt").map(|l| {
         let mut tok = l.split(" | ");
         let left = tok.next().unwrap().split(' ');
         let right = tok.next().unwrap().split(' ');

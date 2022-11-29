@@ -5,7 +5,7 @@ use aoc_common::file_lines;
 type Point = (i32, i32);
 
 fn input() -> Vec<(Point, Point)> {
-    file_lines("inputs/day5.txt").map(|l| {
+    file_lines("inputs/day05.txt").map(|l| {
         let mut split = l.split(" -> ");
         let mut left = split.next().unwrap().split(',');
         let left = (left.next().unwrap().parse::<i32>().unwrap(), left.next().unwrap().parse::<i32>().unwrap());

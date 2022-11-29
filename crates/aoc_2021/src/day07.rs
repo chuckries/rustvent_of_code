@@ -1,7 +1,7 @@
 use aoc_common::file_string;
 
 fn input() -> (Vec<i32>, i32, i32) {
-    let input: Vec<i32> = file_string("inputs/day7.txt").split(',').map(|s| s.parse().unwrap()).collect();
+    let input: Vec<i32> = file_string("inputs/day07.txt").split(',').map(|s| s.parse().unwrap()).collect();
 
     let mut min = i32::MAX;
     let mut max = i32::MIN;

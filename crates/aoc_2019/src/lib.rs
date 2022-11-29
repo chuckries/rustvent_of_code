@@ -43,7 +43,7 @@ mod day2 {
         let mem = int_code.mem_mut();
         mem[1] = 12;
         mem[2] = 2;
-        int_code.run_to_halt();
+        int_code.run_to_halt().unwrap();
 
         let answer = int_code.mem()[0];
         assert_eq!(answer, 3931283);
@@ -61,7 +61,7 @@ mod day2 {
                 let mem = int_code.mem_mut();
                 mem[1] = i;
                 mem[2] = j;
-                int_code.run_to_halt();
+                int_code.run_to_halt().unwrap();
                 if int_code.mem()[0] == TARGET {
                     answer = 100 * i + j;
                     break 'outer;
@@ -640,7 +640,7 @@ mod day12 {
 
     fn input() -> Vec<Vec3i32> {
         lazy_static! {
-            static ref RE: Regex = Regex::new(r"<x=(-?[0-9]+), y=(-?[0-9]+), z=(-?[0-9]+)>").unwrap();
+            static ref RE: Regex = Regex::new(r"<x=(-?\d+), y=(-?\d+), z=(-?\d+)>").unwrap();
         }
 
         RE.captures_iter(&file_string("inputs/day12.txt")).map(|capture| {

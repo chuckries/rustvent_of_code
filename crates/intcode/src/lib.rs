@@ -2,6 +2,7 @@ use std::{collections::VecDeque, rc::Rc};
 
 use aoc_common::{file_string};
 
+#[derive(Debug)]
 pub enum IntCodeResult {
     Halt,
     Input,
@@ -56,7 +57,7 @@ impl IntCode {
         self.relative_base = 0;
         self.is_halt = false;
 
-        self.mem[0..self.code.len()].copy_from_slice(&self.code);
+        self.mem[..self.code.len()].copy_from_slice(&self.code);
         self.mem[self.code.len()..].fill(0);
     }
 
@@ -73,18 +74,18 @@ impl IntCode {
         self.run()
     }
 
-    pub fn run_to_halt(&mut self) -> Option<Vec<i64>> {
+    pub fn run_to_halt(&mut self) -> Result<Vec<i64>, IntCodeResult> {
         let mut outputs = Vec::new();
         loop {
             match self.run() {
                 IntCodeResult::Output(i) => outputs.push(i),
-                IntCodeResult::Halt => return Some(outputs),
-                IntCodeResult::Input => return None,
+                IntCodeResult::Halt => return Ok(outputs),
+                input @ IntCodeResult::Input => return Err(input),
             }
         }
     }
 
-    pub fn run_input_to_halt(&mut self, input: &[i64]) -> Option<Vec<i64>> {
+    pub fn run_input_to_halt(&mut self, input: &[i64]) -> Result<Vec<i64>, IntCodeResult> {
         self.input.extend(input.iter());
         self.run_to_halt()
     }
@@ -190,7 +191,7 @@ impl IntCode {
 
     fn ensure_memory(&mut self, addr: usize) {
         if addr >= self.mem.len() {
-            let size = addr.max(self.mem.len() * 2);
+            let size = usize::max(addr + 1, self.mem.len() * 2);
             self.mem.resize(size, 0);
         }
     }

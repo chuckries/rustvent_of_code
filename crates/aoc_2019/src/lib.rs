@@ -6,7 +6,7 @@ mod day1 {
     use aoc_common::file_lines_as;
 
     fn input() -> Vec<i32> {
-        file_lines_as("inputs/day1.txt").collect()
+        file_lines_as("inputs/day01.txt").collect()
     }
 
     #[test]
@@ -38,7 +38,7 @@ mod day2 {
 
     #[test]
     fn part1() {
-        let mut int_code = IntCode::from_file("inputs/day2.txt");
+        let mut int_code = IntCode::from_file("inputs/day02.txt");
 
         let mem = int_code.mem_mut();
         mem[1] = 12;
@@ -52,7 +52,7 @@ mod day2 {
     const TARGET: i64 = 19690720;
     #[test]
     fn part2() {
-        let mut int_code = IntCode::from_file("inputs/day2.txt");
+        let mut int_code = IntCode::from_file("inputs/day02.txt");
 
         let mut answer = 0;
         'outer: for i in 0..100 {
@@ -81,7 +81,7 @@ mod day3 {
     struct Turn(Vec2i32, i32);
 
     fn input() -> [Vec<Turn>; 2] {
-        let mut iter = file_lines("inputs/day3.txt").map(|l| {
+        let mut iter = file_lines("inputs/day03.txt").map(|l| {
             l.split(',').map(|t| {
                 let (dir, num) = t.split_at(1);
                 let dir = match dir {
@@ -207,7 +207,7 @@ mod day5 {
     use crate::{IntCode};
 
     fn run(id: i64) -> i64 {
-        let mut int_code = IntCode::from_file("inputs/day5.txt");
+        let mut int_code = IntCode::from_file("inputs/day05.txt");
         let outputs = int_code.run_input_to_halt(&[id]).unwrap();
 
         *outputs.last().unwrap()
@@ -236,7 +236,7 @@ mod day6 {
     fn input() -> Map {
         let mut map = Map::new();
 
-        for s in file_lines("inputs/day6.txt") {
+        for s in file_lines("inputs/day06.txt") {
             let tok = s.split(')').collect::<Vec<_>>();
 
             map.entry(tok[0].to_string()).or_default().1.push(tok[1].to_string());
@@ -296,7 +296,7 @@ mod day7 {
     use crate::{IntCode, IntCodeResult};
 
     fn run_once(phases: &[i64]) -> i64 {
-        let mut computers = vec![IntCode::from_file("inputs/day7.txt"); 5];
+        let mut computers = vec![IntCode::from_file("inputs/day07.txt"); 5];
         for pair in computers.iter_mut().zip(phases) {
             pair.0.push_input_back(*pair.1);
         }
@@ -310,7 +310,7 @@ mod day7 {
     }
 
     fn run_multiple(phases: &[i64]) -> i64 {
-        let mut computers = vec![IntCode::from_file("inputs/day7.txt"); 5];
+        let mut computers = vec![IntCode::from_file("inputs/day07.txt"); 5];
         for pair in computers.iter_mut().zip(phases) {
             pair.0.push_input_back(*pair.1);
         }
@@ -365,7 +365,7 @@ mod day8 {
     const AREA: usize = DIMENSIONS.x * DIMENSIONS.y;
 
     fn input() -> Vec<u8> {
-        file_string("inputs/day8.txt").into_bytes()
+        file_string("inputs/day08.txt").into_bytes()
     }
 
     #[test]
@@ -438,7 +438,7 @@ mod day9 {
     use crate::IntCode;
 
     fn run(val: i64) -> i64 {
-        IntCode::from_file("inputs/day9.txt").run_input_to_halt(&[val]).unwrap()[0]
+        IntCode::from_file("inputs/day09.txt").run_input_to_halt(&[val]).unwrap()[0]
     }
 
     #[test]

@@ -48,9 +48,9 @@ impl<T: PrimInt> Vec2<T> {
         let mut adj = Vec::with_capacity(4);
 
         if self.x > T::zero() { adj.push(Self { x: self.x - T::one(), y: self.y            }) }
-        adj.push(Self { x: self.x + T::one(), y: self.y            });
+                                adj.push(Self { x: self.x + T::one(), y: self.y            });
         if self.y > T::zero() { adj.push(Self { x: self.x           , y: self.y - T::one() }) }
-        adj.push(Self { x: self.x           , y: self.y + T::one() });
+                                adj.push(Self { x: self.x           , y: self.y + T::one() });
 
         adj.into_iter()
     }

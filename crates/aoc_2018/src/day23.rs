@@ -92,17 +92,11 @@ impl PartialOrd for Search {
 
 impl Ord for Search {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let mut cmp_val = self.in_range as i64 - other.in_range as i64;
-        if cmp_val == 0 {
-            cmp_val = other.region.point_closest_to(Vec3i64::zero()).manhattan() - self.region.point_closest_to(Vec3i64::zero()).manhattan();
+        let mut cmp = self.in_range.cmp(&other.in_range);
+        if cmp == Ordering::Equal {
+            cmp = other.region.point_closest_to(Vec3i64::zero()).manhattan().cmp(&self.region.point_closest_to(Vec3i64::zero()).manhattan());
         }
-
-        match cmp_val {
-            0 => Ordering::Equal,
-            x if x < 0 => Ordering::Less,
-            x if x > 0 => Ordering::Greater,
-            _ => unreachable!()
-        }
+        cmp
     }
 }
 
@@ -129,7 +123,7 @@ fn part2() {
     let mut min = bots[0].pos;
     let mut max = bots[0].pos;
 
-    for b in bots.iter().skip(1) {
+    for b in bots[1..].iter() {
         if b.pos.x < min.x {
             min.x = b.pos.x;
         }

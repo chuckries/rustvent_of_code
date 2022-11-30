@@ -20,7 +20,7 @@ pub fn file_string(path: &str) -> String {
 
 pub fn file_lines(path: &str) -> impl Iterator<Item = String> {
     let reader = BufReader::new(File::open(path).unwrap());
-    return reader.lines().map(|l| l.unwrap());
+    reader.lines().map(|l| l.unwrap())
 }
 
 pub fn file_lines_as<T>(path: &str) -> impl Iterator<Item = T> 

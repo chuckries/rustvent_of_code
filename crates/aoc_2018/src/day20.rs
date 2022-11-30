@@ -163,13 +163,13 @@ impl MapBuilder
         next_positions.insert(pos);
 
         for stmt in stmts {
-            for p in next_positions.drain().collect::<Vec<Vec2i32>>() {
+            for p in next_positions.drain().collect::<Vec<_>>() {
                 match stmt {
                     Stmt::Literal(s) => {
                         next_positions.insert(self.explore_literal(*s, p));
                     }
                     Stmt::Group(g) => {
-                        next_positions.extend(self.explore_group(g, p));
+                        self.explore_group(g, p, &mut next_positions);
                     }
                 }
             }
@@ -196,14 +196,10 @@ impl MapBuilder
         pos
     }
 
-    fn explore_group(&mut self, group: &[Vec<Stmt>], pos: Vec2i32) -> HashSet<Vec2i32> {
-        let mut next_positions: HashSet<Vec2i32> = HashSet::new();
-
+    fn explore_group(&mut self, group: &[Vec<Stmt>], pos: Vec2i32, next_positions: &mut HashSet<Vec2i32>) {
         for stmts in group {
             next_positions.extend(self.explore_stmts(stmts, pos));
         }
-
-        next_positions
     }
 }
 

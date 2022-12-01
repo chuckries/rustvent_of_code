@@ -13,6 +13,7 @@ fn input() -> Vec<Vec<i32>> {
             current.push(line.parse().unwrap());
         }
     }
+    elves.push(current);
 
     elves
 }

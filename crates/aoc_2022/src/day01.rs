@@ -27,7 +27,7 @@ fn part1() {
 #[test]
 fn part2() {
     let input = input();
-    let mut totals = input.iter().map(|v| v.iter().sum::<i32>()).collect::<Vec<_>>();
+    let mut totals: Vec<i32> = input.iter().map(|v| v.iter().sum()).collect();
     totals.sort_by(|a, b| b.cmp(a));
     let answer: i32 = totals[0..3].iter().sum();
     assert_eq!(answer, 199172);

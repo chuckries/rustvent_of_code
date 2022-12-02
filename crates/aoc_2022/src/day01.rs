@@ -1,7 +1,7 @@
 use aoc_common::file_lines;
 
 fn input() -> Vec<Vec<i32>> {
-    let mut lines = file_lines("inputs/day1.txt");
+    let mut lines = file_lines("inputs/day01.txt");
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut current: Vec<i32> = Vec::new();
 

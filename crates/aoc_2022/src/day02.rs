@@ -41,27 +41,35 @@ fn type_score(t: Type) -> i32 {
     }
 }
 
-fn win_score(me: Type, them: Type) -> i32 {
+fn get_result(me: Type, them: Type) -> Result {
     match me {
         Rock => match them {
-            Rock => 3,
-            Paper => 0,
-            Scissors => 6,
+            Rock => Draw,
+            Paper => Lose,
+            Scissors => Win,
         }
         Paper => match them {
-            Rock => 6,
-            Paper => 3,
-            Scissors => 0,
+            Rock => Win,
+            Paper => Draw,
+            Scissors => Lose,
         }
         Scissors => match them {
-            Rock => 0,
-            Paper => 6,
-            Scissors => 3,
+            Rock => Lose,
+            Paper => Win,
+            Scissors => Draw,
         }
     }
 }
 
-fn get_result(c: char) -> Result {
+fn result_score(r: Result) -> i32 {
+    match r {
+        Win => 6,
+        Lose => 0,
+        Draw => 3,
+    }
+}
+
+fn get_needed_result(c: char) -> Result {
     match c {
         'X' => Lose,
         'Y' => Draw,
@@ -70,7 +78,7 @@ fn get_result(c: char) -> Result {
     }
 }
 
-fn get_me(them: Type, me: Result) -> Type {
+fn get_needed_type(them: Type, me: Result) -> Type {
     match them {
         Rock => match me {
             Win => Paper,
@@ -98,8 +106,9 @@ fn part1() {
         let me = get_type(me);
         let them = get_type(them);
         let type_score = type_score(me);
-        let win_score = win_score(me, them);
-        type_score + win_score
+        let result = get_result(me, them);
+        let result_score = result_score(result);
+        type_score + result_score
     }).sum();
 
     assert_eq!(answer, 14297);
@@ -111,10 +120,10 @@ fn part2() {
 
     let answer: i32 = input.into_iter().map(|(them, me)| {
         let them = get_type(them);
-        let me = get_result(me);
-        let me = get_me(them, me);
+        let result = get_needed_result(me);
+        let me = get_needed_type(them, result);
         let type_score = type_score(me);
-        let win_score = win_score(me, them);
+        let win_score = result_score(result);
         type_score + win_score
     }).sum();
 

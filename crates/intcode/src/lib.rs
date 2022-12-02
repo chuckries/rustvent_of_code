@@ -209,9 +209,7 @@ impl IntCode {
     }
 
     pub fn add_input(&mut self, input: &[i64]) {
-        for val in input {
-            self.input.push_back(*val);
-        }
+        self.input.extend(input.iter());
     }
 }
 

@@ -32,13 +32,13 @@ fn part1() {
 fn part2() {
     let input: Vec<String> = input().collect();
 
-    let answer: u32 = input.chunks(3).map(|chunk| {
-        let c0: HashSet<u8> = chunk[0].bytes().collect();
-        let c1: HashSet<u8> = chunk[1].bytes().collect();
-        let c2: HashSet<u8> = chunk[2].bytes().collect();
+    let answer: u32 = input.chunks(3).map(|lines| {
+        let l0: HashSet<u8> = lines[0].bytes().collect();
+        let l1: HashSet<u8> = lines[1].bytes().collect();
+        let l2: HashSet<u8> = lines[2].bytes().collect();
 
-        let similar: HashSet<u8> = c0.intersection(&c1).copied().collect();
-        similar.intersection(&c2).copied().map(letter_score).sum::<u32>()
+        let similar: HashSet<u8> = l0.intersection(&l1).copied().collect();
+        similar.intersection(&l2).copied().map(letter_score).sum::<u32>()
     }).sum();
 
     assert_eq!(answer, 2499);

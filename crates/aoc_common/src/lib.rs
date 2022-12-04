@@ -1,5 +1,7 @@
+use std::collections::HashSet;
 use std::fmt::{Debug, Write};
 use std::fs::File;
+use std::hash::Hash;
 use std::io::{BufReader, BufRead, Read};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
@@ -147,13 +149,19 @@ impl<T: Ord, U> Ord for SearchNode<T, U> {
     }
 }
 
-pub trait ToVec: Iterator
+pub trait IteratorExt: Iterator
 {
     fn to_vec(self) -> Vec<Self::Item>
         where Self: Sized
     {
         self.collect()
     }
+
+    fn to_set(self) -> HashSet<Self::Item>
+        where Self: Sized, <Self as Iterator>::Item: Eq + Hash
+    {
+        self.collect()
+    }
 }
 
-impl<T: ?Sized> ToVec for T where T: Iterator { }
+impl<T: ?Sized> IteratorExt for T where T: Iterator { }

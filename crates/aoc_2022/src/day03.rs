@@ -1,6 +1,4 @@
-use std::collections::HashSet;
-
-use aoc_common::file_lines;
+use aoc_common::{file_lines, IteratorExt};
 
 fn input() -> impl Iterator<Item = String> {
     file_lines("inputs/day03.txt")
@@ -15,14 +13,19 @@ fn letter_score(c: u8) -> u32 {
     score as u32
 }
 
+fn find<I, F>(it: I, f: F) -> u32 
+    where I: Iterator<Item = u8>, F: Fn(&u8) -> bool
+{
+    letter_score(it.filter(f).next().unwrap())
+}
+
 #[test]
 fn part1() {
     let answer: u32 = input().map(|line| {
         let (front, back) = line.split_at(line.len() / 2);
-        let front: HashSet<u8> = front.bytes().collect();
-        let back: HashSet<u8> = back.bytes().collect();
+        let back = back.bytes().to_set();
 
-        front.intersection(&back).copied().map(letter_score).sum::<u32>()
+        find(front.bytes(), |c| back.contains(c))
     }).sum();
 
     assert_eq!(answer, 7793);
@@ -30,14 +33,11 @@ fn part1() {
 
 #[test]
 fn part2() {
-    let input: Vec<String> = input().collect();
+    let answer: u32 = input().to_vec().chunks(3).map(|lines| {
+        let l1 = lines[1].bytes().to_set();
+        let l2 = lines[2].bytes().to_set();
 
-    let answer: u32 = input.chunks(3).map(|lines| {
-        let l0: HashSet<u8> = lines[0].bytes().collect();
-        let l1: HashSet<u8> = lines[1].bytes().collect();
-        let l2: HashSet<u8> = lines[2].bytes().collect();
-
-        l0.intersection(&l1).copied().collect::<HashSet<_>>().intersection(&l2).copied().map(letter_score).sum::<u32>()
+        find(lines[0].bytes(), |c| l1.contains(c) && l2.contains(c))
     }).sum();
 
     assert_eq!(answer, 2499);

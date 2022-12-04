@@ -37,8 +37,7 @@ fn part2() {
         let l1: HashSet<u8> = lines[1].bytes().collect();
         let l2: HashSet<u8> = lines[2].bytes().collect();
 
-        let similar: HashSet<u8> = l0.intersection(&l1).copied().collect();
-        similar.intersection(&l2).copied().map(letter_score).sum::<u32>()
+        l0.intersection(&l1).copied().collect::<HashSet<_>>().intersection(&l2).copied().map(letter_score).sum::<u32>()
     }).sum();
 
     assert_eq!(answer, 2499);

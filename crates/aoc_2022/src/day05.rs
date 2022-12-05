@@ -44,7 +44,7 @@ fn run<F>(mut f: F) -> String
     let (mut stacks, instructions) = input();
 
     for (count, from, to) in instructions {
-        f(count, to, from, &mut stacks);
+        f(count, from, to, &mut stacks);
     }
 
     stacks.iter().map(|s| s.last().unwrap()).collect()
@@ -52,7 +52,7 @@ fn run<F>(mut f: F) -> String
 
 #[test]
 fn part1() {
-    let answer = run(|count, to, from, stacks| {
+    let answer = run(|count, from, to, stacks| {
         for _ in 0..count {
             let c = stacks[from - 1].pop().unwrap();
             stacks[to - 1].push(c);
@@ -66,7 +66,7 @@ fn part1() {
 fn part2() {
     let mut tmp: Vec<char> = Vec::new();
 
-    let answer = run(|count, to, from, stacks| {
+    let answer = run(|count, from, to, stacks| {
         for _ in 0..count {
             tmp.push(stacks[from - 1].pop().unwrap());
         }

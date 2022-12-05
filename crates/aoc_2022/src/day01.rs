@@ -20,15 +20,13 @@ fn input() -> Vec<Vec<i32>> {
 
 #[test]
 fn part1() {
-    let input = input();
-    let answer: i32 = input.iter().map(|v| v.iter().sum()).max().unwrap();
+    let answer: i32 = input().iter().map(|v| v.iter().sum()).max().unwrap();
     assert_eq!(answer, 66616);
 }
 
 #[test]
 fn part2() {
-    let input = input();
-    let mut totals: Vec<i32> = input.iter().map(|v| v.iter().sum()).collect();
+    let mut totals: Vec<i32> = input().iter().map(|v| v.iter().sum()).collect();
     totals.sort_by(|a, b| b.cmp(a));
     let answer: i32 = totals[0..3].iter().sum();
     assert_eq!(answer, 199172);

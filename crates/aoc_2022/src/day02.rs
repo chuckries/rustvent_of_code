@@ -17,11 +17,11 @@ enum Result {
     Draw,
 }
 
-fn input() -> Vec<(char, char)> {
+fn input() -> impl Iterator<Item = (char, char)> {
     file_lines("inputs/day02.txt").map(|l| {
         let mut split = l.split(' ');
         (split.next().unwrap().chars().nth(0).unwrap(), split.next().unwrap().chars().nth(0).unwrap())
-    }).collect()
+    })
 }
 
 fn get_type(c: char) -> Type {
@@ -100,9 +100,7 @@ fn get_needed_type(them: Type, me: Result) -> Type {
 
 #[test]
 fn part1() {
-    let input = input();
-
-    let answer: i32 = input.into_iter().map(|(them, me)| {
+    let answer: i32 = input().map(|(them, me)| {
         let me = get_type(me);
         let them = get_type(them);
         let type_score = type_score(me);
@@ -116,9 +114,7 @@ fn part1() {
 
 #[test]
 fn part2() {
-    let input = input();
-
-    let answer: i32 = input.into_iter().map(|(them, me)| {
+    let answer: i32 = input().map(|(them, me)| {
         let them = get_type(them);
         let result = get_needed_result(me);
         let me = get_needed_type(them, result);

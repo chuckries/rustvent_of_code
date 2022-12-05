@@ -28,7 +28,7 @@ fn input() -> (Vec<Vec<char>>, impl Iterator<Item = (usize, usize, usize)>)
 
     lines.next();
 
-    let instructions = lines.into_iter().map(|l| {
+    let instructions = lines.map(|l| {
         let split = l.split(' ').to_vec();
 
         (split[1].parse().unwrap(), split[3].parse().unwrap(), split[5].parse().unwrap())

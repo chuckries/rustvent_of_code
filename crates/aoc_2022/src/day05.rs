@@ -34,7 +34,7 @@ fn input() -> (Vec<Vec<char>>, impl Iterator<Item = (usize, usize, usize)>)
         (split[1].parse().unwrap(), split[3].parse().unwrap(), split[5].parse().unwrap())
     });
 
-    (stacks.into_iter().map(|v| v.into_iter().collect()).collect(), instructions)
+    (stacks.into_iter().map(|v| v.into()).collect(), instructions)
 
 }
 

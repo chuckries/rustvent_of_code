@@ -13,10 +13,10 @@ fn letter_score(c: u8) -> u32 {
     score as u32
 }
 
-fn find<I, F>(it: I, f: F) -> u32 
+fn find<I, F>(mut it: I, f: F) -> u32 
     where I: Iterator<Item = u8>, F: Fn(&u8) -> bool
 {
-    letter_score(it.filter(f).next().unwrap())
+    letter_score(it.find(f).unwrap())
 }
 
 #[test]

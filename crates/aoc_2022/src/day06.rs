@@ -11,17 +11,16 @@ fn input() -> String {
 // fn find(n: usize) -> usize {
 //     input()
 //         .chars()
-//         .enumerate()
 //         .to_vec()
 //         .windows(n)
-//         .filter(|w| 
+//         .enumerate()
+//         .find(|(_, w)| 
 //             w.iter()
-//                 .map(|p| p.1)
 //                 .to_set()
 //                 .len() == n
 //             )
-//         .next()
-//         .unwrap()[n - 1].0 + 1
+//         .unwrap()
+//         .0 + n
 // }
 
 fn find(n: usize) -> usize {
@@ -40,7 +39,7 @@ fn find(n: usize) -> usize {
             break;
         }
 
-        *map.get_mut(&chars[front]).unwrap() -=1 ;
+        *map.get_mut(&chars[front]).unwrap() -= 1;
         *map.entry(chars[back]).or_default() += 1;
 
         front += 1;

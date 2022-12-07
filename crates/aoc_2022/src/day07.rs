@@ -1,14 +1,16 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter::Peekable};
 use aoc_common::{file_lines, IteratorExt};
 use Node::*;
 
+type Directory = HashMap<String, Node>;
+
 enum Node {
-    Dir(HashMap<String, Node>),
+    Dir(Directory),
     File(usize),
 }
 
 impl Node {
-    fn as_dir(&mut self) -> &mut HashMap<String, Node> {
+    fn as_dir(&mut self) -> &mut Directory {
         match self {
             Dir(map) => map,
             _ => panic!()
@@ -17,42 +19,39 @@ impl Node {
 }
 
 fn input() -> Node {
-    fn explore(mut idx: usize, lines: &[String], cd: &mut HashMap<String, Node>) -> usize {
-        while idx < lines.len() {
-            let split = lines[idx].split(' ').to_vec();
-            idx += 1;
-    
+    fn explore(lines: &mut Peekable<impl Iterator<Item = String>>, cd: &mut Directory) {
+        while let Some(line) = lines.next() {
+            let split = line.split(' ').to_vec();
+
             if split[0] != "$" { panic!(); }
-    
+
             match split[1] {
                 "cd" => match split[2] {
                     ".." => break,
-                    next @ _ => idx = explore(idx, lines, cd.get_mut(next).unwrap().as_dir()),
+                    next @ _ => explore(lines, cd.get_mut(next).unwrap().as_dir()),
                 }
                 "ls" => {
-                    while idx < lines.len() {
-                        let split = lines[idx].split(' ').to_vec();
+                    while let Some(line) = lines.peek() {
+                        let split = line.split(' ').to_vec();
                         match split[0] {
                             "$" => break,
-                            "dir" => cd.insert(split[1].to_string(), Dir(HashMap::new())),
+                            "dir" => cd.insert(split[1].to_string(), Dir(Directory::new())),
                             size @ _ => cd.insert(split[1].to_string(), File(size.parse().unwrap())),
                         };
     
-                        idx += 1;
+                        lines.next();
                     }
                 }
                 _ => panic!()
             }
         }
-    
-        idx
     }
 
-    let mut lines = file_lines("inputs/day07.txt").to_vec();
-    let mut root: HashMap<String, Node> = HashMap::new();
-    root.insert("/".to_string(), Dir(HashMap::new()));
-    _ = explore(0, &mut lines, &mut root);
-    root.into_iter().next().unwrap().1
+    let lines = file_lines("inputs/day07.txt");
+    let mut root = Directory::new();
+    root.insert("/".to_string(), Dir(Directory::new()));
+    explore(&mut lines.peekable(), &mut root);
+    root.into_values().next().unwrap()
 }
 
 fn sum_visit<F>(node: &Node, f: &mut F) -> usize
@@ -88,7 +87,7 @@ fn part2() {
     let mut answer = usize::MAX;
     let min_to_delete = UNUSED_NEEDED - (AVAILABLE - sum_visit(&input(), &mut |_| { }));
     sum_visit(&input(), &mut |s| {
-        if s > min_to_delete && s < answer {
+        if s >= min_to_delete && s < answer {
             answer = s;
         }
     });

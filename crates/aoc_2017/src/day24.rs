@@ -1,6 +1,6 @@
 use std::{str::FromStr};
 
-use aoc_common::{ToVec, file_lines_as};
+use aoc_common::{IteratorExt, file_lines_as};
 
 #[derive(Debug)]
 struct Connector {

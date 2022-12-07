@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use aoc_common::{file_lines, ToVec};
+use aoc_common::{file_lines, IteratorExt};
 use lazy_static::lazy_static;
 use regex::Regex;
 

@@ -1,4 +1,4 @@
-use aoc_common::ToVec;
+use aoc_common::IteratorExt;
 
 use Cell::*;
 

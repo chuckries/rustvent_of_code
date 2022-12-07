@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use aoc_common::{file_lines, ToVec, Vec2i32};
+use aoc_common::{file_lines, IteratorExt, Vec2i32};
 
 #[derive(Copy, Clone)]
 enum State {

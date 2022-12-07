@@ -1,4 +1,4 @@
-use aoc_common::{ToVec, file_lines};
+use aoc_common::{IteratorExt, file_lines};
 
 #[derive(Copy, Clone)]
 enum Token {

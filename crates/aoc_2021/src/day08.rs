@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use aoc_common::{file_lines, ToVec};
+use aoc_common::{file_lines, IteratorExt};
 
 fn input() -> Vec<(Vec<u8>, Vec<u8>)> {
     file_lines("inputs/day08.txt").map(|l| {

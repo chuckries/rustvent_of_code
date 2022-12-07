@@ -19,7 +19,9 @@ impl Node {
 }
 
 fn input() -> Node {
-    fn explore(lines: &mut Peekable<impl Iterator<Item = String>>, cd: &mut Directory) {
+    fn explore<T>(lines: &mut Peekable<T>, cd: &mut Directory) 
+        where T: Iterator<Item = String>
+    {
         while let Some(line) = lines.next() {
             let split = line.split(' ').to_vec();
 

@@ -628,7 +628,7 @@ mod day11 {
 }
 
 mod day12 {
-    use aoc_common::{Vec3i32, file_string, lcm, ToVec, Selector, SelectorMut};
+    use aoc_common::{Vec3i32, file_string, lcm, IteratorExt, Selector, SelectorMut};
     use lazy_static::lazy_static;
     use regex::Regex;
 
@@ -808,7 +808,7 @@ mod day13 {
 mod day14 {
     use std::collections::HashMap;
 
-    use aoc_common::{file_lines, ToVec};
+    use aoc_common::{file_lines, IteratorExt};
 
     type Map = HashMap<String, Vec<(i64, i64, String)>>;
 
@@ -989,7 +989,7 @@ mod day15 {
 }
 
 mod day16 {
-    use aoc_common::{file_string, ToVec};
+    use aoc_common::{file_string, IteratorExt};
 
     const BASE_SEQUENCE: [i32; 4] = [0, 1, 0, -1];
 

@@ -1,4 +1,4 @@
-use aoc_common::ToVec;
+use aoc_common::IteratorExt;
 
 const INPUT: &'static str = "137826495";
 

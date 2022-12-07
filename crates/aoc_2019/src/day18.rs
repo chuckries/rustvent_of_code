@@ -1,6 +1,6 @@
 use std::collections::{VecDeque, HashMap, HashSet};
 
-use aoc_common::{file_lines, ToVec, Vec2us};
+use aoc_common::{file_lines, IteratorExt, Vec2us};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum Cell {

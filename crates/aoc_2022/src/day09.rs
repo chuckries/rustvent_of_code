@@ -21,9 +21,9 @@ fn fix(head: Vec2i32, tail: Vec2i32) -> Vec2i32 {
     let diff = head - tail;
     let manhattan = diff.manhattan();
     if (diff.x == 0 || diff.y == 0) && manhattan > 1 {
-        head - Vec2i32::new(diff.x.signum(), diff.y.signum())
+        head - diff.signum()
     } else if manhattan > 2 {
-        head - Vec2i32::new(diff.x - diff.x.signum(), diff.y - diff.y.signum())
+        head - (diff - diff.signum())
     } else {
         tail
     }

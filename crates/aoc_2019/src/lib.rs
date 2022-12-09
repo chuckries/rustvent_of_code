@@ -1119,8 +1119,8 @@ mod day17 {
     fn part2() {
         let (mut computer, map, pos) = input();
 
-        let bounds: Vec2i64 = Vec2us::new(map[0].len(), map.len()).into();
-        let mut pos: Vec2i64 = pos.into();
+        let bounds: Vec2i64 = Vec2us::new(map[0].len(), map.len()).cast();
+        let mut pos: Vec2i64 = pos.cast();
         let mut dir = Vec2i64::new(0, -1);
         let mut path: Vec<i32> = Vec::new();
         loop {

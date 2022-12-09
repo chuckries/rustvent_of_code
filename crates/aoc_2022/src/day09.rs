@@ -19,9 +19,10 @@ fn input() -> impl Iterator<Item = (Vec2i32, i32)> {
 
 fn fix(head: Vec2i32, tail: Vec2i32) -> Vec2i32 {
     let diff = head - tail;
-    if diff.x == 0 || diff.y == 0 {
+    let manhattan = diff.manhattan();
+    if (diff.x == 0 || diff.y == 0) && manhattan > 1 {
         head - Vec2i32::new(diff.x.signum(), diff.y.signum())
-    } else if diff.manhattan() > 2 {
+    } else if manhattan > 2 {
         head - Vec2i32::new(diff.x - diff.x.signum(), diff.y - diff.y.signum())
     } else {
         tail
@@ -31,7 +32,6 @@ fn fix(head: Vec2i32, tail: Vec2i32) -> Vec2i32 {
 fn move_rope(len: usize) -> usize {
     let mut knots = vec![Vec2i32::zero(); len];
     let mut visited: HashSet<Vec2i32> = HashSet::new();
-    visited.insert(Vec2i32::zero());
 
     for (dir, count) in input() {
         for _ in 0..count {
@@ -45,7 +45,7 @@ fn move_rope(len: usize) -> usize {
                 knots[i + 1] = next;
             }
 
-            visited.insert(*knots.last().unwrap());
+            visited.insert(knots[len - 1]);
         }
     }
 

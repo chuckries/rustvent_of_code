@@ -1,5 +1,5 @@
-use std::{str::FromStr, cmp::Ordering, collections::BinaryHeap};
-use aoc_common::{Vec3i64, file_lines_as};
+use std::{str::FromStr, cmp::Ordering};
+use aoc_common::{Vec3i64, file_lines_as, PriorityQueue};
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -79,22 +79,22 @@ impl Box {
 }
 
 #[derive(PartialEq, Eq)]
-struct Search {
+struct Priority {
     region: Box,
-    in_range: usize,
+    in_range: usize
 }
 
-impl PartialOrd for Search {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+impl PartialOrd for Priority {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for Search {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let mut cmp = self.in_range.cmp(&other.in_range);
+impl Ord for Priority {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let mut cmp = other.in_range.cmp(&self.in_range);
         if cmp == Ordering::Equal {
-            cmp = other.region.point_closest_to(Vec3i64::zero()).manhattan().cmp(&self.region.point_closest_to(Vec3i64::zero()).manhattan());
+            cmp = self.region.point_closest_to(Vec3i64::zero()).manhattan().cmp(&other.region.point_closest_to(Vec3i64::zero()).manhattan());
         }
         cmp
     }
@@ -149,26 +149,19 @@ fn part2() {
         hi: max,
     };
 
-    let mut to_search: BinaryHeap<Search> = BinaryHeap::new();
-    to_search.push(Search {
-        region: start,
-        in_range: bots.len(),
-    });
+    let mut to_search: PriorityQueue<Box, Priority> = PriorityQueue::new();
+    to_search.enqueue(start, Priority { region: start, in_range: bots.len() });
 
     let mut answer = 0;
-    while let Some(current) = to_search.pop() {
-        if current.region.is_unit() {
-            answer = current.region.lo.manhattan();
+    while let Some(current) = to_search.dequeue() {
+        if current.is_unit() {
+            answer = current.lo.manhattan();
             break;
         }
 
-        for div in current.region.subdivide() {
+        for div in current.subdivide() {
             let in_range = bots.iter().filter(|b| div.in_range_of(b)).count();
-
-            to_search.push(Search {
-                region: div,
-                in_range
-            });
+            to_search.enqueue(div, Priority { region: div, in_range: in_range });
         }
     }
 

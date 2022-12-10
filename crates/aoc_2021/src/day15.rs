@@ -1,6 +1,6 @@
-use std::{collections::{BinaryHeap, HashSet}};
+use std::{collections::{HashSet}};
 
-use aoc_common::{file_lines, Vec2us, SearchNode};
+use aoc_common::{file_lines, Vec2us, PriorityQueue};
 
 fn input() -> Vec<Vec<usize>> {
     file_lines("inputs/day15.txt").map(|l| {
@@ -9,31 +9,30 @@ fn input() -> Vec<Vec<usize>> {
 }
 
 fn search(map: &Vec<Vec<usize>>) -> usize {
-    let mut to_visit: BinaryHeap<SearchNode<usize, Vec2us>> = BinaryHeap::new();
+    let mut to_visit: PriorityQueue<Vec2us, usize> = PriorityQueue::new();
+
     let mut visited: HashSet<Vec2us> = HashSet::new();
 
     let bounds = Vec2us::new(map[0].len(), map.len());
     let target = Vec2us::new(bounds.x - 1, bounds.y - 1);
 
-    to_visit.push(SearchNode { dist: 0, data: Vec2us::zero() });
+    to_visit.enqueue(Vec2us::zero(), 0);
 
-    while !to_visit.is_empty() {
-        let current = to_visit.pop().unwrap();
-
-        if current.data == target {
-            return current.dist;
+    while let Some((current, dist)) = to_visit.try_dequeue() {
+        if current == target {
+            return dist;
         }
 
         if visited.contains(&current) {
             continue;
         }
-        visited.insert(current.data);
+        visited.insert(current);
 
         for adj in current.adjacent_bounded(&bounds) {
             if visited.contains(&adj) {
                 continue;
             }
-            to_visit.push(SearchNode { dist: current.dist + map[adj.y][adj.x] + 1, data: adj });
+            to_visit.enqueue(adj, dist + map[adj.y][adj.x] + 1);
         }
     }
 

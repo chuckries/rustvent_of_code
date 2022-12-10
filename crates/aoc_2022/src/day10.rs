@@ -1,7 +1,6 @@
 use std::collections::HashSet;
-
-use Instr::*;
 use aoc_common::{file_lines, IteratorExt, Vec2i32, map_points_to_string};
+use Instr::*;
 
 enum Instr {
     Add(i32),

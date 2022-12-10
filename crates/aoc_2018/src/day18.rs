@@ -1,9 +1,7 @@
 #![cfg(test)]
 
 mod day18 {
-    use std::{collections::{BinaryHeap}};
-
-    use aoc_common::{Vec2us, SearchNode};
+    use aoc_common::{Vec2us, PriorityQueue};
 
     const ZERO: Vec2us = Vec2us::new(0, 0);
     const DEPTH: usize = 10689;
@@ -107,7 +105,7 @@ mod day18 {
     }
 
     fn search() -> usize {
-        let mut to_visit: BinaryHeap<SearchNode<usize, Search>> = BinaryHeap::new();
+        let mut to_visit: PriorityQueue<Search, usize> = PriorityQueue::new();
         let mut distances = [
             vec![vec![usize::MAX; TARGET.x * 2]; TARGET.y * 2],
             vec![vec![usize::MAX; TARGET.x * 2]; TARGET.y * 2],
@@ -122,9 +120,9 @@ mod day18 {
             time: 0,
         };
         distances[start.tool][0][0] = 0;
-        to_visit.push(SearchNode { dist: TARGET.x + TARGET.y, data: start });
+        to_visit.enqueue(start, TARGET.x + TARGET.y);
 
-        while let Some(current) = to_visit.pop() {
+        while let Some(current) = to_visit.dequeue() {
             if current.pos == TARGET && current.tool == TORCH {
                 return current.time;
             }
@@ -133,15 +131,12 @@ mod day18 {
             let entry = get_distance(current.pos, other_tool, &mut distances);
             if current.time + 7 < *entry {
                 *entry = current.time + 7;
-                to_visit.push(SearchNode {
-                    dist: current.dist + 7,
-                    data: Search {
-                        pos: current.pos,
-                        tool: other_tool,
-                        risk: current.risk,
-                        time: current.time + 7,
-                    }
-                });
+                to_visit.enqueue(Search {
+                    pos: current.pos,
+                    tool: other_tool,
+                    risk: current.risk,
+                    time: current.time + 7,
+                }, current.time + 7);
             }
 
             for adj in current.pos.adjacent_non_negative().filter_map(|adj| {
@@ -155,15 +150,12 @@ mod day18 {
                 let entry = get_distance(adj.0, current.tool, &mut distances);
                 if current.time + 1 < *entry {
                     *entry = current.time + 1;
-                    to_visit.push(SearchNode {
-                        dist: current.time + 1 + adj.0.manhattan_from(TARGET),
-                        data: Search {
-                            pos: adj.0,
-                            risk: adj.1,
-                            tool: current.tool,
-                            time: current.time + 1,
-                        }
-                    });
+                    to_visit.enqueue(Search {
+                        pos: adj.0,
+                        risk: adj.1,
+                        tool: current.tool,
+                        time: current.time + 1,
+                    }, current.time + 1 + adj.0.manhattan_from(TARGET));
                 }
             }
         }

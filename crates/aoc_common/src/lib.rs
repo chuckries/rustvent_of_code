@@ -4,14 +4,15 @@ use std::fmt::{Debug, Write};
 use std::fs::File;
 use std::hash::Hash;
 use std::io::{BufReader, BufRead, Read};
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use num_traits::PrimInt;
 
+pub use priority_queue::*;
 pub use vec2::*;
 pub use vec3::*;
 
+mod priority_queue;
 mod vec2;
 mod vec3;
 
@@ -109,45 +110,6 @@ pub fn map_points_to_string<T, U>(points: T) -> String
     }
 
     s
-}
-
-pub struct SearchNode<T, U> {
-    pub dist: T,
-    pub data: U
-}
-
-impl<T, U> Deref for SearchNode<T, U> {
-    type Target = U;
-    
-    fn deref(&self) -> &Self::Target {
-        &self.data
-    }
-}
-
-impl<T, U> DerefMut for SearchNode<T, U> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.data
-    }
-}
-
-impl<T: PartialEq, U> PartialEq for SearchNode<T, U> {
-    fn eq(&self, other: &Self) -> bool {
-        self.dist.eq(&other.dist)
-    }
-}
-
-impl<T: Eq, U> Eq for SearchNode<T, U> { }
-
-impl<T: PartialOrd, U> PartialOrd for SearchNode<T, U> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        other.dist.partial_cmp(&self.dist)
-    }
-}
-
-impl<T: Ord, U> Ord for SearchNode<T, U> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.dist.cmp(&self.dist)
-    }
 }
 
 pub trait IteratorExt: Iterator

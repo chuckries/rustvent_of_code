@@ -888,9 +888,9 @@ mod day14 {
 }
 
 mod day15 {
-    use std::collections::{HashSet, BinaryHeap};
+    use std::collections::{HashSet};
 
-    use aoc_common::{Vec2i64, SearchNode};
+    use aoc_common::{Vec2i64, PriorityQueue};
 
     use crate::IntCode;
 
@@ -938,24 +938,25 @@ mod day15 {
     fn part1() {
         let (map, target) = explore();
 
-        let mut to_visit: BinaryHeap<SearchNode<usize, Vec2i64>>  = BinaryHeap::new();
+        let mut to_visit: PriorityQueue<Vec2i64, usize> = PriorityQueue::new();
+        to_visit.enqueue(Vec2i64::zero(), 0);
+
         let mut visited: HashSet<Vec2i64> = HashSet::new();
-        to_visit.push(SearchNode { dist: 0, data: Vec2i64::zero() });
 
         let mut answer = 0;
-        while let Some(current) = to_visit.pop() {
-            if current.data == target {
-                answer = current.dist;
+        while let Some((current, dist)) = to_visit.try_dequeue() {
+            if current == target {
+                answer = dist;
                 break;
             }
 
             if visited.contains(&current) {
                 continue;
             }
-            visited.insert(current.data);
+            visited.insert(current);
 
             for adj in current.adjacent().filter(|adj| map.contains(adj)) {
-                to_visit.push(SearchNode { dist: current.dist + 1, data: adj});
+                to_visit.enqueue(adj, dist + 1);
             }
         }
 

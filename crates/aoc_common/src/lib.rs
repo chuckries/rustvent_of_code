@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::{Debug, Write};
 use std::fs::File;
@@ -158,9 +159,53 @@ pub trait IteratorExt: Iterator
     }
 
     fn to_set(self) -> HashSet<Self::Item>
-        where Self: Sized, <Self as Iterator>::Item: Eq + Hash
+    where 
+        Self: Sized, 
+        Self::Item: Eq + Hash
     {
         self.collect()
+    }
+
+    fn sorted(self) -> std::vec::IntoIter<Self::Item>
+    where 
+        Self: Sized, 
+        Self::Item: Ord
+    {
+        let mut v = Vec::from_iter(self);
+        v.sort();
+        v.into_iter()
+    }
+
+    fn sorted_by<F>(self, f: F) -> std::vec::IntoIter<Self::Item>
+    where 
+        Self: Sized, 
+        F: FnMut(&Self::Item, &Self::Item) -> Ordering
+    {
+        let mut v = Vec::from_iter(self);
+        v.sort_by(f);
+        v.into_iter()
+    }
+
+    fn sorted_by_key<K, F>(self, f: F) -> std::vec::IntoIter<Self::Item>
+    where
+        Self: Sized,
+        K: Ord,
+        F: FnMut(&Self::Item) -> K
+    {
+        let mut v = Vec::from_iter(self);
+        v.sort_by_key(f);
+        v.into_iter()
+    }
+
+    fn sorted_by_cached_key<K, F>(self, f: F) -> std::vec::IntoIter<Self::Item>
+    where
+        Self: Sized,
+        K: Ord,
+        F: FnMut(&Self::Item) -> K
+    {
+        let mut v = Vec::from_iter(self);
+        v.sort_by_cached_key(f);
+        v.into_iter()
     }
 }
 

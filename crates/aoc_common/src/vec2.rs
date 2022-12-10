@@ -1,12 +1,20 @@
 use std::ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div};
-
 use num_traits::{PrimInt, Signed, Num, NumCast, ToPrimitive};
 
 pub type Vec2us = Vec2<usize>;
-pub type Vec2i32 = Vec2<i32>;
-pub type Vec2i64 = Vec2<i64>;
+pub type Vec2u8 = Vec2<u8>;
+pub type Vec2u16 = Vec2<u16>;
 pub type Vec2u32 = Vec2<u32>;
 pub type Vec2u64 = Vec2<u64>;
+pub type Vec2u128 = Vec2<u128>;
+pub type Vec2is = Vec2<isize>;
+pub type Vec2i8 = Vec2<i8>;
+pub type Vec2i16 = Vec2<i16>;
+pub type Vec2i32 = Vec2<i32>;
+pub type Vec2i64 = Vec2<i64>;
+pub type Vec2i128 = Vec2<i128>;
+pub type Vec2f32 = Vec2<f32>;
+pub type Vec2f64 = Vec2<f64>;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 pub struct Vec2<T: Num> {

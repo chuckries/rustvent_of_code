@@ -1,6 +1,6 @@
-use aoc_common::file_lines;
+use aoc_common::{file_lines, IteratorExt};
 
-fn input() -> Vec<Vec<i32>> {
+fn input() -> impl Iterator<Item = impl Iterator<Item = i32>> {
     let mut lines = file_lines("inputs/day01.txt");
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut current: Vec<i32> = Vec::new();
@@ -15,19 +15,17 @@ fn input() -> Vec<Vec<i32>> {
     }
     elves.push(current);
 
-    elves
+    elves.into_iter().map(|v| v.into_iter())
 }
 
 #[test]
 fn part1() {
-    let answer: i32 = input().iter().map(|v| v.iter().sum()).max().unwrap();
+    let answer: i32 = input().map(|v| v.sum()).max().unwrap();
     assert_eq!(answer, 66616);
 }
 
 #[test]
 fn part2() {
-    let mut totals: Vec<i32> = input().iter().map(|v| v.iter().sum()).collect();
-    totals.sort_by(|a, b| b.cmp(a));
-    let answer: i32 = totals[0..3].iter().sum();
+    let answer: i32 = input().map(|v| v.sum::<i32>()).sorted_by(|a, b| b.cmp(a)).take(3).sum();
     assert_eq!(answer, 199172);
 }

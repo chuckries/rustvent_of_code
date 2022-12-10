@@ -100,5 +100,6 @@ fn part2() {
         }
     }
 
-    assert_eq!(usize::max(wins[0], wins[1]), 634769613696613);
+    let answer = wins[0].max(wins[1]);
+    assert_eq!(answer, 634769613696613);
 }

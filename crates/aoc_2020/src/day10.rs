@@ -1,10 +1,8 @@
-use aoc_common::file_lines_as;
+use aoc_common::{file_lines_as, IteratorExt};
 
 
 fn input() -> Vec<i32> {
-    let mut lines: Vec<i32> = file_lines_as("inputs/day10.txt").collect();
-    lines.sort();
-    lines
+    file_lines_as("inputs/day10.txt").sorted().collect()
 }
 
 #[test]

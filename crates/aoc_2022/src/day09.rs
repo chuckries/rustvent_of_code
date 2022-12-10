@@ -17,16 +17,15 @@ fn input() -> impl Iterator<Item = (Vec2i32, i32)> {
     })
 }
 
-fn fix(head: Vec2i32, tail: Vec2i32) -> Vec2i32 {
+fn fix(head: Vec2i32, mut tail: Vec2i32) -> Vec2i32 {
     let diff = head - tail;
     let manhattan = diff.manhattan();
-    if (diff.x == 0 || diff.y == 0) && manhattan > 1 {
-        head - diff.signum()
-    } else if manhattan > 2 {
-        head - (diff - diff.signum())
-    } else {
-        tail
+
+    if manhattan > 2 || (manhattan == 2 && (diff.x == 0 || diff.y == 0)) {
+        tail += diff.signum();
     }
+
+    tail
 }
 
 fn move_rope(len: usize) -> usize {

@@ -59,14 +59,14 @@ impl Cube {
                 if b_lo < a_lo {
                     let mut hi = b.1;
                     *selector_mut(&mut hi) = a_lo - 1;
-                    space.push(Cube::new(status, b.0, hi).into());
+                    space.push(Cube::new(status, b.0, hi));
                     *selector_mut(&mut b.0) = a_lo;
                 }
 
                 if b_hi > a_hi {
                     let mut lo = b.0;
                     *selector_mut(&mut lo) = a_hi + 1;
-                    space.push(Cube::new(status, lo, b.1).into());
+                    space.push(Cube::new(status, lo, b.1));
                     *selector_mut(&mut b.1) = a_hi;
                 }
             }
@@ -95,49 +95,39 @@ impl FromStr for Cube {
     }
 }
 
-fn input() -> Vec<Cube> {
-    file_lines_as("inputs/day22.txt").collect()
+fn input() -> impl Iterator<Item = Cube> {
+    file_lines_as("inputs/day22.txt")
 }
 
-#[test]
-fn part1() {
-    let input = input();
-
+fn run<F>(f: F) -> i64 
+    where F: Fn(&Cube) -> bool
+{
     let mut space: Vec<Cube> = Vec::new();
-    for cube in input.into_iter().filter(|c| {
-        c.points.0.x >= -50 && c.points.0.y >= -50 && c.points.0.z >= -50 &&
-        c.points.1.x <=  50 && c.points.1.y <=  50 && c.points.1.z <=  50
-    }) {
+    for cube in input().filter(f) {
         cube.add_to_space(&mut space);
     }
 
-    let answer = space.into_iter().filter_map(|c| {
-        if c.status == true {
+    space.into_iter().filter_map(|c| {
+        if c.status {
             Some(c.volume())
         } else {
             None
         }
-    }).sum::<i64>();
+    }).sum()
+}
+
+#[test]
+fn part1() {
+    let answer = run(|c| {
+        c.points.0.x >= -50 && c.points.0.y >= -50 && c.points.0.z >= -50 &&
+        c.points.1.x <=  50 && c.points.1.y <=  50 && c.points.1.z <=  50
+    });
 
     assert_eq!(answer, 588120);
 }
 
 #[test]
 fn part2() {
-    let input = input();
-
-    let mut space: Vec<Cube> = Vec::new();
-    for cube in input {
-        cube.add_to_space(&mut space);
-    }
-
-    let answer = space.into_iter().filter_map(|c| {
-        if c.status == true {
-            Some(c.volume())
-        } else {
-            None
-        }
-    }).sum::<i64>();
-
+    let answer = run(|_| true);
     assert_eq!(answer, 1134088247046731);
 }

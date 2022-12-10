@@ -1,6 +1,5 @@
 use aoc_common::{file_lines, IteratorExt};
 
-
 fn input() -> impl Iterator<Item = ((u32, u32), (u32, u32))> {
     file_lines("inputs/day04.txt").map(|l| {
         let nums = l.split([',', '-']).map(|s| s.parse::<u32>().unwrap()).to_vec();

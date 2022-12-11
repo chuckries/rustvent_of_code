@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::fmt::{Debug, Write};
 use std::fs::File;
 use std::hash::Hash;
@@ -117,7 +117,7 @@ pub trait IteratorExt: Iterator
     fn to_vec(self) -> Vec<Self::Item>
         where Self: Sized
     {
-        self.collect()
+        Vec::from_iter(self)
     }
 
     fn to_set(self) -> HashSet<Self::Item>
@@ -125,7 +125,13 @@ pub trait IteratorExt: Iterator
         Self: Sized, 
         Self::Item: Eq + Hash
     {
-        self.collect()
+        HashSet::from_iter(self)
+    }
+
+    fn to_vec_deque(self) -> VecDeque<Self::Item>
+        where Self: Sized
+    {
+        VecDeque::from_iter(self)
     }
 
     fn sorted(self) -> std::vec::IntoIter<Self::Item>

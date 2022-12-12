@@ -55,7 +55,7 @@ impl<T, P> PriorityQueue<T, P>
         self.heap.pop().and_then(|w| Some(w.item))
     }
 
-    pub fn try_dequeue(&mut self) -> Option<(T, P)> {
+    pub fn dequeue_with_priority(&mut self) -> Option<(T, P)> {
         self.heap.pop().and_then(|w| Some((w.item, w.priority)))
     }
 
@@ -63,7 +63,7 @@ impl<T, P> PriorityQueue<T, P>
         self.heap.peek().and_then(|w| Some(&w.item))
     }
 
-    pub fn try_peek(&self) -> Option<(&T, &P)> {
+    pub fn peek_with_priority(&self) -> Option<(&T, &P)> {
         self.heap.peek().and_then(|w| Some((&w.item, &w.priority)))
     }
 }

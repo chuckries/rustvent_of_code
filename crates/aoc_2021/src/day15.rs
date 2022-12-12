@@ -18,7 +18,7 @@ fn search(map: &Vec<Vec<usize>>) -> usize {
 
     to_visit.enqueue(Vec2us::zero(), 0);
 
-    while let Some((current, dist)) = to_visit.try_dequeue() {
+    while let Some((current, dist)) = to_visit.dequeue_with_priority() {
         if current == target {
             return dist;
         }

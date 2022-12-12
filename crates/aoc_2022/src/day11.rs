@@ -71,10 +71,10 @@ struct Monkey {
 }
 
 impl Monkey {
-    fn inspect_next(&mut self, expr: &Expression) -> Option<(i64, usize)> {
+    fn inspect_next(&mut self, reduction: &Expression) -> Option<(i64, usize)> {
         self.items.pop_front().and_then(|i| {
             let mut value = self.expr.evaluate(i);
-            value = expr.evaluate(value);
+            value = reduction.evaluate(value);
             let next = if value % self.div_test == 0 {
                 self.next_true
             } else {
@@ -124,19 +124,19 @@ fn input() -> Vec<Monkey> {
     monkeys
 }
 
-fn run(monkeys: &mut [Monkey], rounds: i32, expr: &Expression) -> i64 {
+fn run(monkeys: &mut [Monkey], rounds: i32, reduction: &Expression) -> i64 {
     let mut counts = vec![0; monkeys.len()];
 
     for _ in 0..rounds {
         for i in 0..monkeys.len() {
-            while let Some((value, next)) = monkeys[i].inspect_next(expr) {
+            while let Some((value, next)) = monkeys[i].inspect_next(reduction) {
                 counts[i] += 1;
                 monkeys[next].items.push_back(value);
             }
         }
     }
 
-    counts.into_iter().sorted_by(|a, b| b.cmp(a)).take(2).fold(1, |acc, i| acc * i)
+    counts.into_iter().sorted_by(|a, b| b.cmp(a)).take(2).product()
 }
 
 #[test]
@@ -150,7 +150,7 @@ fn part1() {
 #[test]
 fn part2() {
     let mut monkeys = input();
-    let divisor = monkeys.iter().map(|m| m.div_test).fold(1, |acc, i| acc * i);
+    let divisor = monkeys.iter().map(|m| m.div_test).product();
     let expr = Expression(Identifier::Old, Op::Mod, Identifier::Const(divisor));
     let answer = run(&mut monkeys, 10000, &expr);
     assert_eq!(answer, 18170818354);

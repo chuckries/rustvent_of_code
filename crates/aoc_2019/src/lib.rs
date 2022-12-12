@@ -944,7 +944,7 @@ mod day15 {
         let mut visited: HashSet<Vec2i64> = HashSet::new();
 
         let mut answer = 0;
-        while let Some((current, dist)) = to_visit.try_dequeue() {
+        while let Some((current, dist)) = to_visit.dequeue_with_priority() {
             if current == target {
                 answer = dist;
                 break;

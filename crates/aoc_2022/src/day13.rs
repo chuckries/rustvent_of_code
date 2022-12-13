@@ -7,12 +7,41 @@ enum Node {
     Int(i32),
 }
 
-impl Node {
-    fn as_list_mut(&mut self) -> &mut Vec<Node> {
-        match self {
-            Node::List(v) => v,
-            _ => panic!()
+impl FromStr for Node {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = &s[1..s.len() - 1];
+        let mut stack: Vec<Vec<Node>> = Vec::new();
+        stack.push(Vec::new());
+
+        let mut chars = s.chars().peekable();
+
+        while let Some(c) = chars.next() {
+            match c {
+                '[' => stack.push(Vec::new()),
+                ']' => {
+                    let top = stack.pop().unwrap();
+                    stack.last_mut().unwrap().push(Node::List(top));
+                }
+                c if c.is_ascii_digit() => {
+                    let mut s = String::new();
+                    while let Some(c) = chars.peek() {
+                        if !c.is_ascii_digit() {
+                            break;
+                        }
+                        s.push(*c);
+                        chars.next();
+                    }
+
+                    stack.last_mut().unwrap().push(Node::Int(s.parse().unwrap()));
+                }
+                ',' => (),
+                _ => panic!()
+            }
         }
+
+        Ok(Node::List(stack.into_iter().next().unwrap()))
     }
 }
 
@@ -66,43 +95,6 @@ impl Ord for Node {
     }
 }
 
-impl FromStr for Node {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut stack: Vec<Node> = Vec::new();
-        stack.push(Node::List(Vec::new()));
-
-        let mut chars = s.bytes().peekable();
-
-        while let Some(c) = chars.next() {
-            match c {
-                b'[' => stack.push(Node::List(Vec::new())),
-                b']' => {
-                    let top = stack.pop().unwrap();
-                    stack.last_mut().unwrap().as_list_mut().push(top);
-                }
-                c if c.is_ascii_digit() => {
-                    let mut bytes: Vec<u8> = vec![c];
-                    while let Some(c) = chars.peek() {
-                        if !c.is_ascii_digit() {
-                            break;
-                        }
-                        bytes.push(*c);
-                        chars.next();
-                    }
-
-                    stack.last_mut().unwrap().as_list_mut().push(Node::Int(String::from_utf8(bytes).unwrap().parse().unwrap()));
-                }
-                b',' => (),
-                _ => panic!()
-            }
-        }
-
-        Ok(stack.into_iter().next().unwrap())
-    }
-}
-
 fn input() -> Vec<Node>{
     let mut packets = Vec::new();
     for line in file_lines("inputs/day13.txt") {
@@ -116,9 +108,7 @@ fn input() -> Vec<Node>{
 
 #[test]
 fn part1() {
-    let packets = input();
-
-    let answer: usize = packets.chunks(2).enumerate().filter_map(|(idx, packets)| {
+    let answer: usize = input().chunks(2).enumerate().filter_map(|(idx, packets)| {
         if packets[0] < packets[1] {
             Some(idx + 1)
         } else {

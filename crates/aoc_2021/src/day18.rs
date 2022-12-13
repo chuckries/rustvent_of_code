@@ -61,11 +61,7 @@ impl TreeNode {
     }
 
     fn try_explode(&mut self) -> bool {
-        if self.try_explode_recurse(0).is_some() {
-            true
-        } else {
-            false
-        }
+        self.try_explode_recurse(0).is_some()
     }
 
     fn try_explode_recurse(&mut self, depth: usize) -> Option<ExplodeResult> {
@@ -123,11 +119,7 @@ impl TreeNode {
     }
 
     fn try_split(&mut self) -> bool {
-        if self.try_split_recurse().is_some() {
-            true
-        } else {
-            false
-        }
+        self.try_split_recurse().is_some()
     }
 
     fn try_split_recurse(&mut self) -> Option<SplitResult> {
@@ -194,8 +186,8 @@ fn input() -> Vec<Tree> {
 #[test]
 fn part1() {
     let input = input();
-    
-    let sum = input.iter().skip(1).fold(input[0].clone(), |accum, i| accum.add(i));
+
+    let sum = input.into_iter().reduce(|accum, i| accum.add(&i)).unwrap();
 
     let answer = sum.magnitude();
     assert_eq!(answer, 3359);
@@ -206,14 +198,17 @@ fn part2() {
     let input = input();
 
     let mut max = 0;
-    for i in 0..input.len() {
-        for j in 0..input.len() {
-            if i == j { continue; }
-
-            let mag = input[i].add(&input[j]).magnitude();
-            if mag > max {
-                max = mag;
+    for i in 0..input.len() - 1 {
+        for j in i..input.len() {
+            fn check(a: &Tree, b: &Tree, max: &mut usize) {
+                let mag = a.add(b).magnitude();
+                if mag > *max {
+                    *max = mag;
+                }
             }
+
+            check(&input[i], &input[j], &mut max);
+            check(&input[j], &input[i], &mut max);
         }
     }
 

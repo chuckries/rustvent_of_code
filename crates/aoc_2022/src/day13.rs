@@ -1,47 +1,41 @@
-use std::{str::FromStr, cmp::Ordering};
-use aoc_common::{file_lines};
+use std::{str::FromStr, cmp::Ordering, rc::Rc, iter::Peekable};
+use aoc_common::{file_lines, IteratorExt};
 
-#[derive(Clone)]
 enum Node {
     List(Vec<Node>),
     Int(i32),
 }
 
-impl FromStr for Node {
-    type Err = ();
+impl Node {
+    fn parse(chars: &mut Peekable<impl Iterator<Item = char>>) -> Vec<Node> {
+        if chars.next().unwrap() != '[' {
+            panic!();
+        }
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = &s[1..s.len() - 1];
-        let mut stack: Vec<Vec<Node>> = Vec::new();
-        stack.push(Vec::new());
-
-        let mut chars = s.chars().peekable();
-
-        while let Some(c) = chars.next() {
-            match c {
-                '[' => stack.push(Vec::new()),
+        let mut list: Vec<Node> = Vec::new();
+        loop {
+            match chars.peek().unwrap() {
                 ']' => {
-                    let top = stack.pop().unwrap();
-                    stack.last_mut().unwrap().push(Node::List(top));
+                    chars.next().unwrap();
+                    break;
                 }
-                c if c.is_ascii_digit() => {
-                    let mut s = String::new();
-                    while let Some(c) = chars.peek() {
-                        if !c.is_ascii_digit() {
-                            break;
-                        }
-                        s.push(*c);
-                        chars.next();
+                '[' => list.push(Node::List(Self::parse(chars))),
+                ',' => {
+                    chars.next().unwrap();
+                }
+                c if c.is_digit(10) => {
+                    let mut s = c.to_string();
+                    chars.next().unwrap();
+                    while chars.peek().unwrap().is_digit(10) {
+                        s.push(chars.next().unwrap());
                     }
-
-                    stack.last_mut().unwrap().push(Node::Int(s.parse().unwrap()));
+                    list.push(Node::Int(s.parse().unwrap()));
                 }
-                ',' => (),
                 _ => panic!()
             }
         }
 
-        Ok(Node::List(stack.into_iter().next().unwrap()))
+        list
     }
 }
 
@@ -63,47 +57,35 @@ impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Node::Int(a), Node::Int(b)) => {
-                return a.cmp(b);
+                a.cmp(b)
             }
             (Node::List(a), Node::List(b)) => {
-                let mut i = 0;
-                loop {
-                    if i == a.len() && i == b.len() {
-                        return Ordering::Equal
-                    } else if i == a.len() {
-                        return Ordering::Less;
-                    } else if i == b.len() {
-                        return Ordering::Greater;
-                    } else {
-                        let cmp = a[i].cmp(&b[i]);
-                        if cmp != Ordering::Equal {
-                            return cmp;
-                        }
-                        i += 1;
-                    }
-                }
+                a.cmp(b)
             }
             (a @ Node::List(_), Node::Int(b)) => {
-                let right = Node::List(vec![Node::Int(*b)]);
-                return a.cmp(&right);
+                a.cmp(&Node::List(vec![Node::Int(*b)]))
             }
             (Node::Int(a), b @ Node::List(_)) => {
-                let left = Node::List(vec![Node::Int(*a)]);
-                return left.cmp(b);
+                Node::List(vec![Node::Int(*a)]).cmp(b)
             }
         }
     }
 }
 
-fn input() -> Vec<Node>{
-    let mut packets = Vec::new();
-    for line in file_lines("inputs/day13.txt") {
-        if !line.is_empty() {
-            packets.push(line.parse().unwrap());
-        }
-    }
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct Packet(Rc<Vec<Node>>);
 
-    packets
+impl FromStr for Packet {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Packet(Rc::new(Node::parse(&mut s.chars().peekable()))))
+    }
+}
+
+
+fn input() -> Vec<Packet>{
+    file_lines("inputs/day13.txt").filter(|l| !l.is_empty()).map(|l| l.parse().unwrap()).to_vec()
 }
 
 #[test]
@@ -123,8 +105,8 @@ fn part1() {
 fn part2() {
     let mut packets = input();
 
-    let divider2: Node = "[[2]]".parse().unwrap();
-    let divider6: Node = "[[6]]".parse().unwrap();
+    let divider2: Packet = "[[2]]".parse().unwrap();
+    let divider6: Packet = "[[6]]".parse().unwrap();
 
     packets.push(divider2.clone());
     packets.push(divider6.clone());

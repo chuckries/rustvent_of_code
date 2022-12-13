@@ -38,6 +38,7 @@ fn search<FFound, FTest>(map: &Vec<Vec<i32>>, start: Vec2us, f_found: FFound, f_
     let bounds = Vec2us::new(map[0].len(), map.len());
     let mut queue: VecDeque<(Vec2us, i32)> = VecDeque::new();
     let mut visited = vec![vec![false; map[0].len()]; map.len()];
+    visited[start.y][start.x] = true;
 
     queue.push_back((start, 0));
 
@@ -46,13 +47,9 @@ fn search<FFound, FTest>(map: &Vec<Vec<i32>>, start: Vec2us, f_found: FFound, f_
             return dist;
         }
 
-        if visited[current.y][current.x] {
-            continue;
-        }
-        visited[current.y][current.x] = true;
-
         for adj in current.adjacent_bounded(&bounds) {
             if !visited[adj.y][adj.x] && f_test(map[current.y][current.x], map[adj.y][adj.x]) {
+                visited[adj.y][adj.x] = true;
                 queue.push_back((adj, dist + 1));
             }
         }

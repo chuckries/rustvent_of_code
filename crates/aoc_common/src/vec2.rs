@@ -38,6 +38,10 @@ impl<T: Num> Vec2<T> {
     pub fn unit_y() -> Self {
         Self { x: T::zero(), y: T::one() }
     }
+
+    pub fn is_zero(&self) -> bool {
+        self.x == T::zero() && self.y == T::zero()
+    }
 }
 
 impl<T: PrimInt> Vec2<T> {
@@ -88,6 +92,21 @@ impl<T: PrimInt> Vec2<T> {
         if self.x < bounds.x - T::one()                                     { sur.push(Vec2 { x: self.x + T::one(), y: self.y            }); }
         if self.x < bounds.x - T::one() && self.y < bounds.y - T::one()     { sur.push(Vec2 { x: self.x + T::one(), y: self.y + T::one() }); }
         sur.into_iter()
+    }
+
+    pub fn bounds<I: Iterator<Item = Self>>(it: I) -> Self {
+        let mut bounds = Self::zero();
+
+        for i in it {
+            if i.x > bounds.x {
+                bounds.x = i.x;
+            }
+            if i.y > bounds.y {
+                bounds.y = i.y;
+            }
+        }
+
+        bounds + (T::one(), T::one()).into()
     }
 
     pub fn iter(&self) -> Iter<T> {

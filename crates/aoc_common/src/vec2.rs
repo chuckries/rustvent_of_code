@@ -42,6 +42,7 @@ impl<T: Num> Vec2<T> {
     pub fn is_zero(&self) -> bool {
         self.x == T::zero() && self.y == T::zero()
     }
+
 }
 
 impl<T: PrimInt> Vec2<T> {
@@ -107,6 +108,14 @@ impl<T: PrimInt> Vec2<T> {
         }
 
         bounds + (T::one(), T::one()).into()
+    }
+
+    pub fn max_value() -> Self {
+        Self { x: T::max_value(), y: T::max_value() }
+    }
+
+    pub fn min_value() -> Self {
+        Self { x: T::min_value(), y: T::min_value() }
     }
 
     pub fn iter(&self) -> Iter<T> {

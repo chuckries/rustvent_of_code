@@ -68,7 +68,7 @@ struct Graph {
 impl Graph {
     fn new() -> Graph {
         let nodes = input();
-        let bounds = Vec2us::bounds(nodes.iter().map(|n| n.idx));
+        let bounds = Vec2us::bounds_from_zero_exclusive(nodes.iter().map(|n| n.idx));
         let goal_idx = Vec2us::new(bounds.x - 1, 0);
         let empty = nodes.iter().find(|n| n.used == 0).unwrap();
         let empty_idx = empty.idx;

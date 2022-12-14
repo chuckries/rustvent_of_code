@@ -31,6 +31,10 @@ impl<T: Num> Vec2<T> {
         Self { x: T::zero(), y: T::zero() }
     }
 
+    pub fn one() -> Self {
+        Self { x: T::one(), y: T::one() }
+    }
+
     pub fn unit_x() -> Self {
         Self { x: T::one(), y: T::zero() }
     }
@@ -84,18 +88,40 @@ impl<T: PrimInt> Vec2<T> {
     pub fn surrouding_bounded(&self, bounds: &Self) -> impl Iterator<Item = Self> {
         let mut sur = Vec::with_capacity(8);
     
-        if self.x > T::zero() && self.y > T::zero()                         { sur.push(Vec2 { x: self.x - T::one(), y: self.y - T::one() }); }
-        if self.x > T::zero()                                               { sur.push(Vec2 { x: self.x - T::one(), y: self.y            }); }
-        if self.x > T::zero() && self.y < bounds.y - T::one()               { sur.push(Vec2 { x: self.x - T::one(), y: self.y + T::one() }); }
-        if self.y > T::zero()                                               { sur.push(Vec2 { x: self.x           , y: self.y - T::one() }); }
-        if self.y < bounds.y - T::one()                                     { sur.push(Vec2 { x: self.x           , y: self.y + T::one() }); }
-        if self.x < bounds.x - T::one() && self.y > T::zero()               { sur.push(Vec2 { x: self.x + T::one(), y: self.y - T::one() }); }
-        if self.x < bounds.x - T::one()                                     { sur.push(Vec2 { x: self.x + T::one(), y: self.y            }); }
-        if self.x < bounds.x - T::one() && self.y < bounds.y - T::one()     { sur.push(Vec2 { x: self.x + T::one(), y: self.y + T::one() }); }
+        if self.x > T::zero() && self.y > T::zero()                         { sur.push(Self { x: self.x - T::one(), y: self.y - T::one() }); }
+        if self.x > T::zero()                                               { sur.push(Self { x: self.x - T::one(), y: self.y            }); }
+        if self.x > T::zero() && self.y < bounds.y - T::one()               { sur.push(Self { x: self.x - T::one(), y: self.y + T::one() }); }
+        if self.y > T::zero()                                               { sur.push(Self { x: self.x           , y: self.y - T::one() }); }
+        if self.y < bounds.y - T::one()                                     { sur.push(Self { x: self.x           , y: self.y + T::one() }); }
+        if self.x < bounds.x - T::one() && self.y > T::zero()               { sur.push(Self { x: self.x + T::one(), y: self.y - T::one() }); }
+        if self.x < bounds.x - T::one()                                     { sur.push(Self { x: self.x + T::one(), y: self.y            }); }
+        if self.x < bounds.x - T::one() && self.y < bounds.y - T::one()     { sur.push(Self { x: self.x + T::one(), y: self.y + T::one() }); }
         sur.into_iter()
     }
 
-    pub fn bounds<I: Iterator<Item = Self>>(it: I) -> Self {
+    pub fn bounding_box<I: Iterator<Item = Self>>(it: I) -> (Self, Self) {
+        let mut min = Self { x: T::max_value(), y: T::max_value() };
+        let mut max = Self { x: T::min_value(), y: T::min_value() };
+
+        for i in it {
+            if i.x < min.x {
+                min.x = i.x;
+            }
+            if i.y < min.y {
+                min.y = i.y;
+            }
+            if i.x > max.x {
+                max.x = i.x;
+            }
+            if i.y > max.y {
+                max.y = i.y;
+            }
+        }
+
+        (min, max)
+    }
+
+    pub fn bounds_from_zero_inclusive<I: Iterator<Item = Self>>(it: I) -> Self {
         let mut bounds = Self::zero();
 
         for i in it {
@@ -107,7 +133,11 @@ impl<T: PrimInt> Vec2<T> {
             }
         }
 
-        bounds + (T::one(), T::one()).into()
+        bounds
+    }
+
+    pub fn bounds_from_zero_exclusive<I: Iterator<Item = Self>>(it: I) -> Self {
+        Self::bounds_from_zero_inclusive(it) + Self { x: T::one(), y: T::one() }
     }
 
     pub fn max_value() -> Self {
@@ -118,8 +148,28 @@ impl<T: PrimInt> Vec2<T> {
         Self { x: T::min_value(), y: T::min_value() }
     }
 
+    /// returns an iterator that yields every point in the square defined by 
+    /// self and p1 (inclusive). Order will be top left to bottom right, regardless
+    /// of the the two points provided
+    pub fn area(&self, p1: Self) -> Iter<T> {
+        let mut min = *self;
+        let mut max = p1;
+
+        if min.x > max.x {
+            (min.x, max.x) = (max.x, min.x);
+        }
+
+        if min.y > max.y {
+            (min.y, max.y) = (max.y, min.y);
+        }
+
+        Iter::new(min, max + Self::one())
+    }
+
+    /// return an iterator that yields every point in the square between (0, 0) and the 
+    /// self (exclusive). Only yields points in the first quadrant.
     pub fn iter(&self) -> Iter<T> {
-        Iter::new(Self::new(T::zero(), T::zero()), *self)
+        Iter::new(Self::zero(), *self)
     }
 }
 

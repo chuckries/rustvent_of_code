@@ -55,16 +55,16 @@ fn get_min_bounded_map() -> (Map, Vec2us) {
 }
 
 fn get_max_bounded_map() -> (Map, Vec2us) {
-    let (lines, (low, high)) = input();
+    let (lines, (mut low, mut high)) = input();
 
-    let floor = high.y + 2;
-    let min_x = SOURCE.x - floor;
-    let max_x = SOURCE.x + floor;
+    high.y += 2;
+    low.x = SOURCE.x - high.y;
+    high.x = SOURCE.x + high.y;
 
-    let (mut map, source) = get_map_from_rect(&lines, (min_x, low.y).into(), (max_x, floor).into());
+    let (mut map, source) = get_map_from_rect(&lines, low, high);
 
-    for i in 0..map[floor].len() {
-        map[floor][i] = '#';
+    for i in 0..map[high.y].len() {
+        map[high.y][i] = '#';
     }
 
     (map, source)

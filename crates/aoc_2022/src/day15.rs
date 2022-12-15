@@ -55,7 +55,7 @@ fn part1() {
     assert_eq!(answer, 5181556);
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone)]
 struct Rect(Vec2i64, Vec2i64);
 
 impl Rect {

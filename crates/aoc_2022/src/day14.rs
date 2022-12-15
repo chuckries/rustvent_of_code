@@ -72,22 +72,52 @@ fn get_max_bounded_map() -> (Map, Vec2us) {
     (map, source)
 }
 
+struct StackNode
+{
+    p: Vec2us,
+    i: usize,
+}
+
+impl StackNode {
+    fn new(p: Vec2us) -> StackNode {
+        StackNode {
+            p,
+            i: 0,
+        }
+    }
+}
+
+impl Iterator for StackNode {
+    type Item = Vec2us;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.i >= DIRS.len() {
+            None
+        } else {
+            self.i += 1;
+            Some((self.p.cast::<i32>() + DIRS[self.i - 1]).cast::<usize>())
+        }
+    }
+}
+
 fn fill_sand(map: &mut Map, source: Vec2us) -> usize {
-    'outer: loop {
-        let mut current = source;
+    let mut stack: Vec<StackNode> = Vec::new();
+    stack.push(StackNode::new(source));
 
-        while let Some(next) = dirs(current).find(|idx| map[idx.y][idx.x] == '.') {
-            current = next;
+    'outer: while let Some(current) = stack.last_mut() {
+        if current.p.y == map.len() - 1 {
+            break;
+        }
 
-            if current.y == map.len() - 1 {
-                break 'outer;
+        while let Some(next) = current.next() {
+            if map[next.y][next.x] == '.' {
+                stack.push(StackNode::new(next));
+                continue 'outer;
             }
         }
 
-        map[current.y][current.x] = 'o';
-        if current == source {
-            break;
-        }
+        map[current.p.y][current.p.x] = 'o';
+        stack.pop();
     }
 
     map.iter().flatten().filter(|c| **c == 'o').count()
@@ -109,7 +139,7 @@ fn part1() {
 #[test]
 fn part2() {
     let (mut map, source) = get_max_bounded_map();
-    
+
     let mut queue: VecDeque<Vec2us> = VecDeque::new();
     queue.push_back(source);
     map[source.y][source.x] = 'o';

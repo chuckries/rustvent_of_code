@@ -1,5 +1,4 @@
 use std::collections::VecDeque;
-
 use aoc_common::{file_lines, IteratorExt, Vec2us, Vec2i32};
 
 type Map = Vec<Vec<char>>;
@@ -27,19 +26,22 @@ fn input() -> (Vec<Vec<Vec2us>>, (Vec2us, Vec2us)) {
 fn get_map_from_rect(lines: &Vec<Vec<Vec2us>>, low: Vec2us, high: Vec2us) -> (Map, Vec2us) {
     let width = high.x - low.x + 1;
     let height = high.y + 1;
-    let offset = low.x;
+    let offset: Vec2us = (low.x, 0).into();
 
     let mut map = vec![vec!['.'; width]; height];
 
     for line in lines {
         for w in line.windows(2) {
-            for p in w[0].area(w[1]) {
-                map[p.y as usize][(p.x - offset) as usize] = '#';
+            let p0 = w[0] - offset;
+            let p1 = w[1] - offset;
+
+            for p in p0.area(p1) {
+                map[p.y][p.x] = '#';
             }
         }
     }
 
-    let source = SOURCE - (offset, 0).into();
+    let source = SOURCE - offset;
     map[source.y][source.x] = '+';
 
     (map, source)

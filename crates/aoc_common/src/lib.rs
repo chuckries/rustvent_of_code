@@ -11,10 +11,12 @@ use num_traits::PrimInt;
 pub use priority_queue::*;
 pub use vec2::*;
 pub use vec3::*;
+pub use virtual_grid::*;
 
 mod priority_queue;
 mod vec2;
 mod vec3;
+mod virtual_grid;
 
 pub fn file_string(path: &str) -> String {
     let mut buf = String::new();

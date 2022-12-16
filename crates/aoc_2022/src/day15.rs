@@ -1,4 +1,4 @@
-use aoc_common::{file_lines, IteratorExt, Vec2i64, PriorityQueue};
+use aoc_common::{file_lines, IteratorExt, Vec2i64, PriorityQueue, Rect, RectI64};
 
 fn input() -> Vec<(Vec2i64, Vec2i64)> {
     file_lines("inputs/day15.txt").map(|l| {
@@ -55,47 +55,6 @@ fn part1() {
     assert_eq!(answer, 5181556);
 }
 
-#[derive(Copy, Clone)]
-struct Rect(Vec2i64, Vec2i64);
-
-impl Rect {
-    fn fully_in_range_of(&self, p: Vec2i64, range: i64) -> bool {
-        let max = [(self.0.x, self.0.y), (self.0.x, self.1.y), (self.1.x, self.0.y), (self.1.x, self.1.y)]
-            .iter().map(|(x, y)| p.manhattan_from((*x, *y).into())).max().unwrap();
-        
-        max <= range
-    }
-
-    fn subdivide(&self) -> Option<impl Iterator<Item = Rect>> {
-        if self.is_unit() {
-            None
-        } else {
-            let mut divisions: Vec<Rect> = Vec::with_capacity(4);
-
-            let split_x = self.0.x < self.1.x;
-            let split_y = self.0.y < self.1.y;
-
-            let mid_x = self.0.x + (self.1.x - self.0.x) / 2;
-            let mid_y = self.0.y + (self.1.y - self.0.y) / 2;
-
-            if split_x && split_y { divisions.push(Self((mid_x + 1, mid_y + 1).into(), (self.1.x, self.1.y).into())) }
-            if split_y { divisions.push(Self((self.0.x, mid_y + 1).into(), (mid_x, self.1.y).into())) }
-            if split_x { divisions.push(Self((mid_x + 1, self.0.y).into(), (self.1.x, mid_y).into())) }
-            divisions.push(Self((self.0.x, self.0.y).into(), (mid_x, mid_y).into()));
-
-            Some(divisions.into_iter())
-        }
-    }
-
-    fn area(&self) -> i64 {
-        (self.1.x - self.0.x + 1) * (self.1.y - self.0.y + 1)
-    }
-
-    fn is_unit(&self) -> bool {
-        self.0.x == self.1.x && self.0.y == self.1.y
-    }
-}
-
 #[test]
 fn part2() {
     let bound = 4000000;
@@ -104,20 +63,26 @@ fn part2() {
 
     let manhattans = input.into_iter().map(|(s, b)| (s, s.manhattan_from(b))).to_vec();
 
-    let mut queue: PriorityQueue<Rect, i64> = PriorityQueue::new();
-    let start = Rect((0, 0).into(), (bound, bound).into());
+    let mut queue: PriorityQueue<RectI64, i64> = PriorityQueue::new();
+    let start = Rect::from_size((bound, bound).into());
     queue.enqueue(start, start.area());
+
+    #[inline]
+    fn fully_in_range_of(rect: &RectI64, p: Vec2i64, range: i64) -> bool {
+        let max = rect.corners().iter().map(|c| c.manhattan_from(p)).max().unwrap();
+        max <= range
+    }
 
     let mut answer = 0;
     while let Some(rect) = queue.dequeue() {
         if rect.is_unit() {
-            answer = rect.0.x * 4000000 + rect.0.y;
+            answer = rect.x() * 4000000 + rect.y();
             break;
         }
 
         if let Some(divisions) = rect.subdivide() {
-            for div in divisions {
-                if manhattans.iter().all(|p| !div.fully_in_range_of(p.0, p.1)) {
+            for div in divisions.rev() {
+                if manhattans.iter().all(|p| !fully_in_range_of(&div, p.0, p.1)) {
                     queue.enqueue(div, div.area());
                 }
             }

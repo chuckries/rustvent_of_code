@@ -1,5 +1,5 @@
 use std::ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div};
-use num_traits::{PrimInt, Signed, Num, NumCast, ToPrimitive};
+use num_traits::{PrimInt, Signed};
 
 pub type Vec2us = Vec2<usize>;
 pub type Vec2u8 = Vec2<u8>;
@@ -13,16 +13,14 @@ pub type Vec2i16 = Vec2<i16>;
 pub type Vec2i32 = Vec2<i32>;
 pub type Vec2i64 = Vec2<i64>;
 pub type Vec2i128 = Vec2<i128>;
-pub type Vec2f32 = Vec2<f32>;
-pub type Vec2f64 = Vec2<f64>;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
-pub struct Vec2<T: Num> {
+pub struct Vec2<T: PrimInt> {
     pub x: T,
     pub y: T,
 }
 
-impl<T: Num> Vec2<T> {
+impl<T: PrimInt> Vec2<T> {
     pub const fn new(x: T, y: T) -> Self {
         Vec2 { x, y }
     }
@@ -47,9 +45,6 @@ impl<T: Num> Vec2<T> {
         self.x == T::zero() && self.y == T::zero()
     }
 
-}
-
-impl<T: PrimInt> Vec2<T> {
     pub fn is_in_bounds(&self, bounds: Self) -> bool {
         self.x >= T::zero() && self.x < bounds.x && self.y >= T::zero() && self.y < bounds.y
     }
@@ -99,28 +94,6 @@ impl<T: PrimInt> Vec2<T> {
         sur.into_iter()
     }
 
-    pub fn bounding_box<I: Iterator<Item = Self>>(it: I) -> (Self, Self) {
-        let mut min = Self { x: T::max_value(), y: T::max_value() };
-        let mut max = Self { x: T::min_value(), y: T::min_value() };
-
-        for i in it {
-            if i.x < min.x {
-                min.x = i.x;
-            }
-            if i.y < min.y {
-                min.y = i.y;
-            }
-            if i.x > max.x {
-                max.x = i.x;
-            }
-            if i.y > max.y {
-                max.y = i.y;
-            }
-        }
-
-        (min, max)
-    }
-
     pub fn bounds_from_zero_inclusive<I: Iterator<Item = Self>>(it: I) -> Self {
         let mut bounds = Self::zero();
 
@@ -148,6 +121,10 @@ impl<T: PrimInt> Vec2<T> {
         Self { x: T::min_value(), y: T::min_value() }
     }
 
+    pub fn cast<U: PrimInt>(&self) -> Vec2<U> {
+        Vec2 { x: U::from(self.x).unwrap(), y: U::from(self.y).unwrap() }
+    }
+
     /// returns an iterator that yields every point in the square defined by 
     /// self and p1 (inclusive). Order will be top left to bottom right, regardless
     /// of the the two points provided
@@ -173,15 +150,9 @@ impl<T: PrimInt> Vec2<T> {
     }
 }
 
-impl<T: Num + Signed> Vec2<T> {
+impl<T:PrimInt + Signed> Vec2<T> {
     pub fn signum(&self) -> Self {
         Self { x: self.x.signum(), y: self.y.signum() }
-    }
-}
-
-impl<T: Num + ToPrimitive + Copy> Vec2<T> {
-    pub fn cast<U: Num + NumCast>(&self) -> Vec2<U> {
-        Vec2 { x: U::from(self.x).unwrap(), y: U::from(self.y).unwrap() }
     }
 }
 
@@ -226,13 +197,13 @@ manhattan_signed!(i32);
 manhattan_signed!(i64);
 manhattan_signed!(i128);
 
-impl <T: Num + std::fmt::Display> std::fmt::Display for Vec2<T> {
+impl <T: PrimInt + std::fmt::Display> std::fmt::Display for Vec2<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
     }
 }
 
-impl <T: Num + Copy + Neg<Output = T>> Vec2<T> {
+impl <T: PrimInt + Neg<Output = T>> Vec2<T> {
     pub fn rotate_left(&self) -> Self {
         Self { x: self.y, y: -self.x }
     }
@@ -242,7 +213,7 @@ impl <T: Num + Copy + Neg<Output = T>> Vec2<T> {
     }
 }
 
-impl<T: Num + Neg<Output = T>> Neg for Vec2<T> {
+impl<T: PrimInt + Neg<Output = T>> Neg for Vec2<T> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -250,22 +221,67 @@ impl<T: Num + Neg<Output = T>> Neg for Vec2<T> {
     }
 }
 
-impl <T: Num> Add for Vec2<T> {
-    type Output = Self;
+impl <T: PrimInt> Add for Vec2<T> {
+    type Output = Vec2<T>;
 
     fn add(self, rhs: Self) -> Self::Output {
         Self { x: self.x + rhs.x, y: self.y + rhs.y }
     }
 }
 
-impl <T: Num + Copy> AddAssign for Vec2<T> {
+impl <T: PrimInt> Add for &Vec2<T> {
+    type Output = Vec2<T>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Vec2 { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl <T: PrimInt> Add<&Self> for Vec2<T> {
+    type Output = Vec2<T>;
+
+    fn add(self, rhs: &Self) -> Self::Output {
+        Vec2 { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl <T: PrimInt> Add<&Self> for &Vec2<T> {
+    type Output = Vec2<T>;
+
+    fn add(self, rhs: &Self) -> Self::Output {
+        Vec2 { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl <T: PrimInt> AddAssign for Vec2<T> {
     fn add_assign(&mut self, rhs: Self) {
         self.x = self.x + rhs.x;
         self.y = self.y + rhs.y;
     }
 }
 
-impl <T: Num> Sub for Vec2<T> {
+impl <T: PrimInt> AddAssign for &mut Vec2<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x = self.x + rhs.x;
+        self.y = self.y + rhs.y;
+    }
+}
+
+impl <T: PrimInt> AddAssign<&Self> for Vec2<T> {
+    fn add_assign(&mut self, rhs: &Self) {
+        self.x = self.x + rhs.x;
+        self.y = self.y + rhs.y;
+    }
+}
+
+impl <T: PrimInt> AddAssign<&Self> for &mut Vec2<T> {
+    fn add_assign(&mut self, rhs: &Self) {
+        self.x = self.x + rhs.x;
+        self.y = self.y + rhs.y;
+    }
+}
+
+impl <T: PrimInt> Sub for Vec2<T> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -273,14 +289,14 @@ impl <T: Num> Sub for Vec2<T> {
     }
 }
 
-impl <T: Num + Copy> SubAssign for Vec2<T> {
+impl <T: PrimInt> SubAssign for Vec2<T> {
     fn sub_assign(&mut self, rhs: Self) {
         self.x = self.x - rhs.x;
         self.y = self.y - rhs.y;
     }
 }
 
-impl <T: Num + Copy> Mul<T> for Vec2<T> {
+impl <T: PrimInt> Mul<T> for Vec2<T> {
     type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
@@ -288,14 +304,14 @@ impl <T: Num + Copy> Mul<T> for Vec2<T> {
     }
 }
 
-impl <T: Num + Copy> MulAssign<T> for Vec2<T> {
+impl <T: PrimInt> MulAssign<T> for Vec2<T> {
     fn mul_assign(&mut self, rhs: T) {
         self.x = self.x * rhs;
         self.y = self.y * rhs;
     }
 }
 
-impl <T: Num + Copy> Div<T> for Vec2<T> {
+impl <T: PrimInt> Div<T> for Vec2<T> {
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
@@ -303,13 +319,13 @@ impl <T: Num + Copy> Div<T> for Vec2<T> {
     }
 }
 
-impl<T: Num> From<(T, T)> for Vec2<T> {
+impl<T: PrimInt> From<(T, T)> for Vec2<T> {
     fn from(v: (T, T)) -> Self {
         Vec2 { x: v.0, y: v.1 }
     }
 }
 
-impl<T: Num> From<Vec2<T>> for (T, T) {
+impl<T: PrimInt> From<Vec2<T>> for (T, T) {
     fn from(v: Vec2<T>) -> Self {
         (v.x, v.y)
     }

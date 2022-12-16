@@ -7,12 +7,14 @@ use num_traits::PrimInt;
 
 pub use iterator_ext::*;
 pub use priority_queue::*;
+pub use rect::*;
 pub use vec2::*;
 pub use vec3::*;
 pub use virtual_grid::*;
 
 mod iterator_ext;
 mod priority_queue;
+mod rect;
 mod vec2;
 mod vec3;
 mod virtual_grid;

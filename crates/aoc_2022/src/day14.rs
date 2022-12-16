@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use aoc_common::{file_lines, IteratorExt, Vec2us, Vec2i32};
+use aoc_common::{file_lines, IteratorExt, Vec2us, Vec2i32, RectUs, Rect};
 
 type Map = Vec<Vec<char>>;
 
@@ -7,10 +7,10 @@ const SOURCE: Vec2us = Vec2us::new(500, 0);
 const DIRS: [Vec2i32; 3] = [Vec2i32::new(0, 1), Vec2i32::new(-1, 1), Vec2i32::new(1, 1)];
 
 fn dirs(p: Vec2us) -> impl Iterator<Item = Vec2us> {
-    DIRS.iter().map(move |d| (p.cast::<i32>() + *d).cast::<usize>())
+    DIRS.iter().map(move |d| (p.cast::<i32>() + d).cast::<usize>())
 }
 
-fn input() -> (Vec<Vec<Vec2us>>, (Vec2us, Vec2us)) {
+fn input() -> (Vec<Vec<Vec2us>>, RectUs) {
     let lines = file_lines("inputs/day14.txt").map(|l| {
         l.split(" -> ").map(|s| {
             let split = s.split(',').map(|i| i.parse::<usize>().unwrap()).to_vec();
@@ -18,15 +18,15 @@ fn input() -> (Vec<Vec<Vec2us>>, (Vec2us, Vec2us)) {
         }).to_vec()
     }).to_vec();
 
-    let bounding_rect = Vec2us::bounding_box(lines.iter().flatten().copied());
+    let bounding_rect = Rect::bounding(lines.iter().flatten().copied());
 
     (lines, bounding_rect)
 }
 
-fn get_map_from_rect(lines: &Vec<Vec<Vec2us>>, low: Vec2us, high: Vec2us) -> (Map, Vec2us) {
-    let width = high.x - low.x + 1;
-    let height = high.y + 1;
-    let offset: Vec2us = (low.x, 0).into();
+fn get_map_from_rect(lines: &Vec<Vec<Vec2us>>, rect: &RectUs) -> (Map, Vec2us) {
+    let width = rect.width() + 1;
+    let height = rect.bottom() + 1;
+    let offset: Vec2us = (rect.x(), 0).into();
 
     let mut map = vec![vec!['.'; width]; height];
 
@@ -48,25 +48,25 @@ fn get_map_from_rect(lines: &Vec<Vec<Vec2us>>, low: Vec2us, high: Vec2us) -> (Ma
 }
 
 fn get_min_bounded_map() -> (Map, Vec2us) {
-    let (lines, (mut low, mut high)) = input();
+    let (lines, mut rect) = input();
 
-    low.x -= 1;
-    high.x += 1;
+    *rect.x_mut() -= 1;
+    *rect.width_mut() += 2;
 
-    get_map_from_rect(&lines, low, high)
+    get_map_from_rect(&lines, &rect)
 }
 
 fn get_max_bounded_map() -> (Map, Vec2us) {
-    let (lines, (mut low, mut high)) = input();
+    let (lines, mut rect) = input();
 
-    high.y += 2;
-    low.x = SOURCE.x - high.y;
-    high.x = SOURCE.x + high.y;
+    *rect.height_mut() += 2;
+    *rect.x_mut() = SOURCE.x - rect.bottom();
+    *rect.width_mut() = rect.bottom() * 2 + 1;
 
-    let (mut map, source) = get_map_from_rect(&lines, low, high);
+    let (mut map, source) = get_map_from_rect(&lines, &rect);
 
-    for i in 0..map[high.y].len() {
-        map[high.y][i] = '#';
+    for i in 0..map[rect.bottom()].len() {
+        map[rect.bottom()][i] = '#';
     }
 
     (map, source)

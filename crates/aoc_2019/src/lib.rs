@@ -894,11 +894,11 @@ mod day15 {
 
     use crate::IntCode;
 
-    const DIRS: [(i64, i64); 4] = [
-        ( 0, -1),
-        ( 0,  1),
-        (-1,  0),
-        ( 1,  0),
+    const DIRS: [Vec2i64; 4] = [
+        Vec2i64::new( 0, -1),
+        Vec2i64::new( 0,  1),
+        Vec2i64::new(-1,  0),
+        Vec2i64::new( 1,  0),
     ];
     const OPPOSITES: [i64; 4] = [2, 1, 4, 3];
 
@@ -914,7 +914,7 @@ mod day15 {
 
     fn explore_recurse(robot: &mut IntCode, map: &mut HashSet<Vec2i64>, pos: Vec2i64, target: &mut Vec2i64) {
         for cand in 0..4 {
-            let new_pos = pos + DIRS[cand as usize].into();
+            let new_pos = pos + DIRS[cand as usize];
             if map.contains(&new_pos) {
                 continue;
             }

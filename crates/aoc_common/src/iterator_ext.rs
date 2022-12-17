@@ -63,6 +63,14 @@ pub trait IteratorExt: Iterator
         v.sort_by_cached_key(f);
         v.into_iter()
     }
+
+    fn unique(self) -> std::collections::hash_set::IntoIter<Self::Item>
+    where
+        Self: Sized,
+        Self::Item: Eq + Hash
+    {
+        self.to_set().into_iter()
+    }
 }
 
 impl<T: ?Sized> IteratorExt for T where T: Iterator { }

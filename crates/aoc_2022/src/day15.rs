@@ -27,9 +27,8 @@ fn part1() {
 
     for (sensor, beacon) in input.iter() {
         let manhattan = sensor.manhattan_from(*beacon);
-        let range = range_within_manhattan_on_row(*sensor, row, manhattan);
-
-        if let Some(mut range) = range {
+        
+        if let Some(mut range) = range_within_manhattan_on_row(*sensor, row, manhattan) {
             for existing in ranges.drain(..).to_vec() {
                 if range.0 > existing.1 + 1 || range.1 + 1 < existing.0 {
                     ranges.push(existing);
@@ -49,7 +48,7 @@ fn part1() {
         } else {
             None
         }
-    }).to_set().len();
+    }).unique().count();
 
     let answer = range_on_row - beacons_on_row;
     assert_eq!(answer, 5181556);

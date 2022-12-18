@@ -106,6 +106,29 @@ fn recurse_tsp_1(current: usize, steps: i64, graph: &Graph, min_graph: &MinGraph
     }
 }
 
+fn dynamic_top_down(start: usize, steps: i64, graph: &Graph, min_graph: &MinGraph) -> HashMap<(usize, i64, i64), i64> {
+    let mut queue: VecDeque<(usize, i64, i64, i64)> = VecDeque::new();
+    let mut maxs: HashMap<(usize, i64, i64), i64> = HashMap::new();
+
+    queue.push_back((start, steps, 0, 0));
+
+    while let Some((current, steps, opened, total)) = queue.pop_front() {
+        let current_max = maxs.entry((current, steps, opened)).or_insert(i64::MIN);
+        if total > *current_max {
+            *current_max = total;
+            queue.push_back((current, steps, opened, total));
+        }
+
+        for (adj, dist) in valid_adj(current, graph, min_graph, opened, steps) {
+            let next_steps = steps - (dist + 1);
+            let delta = next_steps * graph[adj].rate;
+            queue.push_back((adj, next_steps, opened | (1 << adj), total + delta));
+        }
+    }
+
+    maxs
+}
+
 type TspCache2 = HashMap<(usize, i64, usize, i64, i64), i64>;
 
 fn recurse_tsp_2(current_0: usize, steps_0: i64, current_1: usize, steps_1: i64, graph: &Graph, min_graph: &MinGraph, visited: i64, full_key: i64, cache: &mut TspCache2) -> i64 {
@@ -194,6 +217,23 @@ fn part1() {
 }
 
 #[test]
+fn part1_top_down() {
+    let (graph, start) = input();
+    let mut min_graph = MinGraph::new();
+
+    min_graph.resize(graph.len(), HashMap::new());
+
+    for i in 0..graph.len() {
+        if graph[i].rate != 0 || i == start {
+            bfs(i, &graph, &mut min_graph);
+        }
+    }
+    let maxs = dynamic_top_down(start, 30, &graph, &min_graph);
+    let max = *maxs.values().max().unwrap();
+    assert_eq!(max, 1796);
+}
+
+#[test]
 fn part2() {
     let (graph, start) = input();
     let mut min_graph = MinGraph::new();
@@ -216,5 +256,30 @@ fn part2() {
     let mut cache = TspCache2::new();
     let max = recurse_tsp_2(start, 26, start, 26, &graph, &min_graph, 1 << start, full_key, &mut cache);
 
+    assert_eq!(max, 1999);
+}
+
+#[test]
+fn part2_top_down() {
+    let (graph, start) = input();
+    let mut min_graph = MinGraph::new();
+
+    min_graph.resize(graph.len(), HashMap::new());
+
+    for i in 0..graph.len() {
+        if graph[i].rate != 0 || i == start {
+            bfs(i, &graph, &mut min_graph);
+        }
+    }
+    let maxs = dynamic_top_down(start, 26, &graph, &min_graph);
+
+    let mut max = 0;
+    for i in maxs.iter() {
+        for j in maxs.iter() {
+            if i.0.2 & j.0.2 == 0 && i.1 + j.1 > max {
+                max = i.1 + j.1;
+            }
+        }
+    }
     assert_eq!(max, 1999);
 }

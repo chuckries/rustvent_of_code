@@ -49,6 +49,10 @@ impl<T: PrimInt> Vec3<T> {
         Self { x: T::zero(), y: T::zero(), z: T::zero() }
     }
 
+    pub fn one() -> Self {
+        Self { x: T::one(), y: T::one(), z: T::one() }
+    }
+
     pub fn unit_x() -> Self {
         Self { x: T::one(), y: T::zero(), z: T::zero() }
     }
@@ -59,6 +63,17 @@ impl<T: PrimInt> Vec3<T> {
 
     pub fn unit_z() -> Self {
         Self { x: T::zero(), y: T::zero(), z: T::one() }
+    }
+
+    pub fn adjacent(&self) -> impl Iterator<Item = Self> {
+        [
+            Self { x: self.x           , y: self.y           , z: self.z - T::one() },
+            Self { x: self.x           , y: self.y           , z: self.z + T::one() },
+            Self { x: self.x           , y: self.y - T::one(), z: self.z            },
+            Self { x: self.x           , y: self.y + T::one(), z: self.z            },
+            Self { x: self.x - T::one(), y: self.y           , z: self.z            },
+            Self { x: self.x + T::one(), y: self.y           , z: self.z            },
+        ].into_iter()
     }
 }
 
@@ -125,6 +140,23 @@ impl<T: PrimInt> std::ops::AddAssign for Vec3<T> {
         self.z = self.z + rhs.z;
     }
 }
+
+impl<T: PrimInt> std::ops::Sub for Vec3<T> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::new(self.x - rhs.x, self.y - rhs.y, self. z - rhs.z)
+    }
+}
+
+impl<T: PrimInt> std::ops::SubAssign for Vec3<T> {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x = self.x - rhs.x;
+        self.y = self.y - rhs.y;
+        self.z = self.z - rhs.z;
+    }
+}
+
 
 impl<T: PrimInt> From<(T, T, T)> for Vec3<T> {
     fn from(v: (T, T, T)) -> Self {

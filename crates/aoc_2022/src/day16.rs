@@ -51,7 +51,7 @@ fn input() -> (Graph, usize) {
 
 fn bfs(start: usize, graph: &Graph, min_graph: &mut MinGraph) {
     let mut queue: VecDeque<(usize, i64)> = VecDeque::new();
-    queue.push_back((start, 0));
+    queue.push_back((start, 1));
 
     let mut visisted: HashSet<usize> = HashSet::new();
     visisted.insert(start);
@@ -76,9 +76,9 @@ fn valid_adj(current: usize, graph: &Graph, min_graph: &MinGraph, visited: i64, 
     min_graph[current].iter().filter(|(adj, dist)| graph[**adj].rate != 0 && (visited & (1 << **adj)) == 0 && *dist + 1 < time_remaining).map(|(a, b)| (*a, *b)).to_vec()
 }
 
-type TspCache = HashMap<(usize, i64, i64), i64>;
+type Cache = HashMap<(usize, i64, i64), i64>;
 
-fn recurse_tsp_1(current: usize, steps: i64, graph: &Graph, min_graph: &MinGraph, visited: i64, full_key: i64, cache: &mut TspCache) -> i64 {
+fn recurse_max(current: usize, steps: i64, graph: &Graph, min_graph: &MinGraph, visited: i64, full_key: i64, cache: &mut Cache) -> i64 {
     let key = (current, steps, visited);
     if let Some(cached) = cache.get(&key) {
         return *cached;
@@ -92,10 +92,10 @@ fn recurse_tsp_1(current: usize, steps: i64, graph: &Graph, min_graph: &MinGraph
     } else {
         let mut max = 0;
         for (adj, dist) in valid_adj {
-            let new_steps = steps - (dist + 1);
+            let new_steps = steps - dist;
             let delta = new_steps * graph[adj].rate;
 
-            let pressure = delta + recurse_tsp_1(adj, new_steps, graph, min_graph, visited | (1 << adj), full_key, cache);
+            let pressure = delta + recurse_max(adj, new_steps, graph, min_graph, visited | (1 << adj), full_key, cache);
             if pressure > max {
                 max = pressure;
             }
@@ -106,87 +106,21 @@ fn recurse_tsp_1(current: usize, steps: i64, graph: &Graph, min_graph: &MinGraph
     }
 }
 
-fn dynamic_top_down(start: usize, steps: i64, graph: &Graph, min_graph: &MinGraph) -> HashMap<(usize, i64, i64), i64> {
-    let mut queue: VecDeque<(usize, i64, i64, i64)> = VecDeque::new();
-    let mut maxs: HashMap<(usize, i64, i64), i64> = HashMap::new();
+fn recurse_states(current: usize, steps: i64, total: i64, graph: &Graph, min_graph: &MinGraph, visited: i64, full_key: i64, best: &mut Cache) {
+    let key = (current, steps, visited);
 
-    queue.push_back((start, steps, 0, 0));
+    let valid_adj = valid_adj(current, graph, min_graph, visited, steps);
 
-    while let Some((current, steps, opened, total)) = queue.pop_front() {
-        let current_max = maxs.entry((current, steps, opened)).or_insert(i64::MIN);
-        if total > *current_max {
-            *current_max = total;
-            queue.push_back((current, steps, opened, total));
-        }
-
-        for (adj, dist) in valid_adj(current, graph, min_graph, opened, steps) {
-            let next_steps = steps - (dist + 1);
-            let delta = next_steps * graph[adj].rate;
-            queue.push_back((adj, next_steps, opened | (1 << adj), total + delta));
-        }
-    }
-
-    maxs
-}
-
-type TspCache2 = HashMap<(usize, i64, usize, i64, i64), i64>;
-
-fn recurse_tsp_2(current_0: usize, steps_0: i64, current_1: usize, steps_1: i64, graph: &Graph, min_graph: &MinGraph, visited: i64, full_key: i64, cache: &mut TspCache2) -> i64 {
-    let key = (current_0, steps_0, current_1, steps_1, visited);
-
-    if let Some(cached) = cache.get(&key) {
-        return *cached;
-    }
-
-    let valid_adj_0 = valid_adj(current_0, graph, min_graph, visited, steps_0);
-    let valid_adj_1 = valid_adj(current_1, graph, min_graph, visited, steps_1);
-
-    if visited == full_key || (valid_adj_0.len() == 0 && valid_adj_1.len() == 0) {
-        cache.insert(key, 0);
-        0
-    } else if valid_adj_1.len() == 0 {
-        let pressure = recurse_tsp_1(current_0, steps_0, graph, min_graph, visited, full_key, &mut TspCache::new());
-        cache.insert(key, pressure);
-        pressure
-    } else if valid_adj_0.len() == 0 {
-        let pressure = recurse_tsp_1(current_1, steps_1, graph, min_graph, visited, full_key, &mut TspCache::new());
-        cache.insert(key, pressure);
-        pressure
+    if visited == full_key || valid_adj.len() == 0 {
+        let max = best.entry(key).or_default();
+        *max = (*max).max(total);
     } else {
+        for (adj, dist) in valid_adj {
+            let new_steps = steps - dist;
+            let delta = new_steps * graph[adj].rate;
 
-        let mut max = 0;
-
-        for (adj_0, dist_0) in valid_adj_0.iter() {
-            for (adj_1, dist_1) in valid_adj_1.iter() {
-                let new_steps_0 = steps_0 - (*dist_0 + 1);
-                let new_steps_1 = steps_1 - (*dist_1 + 1);
-                let delta_0 = new_steps_0 * graph[*adj_0].rate;
-                let delta_1 = new_steps_1 * graph[*adj_1].rate;
-
-                if adj_0 == adj_1 {
-                    let pressure = delta_0 + recurse_tsp_2(*adj_0, new_steps_0, current_1, steps_1, graph, min_graph, visited | (1 << adj_0), full_key, cache);
-                    if pressure > max {
-                        max = pressure;
-                    }
-
-                    let pressure = delta_1 + recurse_tsp_2(current_0, steps_0, *adj_1, new_steps_1, graph, min_graph, visited | (1 << adj_1), full_key, cache);
-                    if pressure > max {
-                        max = pressure;
-                    }
-                } else {
-                    let mut visited = visited;
-                    visited |= 1 << adj_0;
-                    visited |= 1 << adj_1;
-                    let pressure = delta_0 + delta_1 + recurse_tsp_2(*adj_0, new_steps_0, *adj_1, new_steps_1, graph, min_graph, visited, full_key, cache);
-                    if pressure > max {
-                        max = pressure;
-                    }
-                }
-            }
+            recurse_states(adj, new_steps, total + delta, graph, min_graph, visited | (1 << adj), full_key, best);
         }
-
-        cache.insert(key, max);
-        max
     }
 }
 
@@ -210,26 +144,9 @@ fn part1() {
         }
     }
 
-    let mut cache = TspCache::new();
-    let max = recurse_tsp_1(start, 30, &graph, &min_graph, 1 << start, full_key, &mut cache);
+    let mut cache = Cache::new();
+    let max = recurse_max(start, 30, &graph, &min_graph, 0, full_key, &mut cache);
 
-    assert_eq!(max, 1796);
-}
-
-#[test]
-fn part1_top_down() {
-    let (graph, start) = input();
-    let mut min_graph = MinGraph::new();
-
-    min_graph.resize(graph.len(), HashMap::new());
-
-    for i in 0..graph.len() {
-        if graph[i].rate != 0 || i == start {
-            bfs(i, &graph, &mut min_graph);
-        }
-    }
-    let maxs = dynamic_top_down(start, 30, &graph, &min_graph);
-    let max = *maxs.values().max().unwrap();
     assert_eq!(max, 1796);
 }
 
@@ -253,33 +170,17 @@ fn part2() {
         }
     }
 
-    let mut cache = TspCache2::new();
-    let max = recurse_tsp_2(start, 26, start, 26, &graph, &min_graph, 1 << start, full_key, &mut cache);
-
-    assert_eq!(max, 1999);
-}
-
-#[test]
-fn part2_top_down() {
-    let (graph, start) = input();
-    let mut min_graph = MinGraph::new();
-
-    min_graph.resize(graph.len(), HashMap::new());
-
-    for i in 0..graph.len() {
-        if graph[i].rate != 0 || i == start {
-            bfs(i, &graph, &mut min_graph);
-        }
-    }
-    let maxs = dynamic_top_down(start, 26, &graph, &min_graph);
+    let mut cache = Cache::new();
+    recurse_states(start, 26, 0, &graph, &min_graph, 0, full_key, &mut cache);
 
     let mut max = 0;
-    for i in maxs.iter() {
-        for j in maxs.iter() {
-            if i.0.2 & j.0.2 == 0 && i.1 + j.1 > max {
-                max = i.1 + j.1;
+    for i in cache.iter() {
+        for j in cache.iter() {
+            if i.0.2 & j.0.2 == 0 {
+                max = max.max(i.1 + j.1);
             }
         }
     }
+
     assert_eq!(max, 1999);
 }

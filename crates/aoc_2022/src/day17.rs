@@ -1,32 +1,58 @@
+use std::{collections::HashMap};
+
 use aoc_common::{file_string, IteratorExt, Vec2us};
 
-type Piece = &'static [[char; 4]; 4];
+struct Piece {
+    width: usize,
+    height: usize,
+    pattern: [[char; 4]; 4]
+}
 
-const PIECES: [[[char; 4]; 4]; 5] = [
-    [['#', '#', '#', '#'],
-     ['.', '.', '.', '.'],
-     ['.', '.', '.', '.'],
-     ['.', '.', '.', '.']],
-    
-    [['.', '#', '.', '.'],
-     ['#', '#', '#', '.'],
-     ['.', '#', '.', '.'],
-     ['.', '.', '.', '.'],],
+const PIECES: [Piece; 5] = [
+    Piece {
+        width: 4,
+        height: 1,
+        pattern: [['#', '#', '#', '#'],
+                  ['.', '.', '.', '.'],
+                  ['.', '.', '.', '.'],
+                  ['.', '.', '.', '.']],
+    },
 
-    [['#', '#', '#', '.'],
-     ['.', '.', '#', '.'],
-     ['.', '.', '#', '.'],
-     ['.', '.', '.', '.']],
+    Piece {
+        width: 3,
+        height: 3,
+        pattern: [['.', '#', '.', '.'],
+                  ['#', '#', '#', '.'],
+                  ['.', '#', '.', '.'],
+                  ['.', '.', '.', '.']],
+    },
 
-    [['#', '.', '.', '.'],
-     ['#', '.', '.', '.'],
-     ['#', '.', '.', '.'],
-     ['#', '.', '.', '.']],
+    Piece {
+        width: 3,
+        height: 3,
+        pattern : [['#', '#', '#', '.'],
+                   ['.', '.', '#', '.'],
+                   ['.', '.', '#', '.'],
+                   ['.', '.', '.', '.']],
+    },
 
-    [['#', '#', '.', '.'],
-     ['#', '#', '.', '.'],
-     ['.', '.', '.', '.'],
-     ['.', '.', '.', '.']],
+    Piece {
+        width: 1,
+        height: 4,
+        pattern: [['#', '.', '.', '.'],
+                  ['#', '.', '.', '.'],
+                  ['#', '.', '.', '.'],
+                  ['#', '.', '.', '.']],
+    },
+
+    Piece {
+        width: 2,
+        height: 2,
+        pattern: [['#', '#', '.', '.'],
+                  ['#', '#', '.', '.'],
+                  ['.', '.', '.', '.'],
+                  ['.', '.', '.', '.']],
+    },
 ];
 
 struct PieceIter(usize);
@@ -38,7 +64,7 @@ impl PieceIter {
 }
 
 impl Iterator for PieceIter {
-    type Item = Piece;
+    type Item = &'static Piece;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.0 >= PIECES.len() {
@@ -65,13 +91,13 @@ impl Iterator for MoveIter {
     }
 }
 
-struct Board<T: Iterator<Item = Piece>, const N: usize> {
+struct Board<'a, T: Iterator<Item = &'a Piece>, const N: usize> {
     pieces: T,
     board: Vec<[char; N]>,
     max_height: usize,
 }
 
-impl<T: Iterator<Item = Piece>, const N: usize> Board<T, N> {
+impl<'a, T: Iterator<Item = &'a Piece>, const N: usize> Board<'a, T, N> {
     fn new(pieces: T) -> Self {
         Self {
             pieces,
@@ -86,15 +112,13 @@ impl<T: Iterator<Item = Piece>, const N: usize> Board<T, N> {
         }
     }
 
-    fn do_piece(&mut self, moves: &mut MoveIter) -> i64 {
+    fn do_piece(&mut self, moves: &mut MoveIter) {
         let piece = self.pieces.next().unwrap();
         let mut loc = Vec2us::new(2, self.max_height + 3);
-        self.ensure_height(loc.y + 4);
+        self.ensure_height(loc.y + piece.height);
 
-        let mut count = 0;
-        while let Some(dir) = moves.next() {
-            count += 1;
-            match dir {
+        loop {
+            match moves.next().unwrap() {
                 '<' if self.can_move_left(loc, piece) => loc.x -= 1,
                 '>' if self.can_move_right(loc, piece) => loc.x += 1,
                 _ => (),
@@ -104,25 +128,10 @@ impl<T: Iterator<Item = Piece>, const N: usize> Board<T, N> {
                 loc.y -= 1;
             } else {
                 self.place(loc, piece);
-
-                let mut height = 0;
-                for row in piece.iter() {
-                    if row.iter().any(|c| *c == '#') {
-                        height += 1;
-                    } else {
-                        break;
-                    }
-                }
-
-                if loc.y + height > self.max_height {
-                    self.max_height = loc.y + height;
-                }
-
+                self.max_height = self.max_height.max(loc.y + piece.height);
                 break;
             }
         }
-
-        count
     }
 
     fn ensure_height(&mut self, height: usize) {
@@ -131,17 +140,17 @@ impl<T: Iterator<Item = Piece>, const N: usize> Board<T, N> {
         }
     }
 
-    fn place(&mut self, loc: Vec2us, piece: Piece) {
-        for j in 0..piece.len() {
-            for i in 0..piece[j].len() {
-                if piece[j][i] == '#' {
+    fn place(&mut self, loc: Vec2us, piece: &Piece) {
+        for j in 0..piece.height {
+            for i in 0..piece.width{
+                if piece.pattern[j][i] == '#' {
                     self.board[loc.y + j][loc.x + i] = '#';
                 }
             }
         }
     }
 
-    fn can_move_left(&self, loc: Vec2us, piece: Piece) -> bool {
+    fn can_move_left(&self, loc: Vec2us, piece: &Piece) -> bool {
         if loc.x == 0 {
             return false;
         }
@@ -149,11 +158,15 @@ impl<T: Iterator<Item = Piece>, const N: usize> Board<T, N> {
         self.can_place(loc - Vec2us::unit_x(), piece)
     }
 
-    fn can_move_right(&self, loc: Vec2us, piece: Piece) -> bool {
+    fn can_move_right(&self, loc: Vec2us, piece: &Piece) -> bool {
+        if loc.x + piece.width >= N {
+            return false;
+        }
+
         self.can_place(loc + Vec2us::unit_x(), piece)
     }
 
-    fn can_move_down(&self, loc: Vec2us, piece: Piece) -> bool {
+    fn can_move_down(&self, loc: Vec2us, piece: &Piece) -> bool {
         if loc.y == 0 {
             return false;
         }
@@ -161,14 +174,11 @@ impl<T: Iterator<Item = Piece>, const N: usize> Board<T, N> {
         self.can_place(loc - Vec2us::unit_y(), piece)
     }
 
-    fn can_place(&self, loc: Vec2us, piece: Piece) -> bool {
-        for j in 0..piece.len() {
-            for i in 0..piece[j].len() {
-                if piece[j][i] == '#' {
+    fn can_place(&self, loc: Vec2us, piece: &Piece) -> bool {
+        for j in 0..piece.height {
+            for i in 0..piece.width {
+                if piece.pattern[j][i] == '#' {
                     let board_x = loc.x + i;
-                    if board_x >= N {
-                        return false;
-                    }
                     let board_y = loc.y + j;
                     if self.board[board_y][board_x] == '#' {
                         return false;
@@ -192,12 +202,31 @@ fn part1() {
     let moves = MoveIter(0, input);
     board.run(2022, moves);
 
-    // for row in board.board.iter().rev() {
-    //     println!("{}", row.iter().collect::<String>());
-    // }
-
     let answer = board.max_height;
     assert_eq!(answer, 3219);
+}
+
+#[derive(Clone, Copy)]
+struct State {
+    move_delta: usize,
+    total_moves: usize,
+    height_delta: usize,
+    total_height: usize,
+}
+
+impl State {
+    fn new(move_delta: usize, total_moves: usize, height_delta: usize, total_height: usize) -> Self {
+        Self {
+            move_delta,
+            total_moves,
+            height_delta,
+            total_height,
+        }
+    }
+
+    fn empty() -> Self {
+        Self::new(0, 0, 0, 0)
+    }
 }
 
 #[test]
@@ -206,35 +235,39 @@ fn part2() {
     let mut board: Board<_, 7> = Board::new(PieceIter::new());
     let mut moves_iter = MoveIter(0, input);
 
-    // loop {
-    //     board.do_piece(&mut moves_iter);
-    //     if moves_iter.0 >= moves_iter.1.len() {
-    //         break;
-    //     }
-    // }
+    let mut states: HashMap<(usize, usize), State> = HashMap::new();
 
-    // let mut total_moves: i64 = 1000000000000;
+    let mut moves = 0;
 
-    // let mut height_delta = 0;
-    // let mut move_delta = 0;
+    let cycle_state;
+    loop {
+        board.do_piece(&mut moves_iter);
+        moves += 1;
 
-    // 'outer: loop {
-    //     let mut moves = 0;
-    //     let mut height = 0;
+        let previous = states.entry((board.pieces.0, moves_iter.0)).or_insert(State::empty());
 
-    //     loop {
-    //         moves += board.do_piece(&mut moves_iter);
-    //         total_moves -= moves;
-    //         if moves_iter.0 >= moves_iter.1.len() {
-    //             if board.max_height - height == height_delta && moves == move_delta {
-    //                 break 'outer;
-    //             } else {
-    //                 height_delta = board.max_height - height;
-    //                 height = board.max_height;
-    //                 move_delta = moves;
-    //                 moves = 0;
-    //             }
-    //         }
-    //     }
-    // }
+        if board.max_height - previous.total_height == previous.height_delta &&
+           moves - previous.total_moves == previous.move_delta
+        {
+            cycle_state = *previous;
+            break;
+        } else {
+            previous.height_delta = board.max_height - previous.total_height;
+            previous.total_height = board.max_height;
+            previous.move_delta = moves - previous.total_moves;
+            previous.total_moves = moves;
+        }
+    }
+
+    let moves_remaining: usize = 1000000000000 - moves;
+    let cycles = moves_remaining / cycle_state.move_delta;
+    let moves_after_cycles = moves_remaining % cycle_state.move_delta;
+
+    for _ in 0..moves_after_cycles {
+        board.do_piece(&mut moves_iter);
+    }
+
+    let answer = board.max_height + cycles * cycle_state.height_delta;
+
+    assert_eq!(answer, 1582758620701);
 }

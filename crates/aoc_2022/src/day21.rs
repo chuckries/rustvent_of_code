@@ -77,24 +77,24 @@ impl Node {
 }
 
 fn input() -> Node {
-    let lines = file_lines("inputs/day21.txt");
+    let lines = file_lines("inputs/day21.txt").to_vec();
 
-    let map: HashMap<String, Vec<String>> = lines.map(|l| {
-        let split = l.split([' ']).map(|s| s.to_string()).to_vec();
-        (split[0].trim_end_matches(':').to_string(), split)
+    let map: HashMap<&str, Vec<&str>> = lines.iter().map(|l| {
+        let split = l.split([' ']).to_vec();
+        (split[0].trim_end_matches(':'), split)
     }).collect();
 
-    fn get_node(name: &str, map: &HashMap<String, Vec<String>>) -> Node {
+    fn get_node(name: &str, map: &HashMap<&str, Vec<&str>>) -> Node {
         let data = &map[name];
 
         if data.len() == 2 {
-            if name == "humn" {
-                Node::Humn(data[1].parse().unwrap())
-            } else {
-                Node::Leaf(data[1].parse().unwrap())
+            let val = data[1].parse().unwrap();
+            match name {
+                "humn" => Node::Humn(val),
+                _ => Node::Leaf(val),
             }
         } else {
-            let op = match data[2].as_str() {
+            let op = match data[2] {
                 "+" => Op::Add,
                 "-" => Op::Sub,
                 "/" => Op::Div,

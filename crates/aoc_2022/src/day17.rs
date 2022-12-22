@@ -206,27 +206,12 @@ fn part1() {
     assert_eq!(answer, 3219);
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 struct State {
-    move_delta: usize,
-    total_moves: usize,
+    piece_delta: usize,
+    total_pieces: usize,
     height_delta: usize,
     total_height: usize,
-}
-
-impl State {
-    fn new(move_delta: usize, total_moves: usize, height_delta: usize, total_height: usize) -> Self {
-        Self {
-            move_delta,
-            total_moves,
-            height_delta,
-            total_height,
-        }
-    }
-
-    fn empty() -> Self {
-        Self::new(0, 0, 0, 0)
-    }
 }
 
 #[test]
@@ -237,33 +222,33 @@ fn part2() {
 
     let mut states: HashMap<(usize, usize), State> = HashMap::new();
 
-    let mut moves = 0;
+    let mut pieces = 0;
 
     let cycle_state;
     loop {
         board.do_piece(&mut moves_iter);
-        moves += 1;
+        pieces += 1;
 
-        let previous = states.entry((board.pieces.0, moves_iter.0)).or_insert(State::empty());
+        let previous = states.entry((board.pieces.0, moves_iter.0)).or_insert(State::default());
 
-        if board.max_height - previous.total_height == previous.height_delta &&
-           moves - previous.total_moves == previous.move_delta
+        if pieces - previous.total_pieces == previous.piece_delta &&
+           board.max_height - previous.total_height == previous.height_delta
         {
             cycle_state = *previous;
             break;
         } else {
+            previous.piece_delta = pieces - previous.total_pieces;
+            previous.total_pieces = pieces;
             previous.height_delta = board.max_height - previous.total_height;
             previous.total_height = board.max_height;
-            previous.move_delta = moves - previous.total_moves;
-            previous.total_moves = moves;
         }
     }
 
-    let moves_remaining: usize = 1000000000000 - moves;
-    let cycles = moves_remaining / cycle_state.move_delta;
-    let moves_after_cycles = moves_remaining % cycle_state.move_delta;
+    let pieces_remaining: usize = 1000000000000 - pieces;
+    let cycles = pieces_remaining / cycle_state.piece_delta;
+    let pieces_after_cycles = pieces_remaining % cycle_state.piece_delta;
 
-    for _ in 0..moves_after_cycles {
+    for _ in 0..pieces_after_cycles {
         board.do_piece(&mut moves_iter);
     }
 

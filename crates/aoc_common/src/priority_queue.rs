@@ -66,4 +66,8 @@ impl<T, P> PriorityQueue<T, P>
     pub fn peek_with_priority(&self) -> Option<(&T, &P)> {
         self.heap.peek().and_then(|w| Some((&w.item, &w.priority)))
     }
+
+    pub fn clear(&mut self) {
+        self.heap.clear();
+    }
 }

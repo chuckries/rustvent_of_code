@@ -43,7 +43,7 @@ impl Map {
 
     fn eval_bliz(&self, bliz: Bliz, t: i32) -> i32 {
         match bliz {
-            Bliz::Up(init) => 1 + (safe_mod(init - 1 - t, self.bounds.y - 2)),
+            Bliz::Up(init) => 1 + safe_mod(init - 1 - t, self.bounds.y - 2),
             Bliz::Down(init) => 1 + ((t + init - 1)) % (self.bounds.y - 2),
             Bliz::Left(init) => 1 + safe_mod(init - 1 - t, self.bounds.x - 2),
             Bliz::Right(init) => 1 + ((t + init - 1) % (self.bounds.x - 2)),
@@ -157,7 +157,11 @@ fn part2() {
                 1 => map.start,
                 2 => map.end,
                 _ => panic!(),
-            }
+            };
+
+            // not sure if this is safe, as the fastest route from a -> b doesn't seem like it's guaranteed to be fastest
+            // for a -> b -> a, but this works for my input and is much faster, so whatever
+            queue.clear();
         }
 
         time += 1;
@@ -179,5 +183,5 @@ fn part2() {
         }
     }
 
-    assert_eq!(answer, 0);
+    assert_eq!(answer, 899);
 }

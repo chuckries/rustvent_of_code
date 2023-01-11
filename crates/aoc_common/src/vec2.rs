@@ -1,4 +1,4 @@
-use std::ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div};
+use std::{ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div}};
 use num_traits::{PrimInt, Signed};
 
 pub type Vec2us = Vec2<usize>;
@@ -15,7 +15,7 @@ pub type Vec2i64 = Vec2<i64>;
 pub type Vec2i128 = Vec2<i128>;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
-pub struct Vec2<T: PrimInt> {
+pub struct Vec2<T> {
     pub x: T,
     pub y: T,
 }
@@ -78,6 +78,19 @@ impl<T: PrimInt> Vec2<T> {
         if self.y < bounds.y - T::one()     { adj.push(Self { x: self.x           , y: self.y + T::one() }) }
 
         adj.into_iter()
+    }
+
+    pub fn surrounding_unbounded(&self) -> impl Iterator<Item = Self> {
+        [
+            Self { x: self.x - T::one(), y: self.y - T::one() },
+            Self { x: self.x - T::one(), y: self.y            },
+            Self { x: self.x - T::one(), y: self.y + T::one() },
+            Self { x: self.x           , y: self.y - T::one() },
+            Self { x: self.x           , y: self.y + T::one() },
+            Self { x: self.x + T::one(), y: self.y - T::one() },
+            Self { x: self.x + T::one(), y: self.y            },
+            Self { x: self.x + T::one(), y: self.y + T::one() },
+        ].into_iter()
     }
 
     pub fn surrouding_bounded(&self, bounds: &Self) -> impl Iterator<Item = Self> {

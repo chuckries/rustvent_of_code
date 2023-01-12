@@ -222,9 +222,7 @@ impl<'a, const N: usize> FaceView<'a, N> {
     }
 
     fn map_idx(&self, p: Vec2i32) -> Vec2us {
-        let rot = (self.cube.faces[self.face].initial_rotation + 4 - self.rotation) % 4;
-
-        let offset = match rot {
+        let offset = match self.rotation {
             0 => p,
             1 => Vec2i32::new(p.y, N as i32 - p.x - 1),
             2 => Vec2i32::new(N as i32 - p.x - 1, N as i32 - p.y - 1),
@@ -286,7 +284,7 @@ impl<const N: usize> Cube<N> {
         }
     }
 
-    fn print_front_face(&self, orientation: Orientation) {
+    fn _print_front_face(&self, orientation: Orientation) {
         let face = self.get_front_face(orientation);
 
         for j in 0..N {
@@ -296,11 +294,11 @@ impl<const N: usize> Cube<N> {
             println!();
         }
     }
-}
 
-impl<'a, const N: usize> Cube<N> {
-    fn get_front_face(&'a self, orientation: Orientation) -> FaceView<'a, N> {
+    fn get_front_face<'a>(&'a self, orientation: Orientation) -> FaceView<'a, N> {
         let (face, rotation) = orientation.get_front_face_and_rotation();
+        let rotation = (self.faces[face].initial_rotation + 4 - rotation) % 4;
+
         FaceView {
             cube: self,
             face,
@@ -363,11 +361,10 @@ fn part2() {
         }
     }
 
-    let map_pos = cube.get_front_face(orientation).map_idx(pos);
+    let front = cube.get_front_face(orientation);
+    let map_pos = front.map_idx(pos);
 
-    let (face, rot) = orientation.get_front_face_and_rotation();
-    let rot = (cube.faces[face].initial_rotation + 4 - rot) % 4;
-    for _ in 0..rot {
+    for _ in 0..front.rotation {
         dir = dir.rotate_left();
     }
 
@@ -379,5 +376,5 @@ fn part2() {
         _ => panic!()
     };
 
-    assert_eq!(answer, 0);
+    assert_eq!(answer, 143208);
 }

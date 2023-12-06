@@ -1,41 +1,44 @@
 use aoc_common::{file_lines, IteratorExt};
 
-fn input() -> Vec<Vec<i64>> {
-    file_lines("inputs/day06.txt").map(|l| {
-        l.split_whitespace().skip(1).map(|n| n.parse().unwrap()).to_vec()
-    }).to_vec()
+fn input<F, T>(f: F) -> (T, T)
+    where F: Fn(&[&str]) -> T
+{
+    let lines = file_lines("inputs/day06.txt");
+    let mut items = lines.map(|l| {
+        let numbers = l.split_whitespace().skip(1).to_vec();
+        f(&numbers)
+    });
+
+    (items.next().unwrap(), items.next().unwrap())
 }
 
-fn solve_bounds(time: i64, distance: i64) -> (i64, i64) {
+fn solve_bounds(time: i64, distance: i64) -> i64 {
     let sqrt = f64::sqrt((time * time - 4 * distance) as f64);
 
     let low = f64::ceil((time as f64 - sqrt) / 2.0) as i64;
     let high = f64::floor((time as f64 + sqrt) / 2.0) as i64;
-    (low, high)
+
+    high - low + 1
 }
 
 #[test]
 fn part1() {
-    let input = input();
-    let times = &input[0];
-    let distances = &input[1];
+    let (times, distances) = input(|nums| {
+        nums.iter().map(|n| n.parse::<i64>().unwrap()).to_vec()
+    });
 
-    let mut total = 1;
-    for (t, d) in times.iter().zip(distances) {
-        let (low, high) = solve_bounds(*t, *d);
-        total *= high - low + 1;
-    }
+    let answer: i64 = times.into_iter().zip(distances).map(|(t, d)| solve_bounds(t, d)).product();
 
-    assert_eq!(741000, total);
+    assert_eq!(741000, answer);
 }
 
 #[test]
 fn part2() {
-    let input = input();
-    let input = input.iter().map(|v| v.iter().map(|n| n.to_string()).to_vec().join("").parse::<i64>().unwrap()).to_vec();
+    let (time, distance) = input(|nums| {
+        nums.join("").parse::<i64>().unwrap()
+    });
 
-    let (low, high) = solve_bounds(input[0], input[1]);
-    let answer = high - low + 1;
+    let answer = solve_bounds(time, distance);
 
     assert_eq!(38220708, answer);
 }

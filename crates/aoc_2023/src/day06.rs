@@ -3,8 +3,7 @@ use aoc_common::{file_lines, IteratorExt};
 fn input<F, T>(f: F) -> (T, T)
     where F: Fn(&[&str]) -> T
 {
-    let lines = file_lines("inputs/day06.txt");
-    let mut items = lines.map(|l| {
+    let mut items = file_lines("inputs/day06.txt").map(|l| {
         let numbers = l.split_whitespace().skip(1).to_vec();
         f(&numbers)
     });

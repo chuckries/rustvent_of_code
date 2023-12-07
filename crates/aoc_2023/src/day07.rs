@@ -46,48 +46,27 @@ fn get_hand_type(hand: &[char], jacks_wild: bool) -> HandType {
         }
     }
 
-    if map.len() == 1 || wilds == 5 || wilds == 4 {
-        FiveOfAKind
-    } else if wilds == 3 {
-        FourOfAKind
-    } else if wilds == 2 {
-        if map.len() == 3 {
-            ThreeOfAKind
-        } else {
-            FourOfAKind
-        }
-    } else if wilds == 1 {
-        if map.len() == 2 {
-            if *map.values().max().unwrap() == 3 {
-                FourOfAKind
-            } else {
-                FullHouse
-            }
-        } else if map.len() == 3 {
-            ThreeOfAKind
-        } else {
-            OnePair
-        }
-    } else if wilds == 0 {
-        if map.len() == 2 {
-            if *map.values().max().unwrap() == 4 {
-                FourOfAKind
-            } else {
-                FullHouse
-            } 
-        } else if map.len() == 3 {
-            if *map.values().max().unwrap() == 3 {
-                ThreeOfAKind
-            } else {
-                TwoPair
-            }
-        } else if map.len() == 4 { 
-            OnePair
-        } else {
-            HighCard
-        }
-    }  else {
-        panic!()
+    let count_buckets = map.len();
+    let max_bucket = map.values().copied().max().unwrap_or_default();
+
+    match (wilds, count_buckets, max_bucket) {
+        (_, 1, _) => FiveOfAKind,
+        (5, _, _) => FiveOfAKind,
+        (4, _, _) => FiveOfAKind,
+        (3, _, _) => FourOfAKind,
+        (2, 2, _) => FourOfAKind,
+        (2, 3, _) => ThreeOfAKind,
+        (1, 2, 3) => FourOfAKind,
+        (1, 2, 2) => FullHouse,
+        (1, 3, _) => ThreeOfAKind,
+        (1, 4, _) => OnePair,
+        (0, 2, 4) => FourOfAKind,
+        (0, 2, 3) => FullHouse,
+        (0, 3, 3) => ThreeOfAKind,
+        (0, 3, 2) => TwoPair,
+        (0, 4, _) => OnePair,
+        (0, 5, _) => HighCard,
+        _ => panic!(),
     }
 }
 
@@ -109,12 +88,7 @@ fn run(jacks_wild: bool) -> i64 {
         ord
     });
 
-    let mut total: i64 = 0;
-    for (idx, hand) in scored_hands.iter().enumerate() {
-        total += (idx as i64 + 1) * hand.1 as i64;
-    }
-
-    total
+    scored_hands.into_iter().enumerate().map(|(idx, (_, bid, _))| { (idx as i64 + 1) * bid as i64 }).sum()
 }
 
 #[test]

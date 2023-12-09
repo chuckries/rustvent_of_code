@@ -21,21 +21,21 @@ fn extrapolate(seed: Vec<i64>) -> i64 {
     stack.iter().sum()
 }
 
+fn run(reverse: bool) -> i64 {
+    input().into_iter().map(|mut seed| {
+        if reverse { seed.reverse(); }
+        extrapolate(seed)
+    }).sum()
+}
+
 #[test]
 fn part1() {
-    let answer: i64 = input().into_iter().map(|seed| {
-        extrapolate(seed)
-    }).sum();
-
+    let answer = run(false);
     assert_eq!(1789635132, answer);
 }
 
 #[test]
 fn part2() {
-    let answer: i64 = input().into_iter().map(|mut seed| {
-        seed.reverse();
-        extrapolate(seed)
-    }).sum();
-
+    let answer = run(true);
     assert_eq!(913, answer);
 }

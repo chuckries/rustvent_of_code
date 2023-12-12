@@ -167,6 +167,22 @@ impl<T:PrimInt + Signed> Vec2<T> {
     pub fn signum(&self) -> Self {
         Self { x: self.x.signum(), y: self.y.signum() }
     }
+
+    pub fn north_of(&self) -> Self {
+        *self - Self::unit_y()
+    }
+
+    pub fn south_of(&self) -> Self {
+        *self + Self::unit_y()
+    }
+
+    pub fn west_of(&self) -> Self {
+        *self - Self::unit_x()
+    }
+
+    pub fn east_of(&self) -> Self {
+        *self + Self::unit_x()
+    }
 }
 
 macro_rules! manhattan_unsigned {

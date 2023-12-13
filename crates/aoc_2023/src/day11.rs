@@ -28,11 +28,7 @@ fn run(multiplier: usize) -> usize {
         let mut idx = 0;
         for b in bools {
             transform.push(idx);
-            idx += 1;
-
-            if !b {
-                idx += multiplier - 1;
-            }
+            idx += if b { 1 } else { multiplier };
         }
 
         transform

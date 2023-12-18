@@ -233,12 +233,20 @@ impl <T: PrimInt + std::fmt::Display> std::fmt::Display for Vec2<T> {
 }
 
 impl <T: PrimInt + Neg<Output = T>> Vec2<T> {
-    pub fn rotate_left(&self) -> Self {
+    pub fn rotated_left(&self) -> Self {
         Self { x: self.y, y: -self.x }
     }
 
-    pub fn rotate_right(&self) -> Self {
+    pub fn rotated_right(&self) -> Self {
         Self { x: -self.y, y: self. x }
+    }
+
+    pub fn rotate_left(&mut self) {
+        (self.x, self.y) = (self.y, -self.x);
+    }
+
+    pub fn rotate_right(&mut self) {
+        (self.x, self.y) = (-self.y, self.x);
     }
 }
 

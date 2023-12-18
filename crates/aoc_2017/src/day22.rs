@@ -49,8 +49,8 @@ fn run(iterations: usize, matcher: impl Fn(Vec2i32, State) -> (Vec2i32, State)) 
 fn part1() {
     let answer = run(10000, |dir, state| {
         match state {
-            State::Clean => (dir.rotate_left(), State::Infected),
-            State::Infected => (dir.rotate_right(), State::Clean),
+            State::Clean => (dir.rotated_left(), State::Infected),
+            State::Infected => (dir.rotated_right(), State::Clean),
             _ => panic!(),
         }
     });
@@ -62,9 +62,9 @@ fn part1() {
 fn part2() {
     let answer = run(10000000, |dir, state| {
         match state {
-            State::Clean => (dir.rotate_left(), State::Weakened),
+            State::Clean => (dir.rotated_left(), State::Weakened),
             State::Weakened => (dir, State::Infected),
-            State::Infected => (dir.rotate_right(), State::Flagged),
+            State::Infected => (dir.rotated_right(), State::Flagged),
             State::Flagged => (-dir, State::Clean),
         }
     });

@@ -50,8 +50,8 @@ fn part1() {
         match d {
             Dir::Turn(c) => {
                 dir = match c {
-                    'L' => dir.rotate_left(),
-                    'R' => dir.rotate_right(),
+                    'L' => dir.rotated_left(),
+                    'R' => dir.rotated_right(),
                     _ => panic!(),
                 };
             },
@@ -326,8 +326,8 @@ fn part2() {
         match d {
             Dir::Turn(c) => {
                 dir = match c {
-                    'L' => dir.rotate_left(),
-                    'R' => dir.rotate_right(),
+                    'L' => dir.rotated_left(),
+                    'R' => dir.rotated_right(),
                     _ => panic!(),
                 };
             },
@@ -365,7 +365,7 @@ fn part2() {
     let map_pos = front.map_idx(pos);
 
     for _ in 0..front.rotation {
-        dir = dir.rotate_left();
+        dir = dir.rotated_left();
     }
 
     let answer = ((map_pos.y + 1) * 1000) + ((map_pos.x + 1) * 4) + match (dir.x, dir.y) {

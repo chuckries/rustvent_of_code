@@ -38,6 +38,10 @@ pub fn file_lines_as<T>(path: &str) -> impl Iterator<Item = T>
     file_lines(path).map(|l| l.parse().expect("failed to parse line from file"))
 }
 
+pub fn file_2d_map(path: &str) -> Vec<Vec<char>> {
+    file_lines(path).map(|l| l.chars().to_vec()).to_vec()
+}
+
 pub fn gcf<T: PrimInt>(mut a: T, mut b: T) -> T {
     loop {
         let remainder = a % b;

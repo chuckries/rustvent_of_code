@@ -584,9 +584,9 @@ mod day11 {
 
                 let turn = robot.run().unwrap();
                 dir = if turn == 0 {
-                    dir.rotate_left()
+                    dir.rotated_left()
                 } else {
-                    dir.rotate_right()
+                    dir.rotated_right()
                 };
                 pos += dir;
             } else {
@@ -1125,15 +1125,15 @@ mod day17 {
         let mut dir = Vec2i64::new(0, -1);
         let mut path: Vec<i32> = Vec::new();
         loop {
-            let left = pos + dir.rotate_left();
+            let left = pos + dir.rotated_left();
             if left.is_in_bounds(bounds) && map[left.y as usize][left.x as usize] == b'#' {
                 path.push(-1);
-                dir = dir.rotate_left();
+                dir = dir.rotated_left();
             } else {
-                let right = pos + dir.rotate_right();
+                let right = pos + dir.rotated_right();
                 if right.is_in_bounds(bounds) && map[right.y as usize][right.x as usize] == b'#' {
                     path.push(-2);
-                    dir = dir.rotate_right();
+                    dir = dir.rotated_right();
                 } else {
                     break;
                 }

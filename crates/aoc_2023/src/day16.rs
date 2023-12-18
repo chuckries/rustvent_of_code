@@ -39,28 +39,28 @@ fn run (mut map: Vec<Vec<char>>, start_pos: Vec2i32, start_dir: Vec2i32) -> i32 
                 }
                 '\\' => {
                     match (dir.x, dir.y) {
-                        ( 1,  0) | (-1,  0) => dir = dir.rotate_right(),
-                        ( 0,  1) | ( 0, -1) => dir = dir.rotate_left(),
+                        ( 1,  0) | (-1,  0) => dir.rotate_right(),
+                        ( 0,  1) | ( 0, -1) => dir.rotate_left(),
                         _ => panic!()
                     }
                 }
                 '/' => {
                     match (dir.x, dir.y) {
-                        ( 1,  0) | (-1,  0) => dir = dir.rotate_left(),
-                        ( 0,  1) | ( 0, -1) => dir = dir.rotate_right(),
+                        ( 1,  0) | (-1,  0) => dir.rotate_left(),
+                        ( 0,  1) | ( 0, -1) => dir.rotate_right(),
                         _ => panic!()
                     }
                 }
                 '-' => {
                     if matches!((dir.x, dir.y), (0, -1) | (0, 1)) {
-                        queue.push_back((pos, dir.rotate_left()));
-                        dir = dir.rotate_right();
+                        queue.push_back((pos, dir.rotated_left()));
+                        dir.rotate_right();
                     }
                 }
                 '|' => {
                     if matches!((dir.x, dir.y), (-1, 0) | (1, 0)) {
-                        queue.push_back((pos, dir.rotate_left()));
-                        dir = dir.rotate_right();
+                        queue.push_back((pos, dir.rotated_left()));
+                        dir.rotate_right();
                     }
                 }
                 'v' | '^' => {

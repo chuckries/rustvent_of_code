@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use aoc_common::{file_lines, IteratorExt};
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy, Debug)]
 struct Part {
     x: i32,
     m: i32,
@@ -13,6 +13,26 @@ struct Part {
 impl Part {
     fn sum(&self) -> i32 {
         self.x + self.m + self.a + self.s
+    }
+
+    fn x_mut(&mut self) -> &mut i32 {
+        &mut self.x
+    }
+
+    fn m_mut(&mut self) -> &mut i32 {
+        &mut self.m
+    }
+
+    fn a_mut(&mut self) -> &mut i32 {
+        &mut self.a
+    }
+
+    fn s_mut(&mut self) -> &mut i32 {
+        &mut self.s
+    }
+
+    fn volume(min: Self, max: Self) -> usize {
+        (max.x - min.x + 1) as usize * (max.m - min.m + 1) as usize * (max.a - min.a + 1) as usize * (max.s - min.s + 1) as usize
     }
 }
 
@@ -26,7 +46,6 @@ enum Category {
 
 #[derive(Clone)]
 enum RuleResult {
-    None,
     Accept,
     Reject,
     Workflow(String),
@@ -43,10 +62,10 @@ enum Rule {
 }
 
 impl Rule {
-    fn evaluate(&self, part: &Part) -> RuleResult {
+    fn evaluate(&self, part: &Part) -> Option<RuleResult> {
         match self {
             Self::Conditional(category, op, constant, result) => {
-                let property = match *category {
+                let category = match *category {
                     Category::X => part.x,
                     Category::M => part.m,
                     Category::A => part.a,
@@ -54,17 +73,17 @@ impl Rule {
                 };
 
                 let meets_condition = match *op {
-                    Op::Lt => property < *constant,
-                    Op::Gt => property > *constant,
+                    Op::Lt => category < *constant,
+                    Op::Gt => category > *constant,
                 };
 
                 if meets_condition {
-                    result.clone()
+                    Some(result.clone())
                 } else {
-                    RuleResult::None
+                    None
                 }
             }
-            Self::Unconditional(result) => result.clone(),
+            Self::Unconditional(result) => Some(result.clone()),
         }
     }
 }
@@ -77,8 +96,7 @@ struct Workflow {
 impl Workflow {
     fn evaluate(&self, part: &Part) -> RuleResult {
         for rule in self.rules.iter() {
-            let result = rule.evaluate(part);
-            if !matches!(result, RuleResult::None) {
+            if let Some(result) = rule.evaluate(part) {
                 return result;
             }
         }
@@ -87,7 +105,7 @@ impl Workflow {
     }
 }
 
-fn input() -> (Vec<Workflow>, Vec<Part>) {
+fn input() -> (HashMap<String, Workflow>, Vec<Part>) {
     let mut lines = file_lines("inputs/day19.txt");
 
     let mut workflows: Vec<Workflow> = Vec::new();
@@ -116,11 +134,11 @@ fn input() -> (Vec<Workflow>, Vec<Part>) {
                 let result = parts[1];
 
                 let op_idx = cmp.find(|c| matches!(c, '<' | '>')).unwrap();
-                let prop = &cmp[0..op_idx];
+                let category = &cmp[0..op_idx];
                 let op = &cmp[op_idx..op_idx + 1];
                 let constant: i32 = cmp[op_idx + 1 ..].parse().unwrap();
 
-                let prop = match prop {
+                let category = match category {
                     "x" => Category::X,
                     "m" => Category::M,
                     "a" => Category::A,
@@ -140,7 +158,7 @@ fn input() -> (Vec<Workflow>, Vec<Part>) {
                     _ => RuleResult::Workflow(result.to_string()),
                 };
 
-                rules.push(Rule::Conditional(prop, op, constant, result));
+                rules.push(Rule::Conditional(category, op, constant, result));
             }
         }
 
@@ -166,16 +184,14 @@ fn input() -> (Vec<Workflow>, Vec<Part>) {
         parts.push(part);
     }
 
+    let workflows: HashMap<String, Workflow> = workflows.into_iter().map(|w| (w.name.clone(), w)).collect();
+
     (workflows, parts)
 }
 
 #[test]
 fn part1() {
-    let (rules, parts) = input();
-    let mut workflows: HashMap<String, Workflow> = HashMap::new();
-    for w in rules {
-        workflows.insert(w.name.clone(), w);
-    }
+    let (workflows, parts) = input();
 
     let answer: i32 = parts.iter().filter_map(|p| {
         let mut current = &workflows["in"];
@@ -184,10 +200,162 @@ fn part1() {
                 RuleResult::Accept => return Some(p.sum()),
                 RuleResult::Reject => return None,
                 RuleResult::Workflow(next) => current = &workflows[&next],
-                _ => panic!()
             };
         }
     }).sum();
 
     assert_eq!(509597, answer);
+}
+
+struct State {
+    workflow: String,
+    min: Part,
+    max: Part,
+}
+
+#[test]
+fn part2() {
+    let (workflows, _) = input();
+
+    let mut queue: VecDeque<State> = VecDeque::new();
+    queue.push_back(State {
+        workflow: "in".to_string(),
+        min: Part { x: 1, m: 1, a: 1, s: 1 },
+        max: Part { x: 4000, m: 4000, a: 4000, s: 4000 },
+    });
+
+    let mut accepted: Vec<(Part, Part)> = Vec::new();
+
+    while let Some(State { workflow, mut min, mut max }) = queue.pop_front() {
+        let workflow = &workflows[&workflow];
+
+        for rule in workflow.rules.iter() {
+            match rule {
+                Rule::Unconditional(result) => {
+                    match result {
+                        RuleResult::Accept => accepted.push((min, max)),
+                        RuleResult::Reject => (),
+                        RuleResult::Workflow(workflow) => {
+                            queue.push_back(State {
+                                workflow: workflow.clone(),
+                                min,
+                                max
+                            });
+                        }
+                    }
+                },
+                Rule::Conditional(category, op, constant, result) => {
+                    let selector = match category {
+                        Category::X => Part::x_mut,
+                        Category::M => Part::m_mut,
+                        Category::A => Part::a_mut,
+                        Category::S => Part::s_mut,
+                    };
+
+                    let min_prop = *selector(&mut min);
+                    let max_prop = *selector(&mut max);
+
+                    let (range_in, range_out): (Option<(Part,Part)>, Option<(Part, Part)>) = match op {
+                        Op::Lt => {
+                            let mut range_in = None;
+                            let mut range_out = None;
+
+                            if min_prop < *constant {
+                                let min_in = min;
+                                let mut max_in = max;
+                                *selector(&mut max_in) = max_prop.min(*constant - 1);
+                                range_in = Some((min_in, max_in));
+                            }
+
+                            if max_prop >= *constant {
+                                let mut min_out = min;
+                                let max_out = max;
+                                *selector(&mut min_out) = min_prop.max(*constant);
+                                range_out = Some((min_out, max_out));
+                            }
+
+                            (range_in, range_out)
+                        },
+                        Op:: Gt => {
+                            let mut range_in = None;
+                            let mut range_out = None;
+
+                            if max_prop > *constant {
+                                let mut min_in = min;
+                                let max_in = max;
+                                *selector(&mut min_in) = min_prop.max(*constant + 1);
+                                range_in = Some((min_in, max_in));
+                            }
+
+                            if min_prop <= *constant {
+                                let min_out = min;
+                                let mut max_out = max;
+                                *selector(&mut max_out) = max_prop.min(*constant);
+                                range_out = Some((min_out, max_out));
+                            }
+
+                            (range_in, range_out)
+                        }
+                    };
+
+                    if let Some((min_in, max_in)) = range_in {
+                        match result {
+                            RuleResult::Accept => accepted.push((min_in, max_in)),
+                            RuleResult::Reject => (),
+                            RuleResult::Workflow(next_workflow) => {
+                                queue.push_back(State {
+                                    workflow: next_workflow.clone(),
+                                    min: min_in,
+                                    max: max_in,
+                                });
+                            }
+                        }
+                    }
+
+                    if let Some((min_out, max_out)) = range_out {
+                        min = min_out;
+                        max = max_out;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    let mut total_volume: usize = 0;
+    let mut added: Vec<(Part, Part)> = Vec::new();
+    for (min, max) in accepted {
+        total_volume += Part::volume(min, max);
+
+        for (existing_min, existing_max) in added.iter() {
+            if min.x > existing_max.x || max.x < existing_min.x ||
+               min.m > existing_max.m || max.m < existing_min.m ||
+               min.a > existing_max.a || max.a < existing_min.a ||
+               min.s > existing_max.s || max.s < existing_min.s {
+                continue;
+            }
+
+            let overlapped_min = Part {
+                x: min.x.max(existing_min.x),
+                m: min.m.max(existing_min.m),
+                a: min.a.max(existing_min.a),
+                s: min.s.max(existing_min.s),
+            };
+
+            let overlapped_max = Part {
+                x: max.x.min(existing_max.x),
+                m: max.m.min(existing_max.m),
+                a: max.a.min(existing_max.a),
+                s: max.s.min(existing_max.s),
+            };
+
+            let overlapped_volume = Part::volume(overlapped_min, overlapped_max);
+            total_volume -= overlapped_volume;
+        }
+
+        added.push((min, max));
+    }
+
+    assert_eq!(143219569011526, total_volume);
 }

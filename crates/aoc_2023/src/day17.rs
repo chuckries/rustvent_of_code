@@ -60,7 +60,7 @@ fn run<const MIN: i32, const MAX: usize>() -> i32 {
             continue;
         }
         *has_visited = true;
-
+        
         if state.steps < MAX as i32 {
             nexts.push((state.pos + state.dir, state.dir, state.steps + 1));
         }

@@ -243,7 +243,7 @@ fn run(input: &[(char, i64)]) -> i64 {
 }
 
 #[test]
-fn part1_2() {
+fn part1() {
     let input = file_lines("inputs/day18.txt").map(|l| {
         let mut split = l.split_whitespace();
         (split.next().unwrap().chars().next().unwrap(), split.next().unwrap().parse().unwrap())

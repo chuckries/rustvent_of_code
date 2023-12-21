@@ -156,10 +156,10 @@ fn part2() {
                 let root_source = sources.get_mut(&signal.src).unwrap();
                 if root_source.is_none() {
                     *root_source = Some(presses);
-                }
 
-                if sources.values().all(|v| v.is_some()) {
-                    break 'outer;
+                    if sources.values().all(|v| v.is_some()) {
+                        break 'outer;
+                    }
                 }
             }
 

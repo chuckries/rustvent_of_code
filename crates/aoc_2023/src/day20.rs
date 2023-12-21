@@ -1,6 +1,6 @@
 use std::{collections::{VecDeque, HashMap}, fmt::Debug};
 
-use aoc_common::{file_lines, IteratorExt};
+use aoc_common::{file_lines, IteratorExt, lcm};
 
 struct Signal {
     src: String,
@@ -169,6 +169,6 @@ fn part2() {
         }
     }
 
-    let answer: usize = sources.values().map(|v| v.unwrap()).product();
+    let answer: usize = lcm(&sources.values().map(|v| v.unwrap()).to_vec());
     assert_eq!(229215609826339, answer);
 }

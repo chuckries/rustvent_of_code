@@ -161,15 +161,15 @@ fn part2() {
     // 2: (2, 3)
     // n: (n, n + 1)
 
-    let primaries = (interior_distance * (interior_distance - 1) ) / 2;
-    let alternates = ((interior_distance + 1) * interior_distance) / 2;
+    let primaries = ((interior_distance - 1) * interior_distance) / 2;
+    let alternates = primaries + interior_distance;
 
     // double both of them
     let primaries = primaries * 2;
     let alternates = alternates * 2;
 
     // add the center line
-    let interior_width_of_center_line = 2 * height_in_one_dir_inclusive - 3;
+    let interior_width_of_center_line = 2 * interior_distance + 1;
     let primaries = primaries + interior_width_of_center_line / 2;
     let alternates = alternates + interior_width_of_center_line / 2 + 1;
 

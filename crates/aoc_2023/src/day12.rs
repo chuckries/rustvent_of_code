@@ -1,128 +1,88 @@
-use std::iter;
+use std::collections::HashMap;
 
 use aoc_common::{file_lines, IteratorExt};
 
-fn input() -> Vec<(Vec<u8>, Vec<usize>)> {
+fn input(repeats: usize) -> Vec<(Vec<u8>, Vec<usize>)> {
     file_lines("inputs/day12.txt").map(|l| {
         let mut split = l.split(' ');
-        let puzzle = split.next().unwrap().bytes().collect();
-        let clues = split.next().unwrap().split(',').map(|s| s.parse().unwrap()).to_vec();
+
+        let puzzle = split.next().unwrap();
+        let puzzle = vec![puzzle; repeats].join("?");
+        let puzzle = puzzle.bytes().collect();
+
+        let clues = split.next().unwrap();
+        let clues = vec![clues; repeats].join(",");
+        let clues = clues.split(',').map(|s| s.parse().unwrap()).to_vec();
         (puzzle, clues)
     }).to_vec()
 }
 
-fn generate_solutions(puzzle: &[u8], clues: &[usize], buff: Vec<u8>, idx: usize) -> usize {
-    if clues.len() == 0 {
-        panic!();
-    }
+fn generate_solutions(puzzle: &[u8], clues: &[usize]) -> usize {
+    return generate_solutions_recursive(puzzle, clues, 0, &mut HashMap::new());
 
-    let available_len = buff.len() - idx;
-    if available_len == 0 {
-        panic!();
-    }
-
-    let min_total = clues.iter().sum::<usize>() + clues.len() - 1;
-    if min_total > buff.len() - idx {
-        panic!();
-    }
-
-    let mut solutions = 0;
-
-    let range = available_len - min_total;
-    for i in 0..=range {
-        let mut buff = buff.clone();
-        for j in 0..clues[0] {
-            buff[idx + i + j] = b'#'
+    fn generate_solutions_recursive(puzzle: &[u8], clues: &[usize], idx: usize, cache: &mut HashMap<(usize, usize), usize>) -> usize {
+        if let Some(cached) = cache.get(&(idx, clues.len())) {
+            return *cached;
         }
 
-        let mut is_ok_solution = true;
-        for j in idx..idx + i + clues[0] {
-            if puzzle[j] != b'?' && puzzle[j] != buff[j] {
-                is_ok_solution = false;
-                break;
+        let mut solutions = 0;
+        
+        let available_len = puzzle.len() - idx;
+        let min_total = clues.iter().sum::<usize>() + clues.len() - 1;
+        let range = available_len - min_total + 1;
+
+        'outer: for i in 0 .. range {
+            for j in idx .. idx + i {
+                if puzzle[j] == b'#' {
+                    continue 'outer;
+                }
             }
-        }
 
-        if is_ok_solution {
+            for j in idx + i .. idx + i + clues[0] {
+                if puzzle[j] == b'.' {
+                    continue 'outer;
+                }
+            }
+
+            let next_idx = idx + i + clues[0];
+
             if clues.len() > 1 {
-                let next_idx = idx + i + clues[0];
-                if puzzle[next_idx] == b'?' || puzzle[next_idx] == buff[next_idx] {
-                    solutions += generate_solutions(puzzle, &clues[1..], buff, next_idx + 1);
+                if puzzle[next_idx] == b'#' {
+                    continue 'outer;
                 }
+                solutions += generate_solutions_recursive(puzzle, &clues[1..], next_idx + 1, cache);
             } else {
-                for j in idx + i + clues[0] .. buff.len() {
-                    if puzzle[j] != b'?' && puzzle[j] != buff[j] {
-                        is_ok_solution = false;
-                        break;
+                for j in next_idx .. puzzle.len() {
+                    if puzzle[j] == b'#' {
+                        continue 'outer;
                     }
                 }
 
-                if is_ok_solution {
-                    solutions += 1;
-
-                    for b in buff.iter() {
-                        print!("{}", *b as char);
-                    }
-                    println!();
-                }
+                solutions += 1;
             }
         }
-    }
 
-    solutions
+        cache.insert((idx, clues.len()), solutions);
+
+        solutions
+    }
+}
+
+fn run(repeats: usize) -> usize {
+    let input = input(repeats);
+    input.into_iter().map(|(puzzle, clues)| {
+        generate_solutions(&puzzle, &clues)
+    }).sum()
 }
 
 #[test]
 fn part1() {
-    let input = input();
-
-    let mut total_solutions = 0;
-    for (puzzle, clues) in input.iter() {
-        for b in puzzle.iter() {
-            print!("{}", *b as char);
-        }
-        
-        for c in clues.iter() {
-            print!(" {}", c);
-        }
-        println!();
-        total_solutions += generate_solutions(&puzzle, &clues, vec![b'.'; puzzle.len()], 0);
-        println!();
-    }
-
-    assert_eq!(7653, total_solutions);
+    let answer = run(1);
+    assert_eq!(7653, answer);
 }
 
 #[test]
 fn part2() {
-    let input = input().iter().map(|(puzzle, clues)| {
-        let mut big_puzzle = Vec::new();
-        let mut big_clues = Vec::new();
-
-        for i in 0..5 {
-            big_puzzle.append(&mut puzzle.clone());
-            if i != 4 {
-                big_puzzle.push(b'?');
-            }
-            big_clues.append(&mut clues.clone());
-        }
-
-        (big_puzzle, big_clues)
-    }).to_vec();
-
-    let mut total_solutions = 0;
-    for (puzzle, clues) in input.iter().take(1) {
-        for b in puzzle.iter() {
-            print!("{}", *b as char);
-        }
-        
-        for c in clues.iter() {
-            print!(" {}", c);
-        }
-        println!();
-        total_solutions += generate_solutions(&puzzle, &clues, vec![b'.'; puzzle.len()], 0);
-        println!();
-    }
-
-    assert_eq!(0, total_solutions);
+    let answer = run(5);
+    assert_eq!(60681419004564, answer);
 }

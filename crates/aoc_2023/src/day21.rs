@@ -1,6 +1,6 @@
-use std::{collections::HashSet, fs::File};
+use std::collections::HashSet;
 
-use aoc_common::{file_lines, Vec2us, IteratorExt, Vec2i32};
+use aoc_common::{file_lines, Vec2us, IteratorExt};
 
 fn input() -> (Vec<Vec<char>>, Vec2us) {
     let mut map = file_lines("inputs/day21.txt").map(|l| {
@@ -34,34 +34,6 @@ fn print_map<W: std::io::Write>(map: &Vec<Vec<char>>, steps: &HashSet<Vec2us>, w
         writeln!(w).unwrap();
     }
     writeln!(w).unwrap();
-}
-
-fn print_space<W: std::io::Write, F>(space: &Vec<Vec<Vec<Vec<char>>>>, steps: &HashSet<Vec2i32>, w: &mut W, f: F)
-    where F: Fn(Vec2i32) -> Option<(Vec2us, Vec2us)>
-{
-    let mut space = space.clone();
-    for p in steps.iter() {
-        let (uv, p) = f(*p).unwrap();
-        space[uv.y][uv.x][p.y][p.x] = 'O';
-    }
-
-    // space[0][0][0][0] = '0';
-    // space[0][1][0][0] = '1';
-    // space[0][2][0][0] = '2';
-    // space[1][0][0][0] = '3';
-
-    for v in 0..5 {
-        for y in 0..space[0][0].len() {
-            for u in 0..5 {
-                for x in 0..space[0][0][0].len() {
-                    write!(w, "{}", space[v][u][y][x]).unwrap();
-                }
-                write!(w, " ").unwrap();
-            }
-            writeln!(w).unwrap();
-        }
-        writeln!(w).unwrap();
-    }
 }
 
 fn count_positions(map: &Vec<Vec<char>>, start: Vec2us, iterations: &[usize], print: bool) -> Vec<usize> {
@@ -214,5 +186,5 @@ fn part2() {
     total += primaries * center_0;
     total += alternates * cetner_1;
 
-    assert_eq!(93270, total);
+    assert_eq!(608603023105276, total);
 }

@@ -22,8 +22,15 @@ impl Piece {
     }
 }
 
-fn input() -> Vec<Piece> {
-    file_lines("inputs/day22.txt").map(|l| {
+#[derive(Default, Clone)]
+struct ResolvedPiece {
+    z: i32,
+    supports: HashSet<usize>,
+    supported_by: HashSet<usize>,
+}
+
+fn input() -> Vec<ResolvedPiece> {
+    let pieces = file_lines("inputs/day22.txt").map(|l| {
         let mut split = l.split('~');
 
         fn parse_vec3(s: &str) -> Vec3i32 {
@@ -35,42 +42,31 @@ fn input() -> Vec<Piece> {
         let p1 = parse_vec3(split.next().unwrap());
 
         Piece::new(p0, p1)
-    }).sorted_by_key(|p| p.p0.z).to_vec()
-}
+    }).sorted_by_key(|p| p.p0.z).to_vec();
 
-#[derive(Default, Clone)]
-struct ResolvedPiece {
-    z: i32,
-    supports: HashSet<usize>,
-    supported_by: HashSet<usize>,
-}
-
-#[test]
-fn part1() {
-    let pieces = input();
     let mut tower: HashMap<Vec2i32, (usize, i32)> = HashMap::new();
     let mut graph = vec![ResolvedPiece::default(); pieces.len()];
 
     for (idx, piece) in pieces.iter().enumerate() {
-        let mut footprint = Vec::new();
+        let mut max = 0;
+        let mut max_pieces: Vec<usize> = Vec::new();
         for i in piece.p0.x ..= piece.p1.x {
             for j in piece.p0.y ..= piece.p1.y {
-                footprint.push(tower.get(&(i, j).into()));
+                if let Some((piece, height)) = tower.get(&(i, j).into()) {
+                    if *height > max {
+                        max = *height;
+                        max_pieces = vec![*piece];
+                    } else if *height == max {
+                        max_pieces.push(*piece);
+                    }
+                }
             }
         }
 
-        let max = footprint.iter().map(|c| {
-            c.unwrap_or(&(0, 0)).1
-        }).max().unwrap();
-
         if max > 0 {
-            for existing in footprint.iter() {
-                if let Some(existing) = existing {
-                    if existing.1 == max {
-                        graph[existing.0].supports.insert(idx);
-                        graph[idx].supported_by.insert(existing.0);
-                    }
-                }
+            for existing in max_pieces {
+                graph[existing].supports.insert(idx);
+                graph[idx].supported_by.insert(existing);
             }
         }
 
@@ -83,7 +79,14 @@ fn part1() {
         }
     }
 
-    let answer = graph.iter().enumerate().filter(|(idx, p)| {
+    graph
+}
+
+#[test]
+fn part1() {
+    let graph = input();
+
+    let answer = graph.iter().filter(|p| {
         p.supports.len() == 0 || p.supports.iter().all(|s| graph[*s].supported_by.len() > 1)
     }).count();
 
@@ -92,45 +95,11 @@ fn part1() {
 
 #[test]
 fn part2() {
-    let pieces = input();
-    let mut tower: HashMap<Vec2i32, (usize, i32)> = HashMap::new();
-    let mut graph = vec![ResolvedPiece::default(); pieces.len()];
-
-    for (idx, piece) in pieces.iter().enumerate() {
-        let mut footprint = Vec::new();
-        for i in piece.p0.x ..= piece.p1.x {
-            for j in piece.p0.y ..= piece.p1.y {
-                footprint.push(tower.get(&(i, j).into()));
-            }
-        }
-
-        let max = footprint.iter().map(|c| {
-            c.unwrap_or(&(0, 0)).1
-        }).max().unwrap();
-
-        if max > 0 {
-            for existing in footprint.iter() {
-                if let Some(existing) = existing {
-                    if existing.1 == max {
-                        graph[existing.0].supports.insert(idx);
-                        graph[idx].supported_by.insert(existing.0);
-                    }
-                }
-            }
-        }
-
-        graph[idx].z = max + 1;
-
-        for i in piece.p0.x ..= piece.p1.x {
-            for j in piece.p0.y ..= piece.p1.y {
-                *tower.entry((i, j).into()).or_default() = (idx, max + piece.height());
-            }
-        }
-    }
+    let graph = input();
 
     fn search(idx: usize, graph: &[ResolvedPiece]) -> usize {
-        let mut visited: HashSet<usize> = HashSet::new();
-        visited.insert(idx);
+        let mut visited = vec![false; graph.len()];
+        visited[idx] = true;
 
         let mut queue: PriorityQueue<usize, i32> = PriorityQueue::new();
         for p in graph[idx].supports.iter().copied() {
@@ -138,15 +107,19 @@ fn part2() {
         }
 
         while let Some(current) = queue.dequeue() {
-            if graph[current].supported_by.iter().all(|p| visited.contains(p)) {
-                visited.insert(current);
+            if visited[current] {
+                continue;
+            }
+
+            if graph[current].supported_by.iter().all(|s| visited[*s]) {
+                visited[current] = true;
                 for adj in graph[current].supports.iter().copied() {
                     queue.enqueue(adj, graph[adj].z);
                 }
             }
         }
 
-        visited.len() - 1
+        visited.into_iter().filter(|v| *v).count() - 1
     }
 
     let answer: usize = (0..graph.len()).map(|idx| search(idx, &graph)).sum();

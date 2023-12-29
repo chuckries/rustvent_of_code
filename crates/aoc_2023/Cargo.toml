@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 aoc_common = { path = "../aoc_common" }
+rand = "0.8"

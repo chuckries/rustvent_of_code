@@ -1,4 +1,4 @@
-use num_traits::PrimInt;
+use num_traits::{PrimInt, Signed};
 
 pub type Vec3us = Vec3<usize>;
 pub type Vec3i32 = Vec3<i32>;
@@ -74,6 +74,17 @@ impl<T: PrimInt> Vec3<T> {
             Self { x: self.x - T::one(), y: self.y           , z: self.z            },
             Self { x: self.x + T::one(), y: self.y           , z: self.z            },
         ].into_iter()
+    }
+}
+
+impl<T: PrimInt + Signed> Vec3<T> {
+    pub fn cross(&self, b: Self) -> Self {
+        let a = self;
+        Self {
+            x: a.y * b.z - a.z * b.y,
+            y: a.z * b.x - a.x * b.z,
+            z: a.x * b.y - a.y * b.x,
+        }
     }
 }
 

@@ -70,9 +70,6 @@ fn part2() {
         }
     }
 
-    intersections.push(start);
-    intersections.push(end);
-
     fn bfs(p: Vec2i32, map: &Vec<Vec<char>>, interections: &[Vec2i32]) -> Vec<(usize, i32)> {
         let bounds = Vec2i32::new(map[0].len() as i32, map.len() as i32);
         let mut queue: VecDeque<(Vec2i32, Vec2i32, usize)> = VecDeque::new();
@@ -107,8 +104,11 @@ fn part2() {
 
     let edges = intersections.iter().map(|int| bfs(*int, &input, &intersections)).to_vec();
 
-    fn recursive_max(current: usize, state: u64, graph: &Vec<Vec<(usize, i32)>>, end: Vec2i32, cache: &mut HashMap<(usize, u64), i32>) -> i32 {
-        if current == graph.len() - 1 {
+    let (start_idx, start_len) = bfs(start, &input, &intersections)[0];
+    let (end_idx, end_len) = bfs(end, &input, &intersections)[0];
+
+    fn recursive_max(current: usize, state: u64, graph: &Vec<Vec<(usize, i32)>>, end: usize, cache: &mut HashMap<(usize, u64), i32>) -> i32 {
+        if current == end {
             return 0;
         }
 
@@ -131,8 +131,7 @@ fn part2() {
         max
     }
 
-    let initital_state = 1 << (intersections.len() - 2);
-    let answer = recursive_max(intersections.len() - 2, initital_state, &edges, end, &mut HashMap::new());
-
+    let max = recursive_max(start_idx, 1 << start_idx, &edges, end_idx, &mut HashMap::new());
+    let answer = max + start_len + end_len;
     assert_eq!(6622, answer);
 }

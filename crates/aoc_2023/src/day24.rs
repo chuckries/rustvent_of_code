@@ -128,7 +128,7 @@ fn part2() {
     // p0 X v + p X v0 - p0 X v0 = p1 X v + p X v1 - p1 X pv1
     // (p0 - p1) X v + p X (v0 - v1) = p0 X v0 - p1 X v1
     // v X (p1 - p0) + p X (v0 - v1) = p0 X v0 - p1 X v1
-    // p x (v0 - v1) + v X (p1 - p0) = p0 X v0 - p1 X v1
+    // p X (v0 - v1) + v X (p1 - p0) = p0 X v0 - p1 X v1
 
     // evaluating the cross product for i, j, and k components for 2 different pairs of inputs
     // gives us a series of 6 equations with 6 unknowns that can be expressed as the following augmented matrix

@@ -36,14 +36,6 @@ impl Part {
     }
 }
 
-#[derive(Copy, Clone)]
-enum Category {
-    X,
-    M,
-    A,
-    S,
-}
-
 #[derive(Clone)]
 enum RuleResult {
     Accept,
@@ -57,7 +49,7 @@ enum Op {
 }
 
 enum Rule {
-    Conditional(Category, Op, i32, RuleResult),
+    Conditional(char, Op, i32, RuleResult),
     Unconditional(RuleResult),
 }
 
@@ -66,10 +58,11 @@ impl Rule {
         match self {
             Self::Conditional(category, op, constant, result) => {
                 let category = match *category {
-                    Category::X => part.x,
-                    Category::M => part.m,
-                    Category::A => part.a,
-                    Category::S => part.s,
+                    'x' => part.x,
+                    'm' => part.m,
+                    'a' => part.a,
+                    's' => part.s,
+                    _ => panic!(),
                 };
 
                 let meets_condition = match *op {
@@ -138,14 +131,6 @@ fn input() -> (HashMap<String, Workflow>, Vec<Part>) {
                 let op = &cmp[op_idx..op_idx + 1];
                 let constant: i32 = cmp[op_idx + 1 ..].parse().unwrap();
 
-                let category = match category {
-                    "x" => Category::X,
-                    "m" => Category::M,
-                    "a" => Category::A,
-                    "s" => Category::S,
-                    _ => panic!(),
-                };
-
                 let op =  match op {
                     "<" => Op::Lt,
                     ">" => Op::Gt,
@@ -158,7 +143,7 @@ fn input() -> (HashMap<String, Workflow>, Vec<Part>) {
                     _ => RuleResult::Workflow(result.to_string()),
                 };
 
-                rules.push(Rule::Conditional(category, op, constant, result));
+                rules.push(Rule::Conditional(category.chars().next().unwrap(), op, constant, result));
             }
         }
 
@@ -246,10 +231,11 @@ fn part2() {
                 },
                 Rule::Conditional(category, op, constant, result) => {
                     let selector = match category {
-                        Category::X => Part::x_mut,
-                        Category::M => Part::m_mut,
-                        Category::A => Part::a_mut,
-                        Category::S => Part::s_mut,
+                        'x' => Part::x_mut,
+                        'm' => Part::m_mut,
+                        'a' => Part::a_mut,
+                        's' => Part::s_mut,
+                        _ => panic!(),
                     };
 
                     let min_prop = *selector(&mut min);

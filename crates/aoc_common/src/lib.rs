@@ -6,19 +6,23 @@ use std::str::FromStr;
 use num_traits::PrimInt;
 
 pub use aabb::*;
+pub use id_map::*;
 pub use iterator_ext::*;
 pub use priority_queue::*;
 pub use rect::*;
 pub use vec2::*;
 pub use vec3::*;
+pub use vecn::*;
 pub use virtual_grid::*;
 
 mod aabb;
+mod id_map;
 mod iterator_ext;
 mod priority_queue;
 mod rect;
 mod vec2;
 mod vec3;
+mod vecn;
 mod virtual_grid;
 
 pub fn file_string(path: &str) -> String {
@@ -65,25 +69,36 @@ pub fn lcm<T: PrimInt>(nums: &[T]) -> T {
     }).unwrap()
 }
 
-pub fn full_permutations<T: Copy + Eq>(items: &[T]) -> Vec<Vec<T>> {
-    let mut permutations: Vec<Vec<T>> = Vec::new();
+pub fn full_permutations<'a, T>(items: &'a [T]) -> Vec<Vec<&'a T>> {
+    fn recurse<'a, T>(solution: &mut Vec<&'a T>, candidates: &mut Vec<&'a T>, solutions: &mut Vec<Vec<&'a T>>, used: &mut [bool]) {
 
-    let mut stack: Vec<(Vec<T>, Vec<T>)> = Vec::new();
-    stack.push((Vec::new(), items.to_vec()));
+        let mut found = false;
+        for i in 0..used.len() {
+            if !used[i] {
+                found = true;
+                used[i] = true;
+                solution.push(candidates[i]);
 
-    while let Some((solution, candidates)) = stack.pop() {
-        if candidates.len() == 0 {
-            permutations.push(solution);
-        } else {
-            for cand in candidates.iter() {
-                let next_solution = solution.iter().chain(std::iter::once(cand)).copied().collect();
-                let next_candidates = candidates.iter().filter(|c| *c != cand).copied().collect();
-                stack.push((next_solution, next_candidates));
+                recurse(solution, candidates, solutions, used);
+
+                solution.pop();
+                used[i] = false;
             }
+        }
+
+        if !found {
+            solutions.push(solution.clone());
         }
     }
 
-    permutations
+    let mut candidates: Vec<&T> = items.iter().collect();
+    let mut solution: Vec<&T> = Vec::with_capacity(candidates.len());
+    let mut solutions: Vec<Vec<&T>> = Vec::with_capacity(candidates.len() * candidates.len());
+    let mut used = vec![false; candidates.len()];
+
+    recurse(&mut solution, &mut candidates, &mut solutions, &mut used);
+
+    solutions
 }
 
 pub fn map_points_to_string<T, U>(points: T) -> String 

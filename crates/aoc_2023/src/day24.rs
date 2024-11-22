@@ -1,6 +1,4 @@
-use std::ops::{Mul, Add, Index, IndexMut};
-
-use aoc_common::{Vec3i64, file_lines, IteratorExt, Vec2i64};
+use aoc_common::{Vec3i64, file_lines, IteratorExt, Vec2i64, VecN};
 
 fn input() -> Vec<(Vec3i64, Vec3i64)> {
     file_lines("inputs/day24.txt").map(|l| {
@@ -45,12 +43,12 @@ fn part1() {
             let x = (m0 * p0.x as f64 - m1 * p1.x as f64 + p1.y as f64 - p0.y as f64) / (m0 - m1);
             let y = m0 * (x - p0.x as f64) + p0.y as f64;
 
-            let sign0 = Vec2i64::new(-v0.x.signum(), -v0.y.signum());
+            let sign0 = -v0.xy().signum();
             if sign0 == Vec2i64::new(f64::signum(x - p0.x as f64) as i64, f64::signum(y - p0.y as f64) as i64) {
                 continue;
             }
 
-            let sign1 = Vec2i64::new(-v1.x.signum(), -v1.y.signum());
+            let sign1 = -v1.xy().signum();
             if sign1 == Vec2i64::new(f64::signum(x - p1.x as f64) as i64, f64::signum(y - p1.y as f64) as i64) {
                 continue;
             }
@@ -62,54 +60,6 @@ fn part1() {
     }
 
     assert_eq!(16779, total);
-}
-
-#[derive(Copy, Clone)]
-struct VecN<const N: usize, T> {
-    vec: [T; N]
-}
-
-impl<const N: usize, T: Copy + Add<Output = T>> Add for VecN<N, T> {
-    type Output = Self;
-
-    fn add(mut self, rhs: Self) -> Self::Output {
-        for i in 0..self.vec.len() {
-            self.vec[i]  = self.vec[i] + rhs.vec[i];
-        }
-        self
-    }
-}
-
-
-impl<const N: usize, T: Copy + Mul<Output = T>> Mul<T> for VecN<N, T> {
-    type Output = Self;
-
-    fn mul(mut self, rhs: T) -> Self::Output {
-        for i in self.vec.iter_mut() {
-            *i = *i * rhs;
-        }
-        self
-    }
-}
-
-impl<const N: usize, T: Copy> Index<usize> for VecN<N, T> {
-    type Output = T;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.vec[index]
-    }
-}
-
-impl<const N: usize, T: Copy> IndexMut<usize> for VecN<N, T> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.vec[index]
-    }
-}
-
-impl<const N: usize, T: Default + Copy> Default for VecN<N, T> {
-    fn default() -> Self {
-        Self { vec: [T::default(); N] }
-    }
 }
 
 #[test]

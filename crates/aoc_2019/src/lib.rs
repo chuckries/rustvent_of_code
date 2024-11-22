@@ -295,10 +295,10 @@ mod day7 {
 
     use crate::{IntCode, IntCodeResult};
 
-    fn run_once(phases: &[i64]) -> i64 {
+    fn run_once(phases: &[&i64]) -> i64 {
         let mut computers = vec![IntCode::from_file("inputs/day07.txt"); 5];
         for pair in computers.iter_mut().zip(phases) {
-            pair.0.push_input_back(*pair.1);
+            pair.0.push_input_back(**pair.1);
         }
 
         let mut result = 0;
@@ -309,10 +309,10 @@ mod day7 {
         result
     }
 
-    fn run_multiple(phases: &[i64]) -> i64 {
+    fn run_multiple(phases: &[&i64]) -> i64 {
         let mut computers = vec![IntCode::from_file("inputs/day07.txt"); 5];
         for pair in computers.iter_mut().zip(phases) {
-            pair.0.push_input_back(*pair.1);
+            pair.0.push_input_back(**pair.1);
         }
 
         let mut result = 0;
@@ -557,7 +557,7 @@ mod day10 {
 }
 
 mod day11 {
-    use std::collections::{HashMap};
+    use std::collections::HashMap;
 
     use aoc_common::{Vec2i32, map_points_to_string};
 

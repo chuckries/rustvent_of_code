@@ -1,4 +1,4 @@
-use std::{ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div}};
+use std::ops::{Neg, Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div};
 use num_traits::{PrimInt, Signed};
 
 pub type Vec2us = Vec2<usize>;

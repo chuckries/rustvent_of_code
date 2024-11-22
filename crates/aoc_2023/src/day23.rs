@@ -1,4 +1,4 @@
-use std::collections::{VecDeque, HashMap};
+use std::collections::VecDeque;
 
 use aoc_common::{file_2d_map, Vec2i32, Vec2us, IteratorExt};
 
@@ -70,7 +70,7 @@ fn part2() {
         }
     }
 
-    fn bfs(p: Vec2i32, map: &Vec<Vec<char>>, interections: &[Vec2i32]) -> Vec<(usize, i32)> {
+    fn bfs(p: Vec2i32, map: &Vec<Vec<char>>, intersections: &[Vec2i32]) -> Vec<(usize, i32)> {
         let bounds = Vec2i32::new(map[0].len() as i32, map.len() as i32);
         let mut queue: VecDeque<(Vec2i32, Vec2i32, usize)> = VecDeque::new();
         for adj in p.adjacent_bounded(&bounds) {
@@ -81,7 +81,7 @@ fn part2() {
 
         let mut edges: Vec<(usize, i32)> = Vec::new();
         while let Some((current, dir, len)) = queue.pop_front() {
-            if let Some(idx) = interections.iter().enumerate().find_map(|(idx, p)| {
+            if let Some(idx) = intersections.iter().enumerate().find_map(|(idx, p)| {
                 if *p == current {
                     Some(idx)
                 } else {
@@ -107,31 +107,30 @@ fn part2() {
     let (start_idx, start_len) = bfs(start, &input, &intersections)[0];
     let (end_idx, end_len) = bfs(end, &input, &intersections)[0];
 
-    fn recursive_max(current: usize, state: u64, graph: &Vec<Vec<(usize, i32)>>, end: usize, cache: &mut HashMap<(usize, u64), i32>) -> i32 {
-        if current == end {
-            return 0;
-        }
-
-        if let Some(cached) = cache.get(&(current, state)) {
-            return *cached;
-        }
-
+    fn dfs_max(start: usize, end: usize, graph: &Vec<Vec<(usize, i32)>>) -> i32 {
+        let mut stack: Vec<(usize, u64, i32)> = Vec::new();
+        stack.push((start, 1 << start, 0));
         let mut max = 0;
-        for (adj, len) in graph[current].iter().cloned() {
-            let flag = 1 << adj;
-            if (state & flag) == 0 {
-                let dist = len + recursive_max(adj, state | flag, graph, end, cache);
-                if dist > max {
-                    max = dist;
+
+        while let Some((current, state, len)) = stack.pop() {
+            if current == end {
+                if len > max {
+                    max = len;
+                }
+            } else {
+                for (adj, delta) in graph[current].iter().cloned() {
+                    let flag = 1 << adj;
+                    if (state & flag) == 0 {
+                        stack.push((adj, state | flag, len + delta));
+                    }
                 }
             }
         }
 
-        cache.insert((current, state), max);
         max
     }
 
-    let max = recursive_max(start_idx, 1 << start_idx, &edges, end_idx, &mut HashMap::new());
+    let max = dfs_max(start_idx, end_idx, &edges);
     let answer = max + start_len + end_len;
     assert_eq!(6622, answer);
 }

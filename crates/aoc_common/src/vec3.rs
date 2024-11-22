@@ -1,5 +1,7 @@
 use num_traits::{PrimInt, Signed};
 
+use crate::Vec2;
+
 pub type Vec3us = Vec3<usize>;
 pub type Vec3i32 = Vec3<i32>;
 pub type Vec3i64 = Vec3<i64>;
@@ -43,6 +45,18 @@ impl<T: PrimInt> Vec3<T> {
 
     pub fn z_mut(&mut self) -> &mut T {
         &mut self.z
+    }
+
+    pub const fn xy(&self) -> Vec2<T> {
+        Vec2::new(self.x, self.y)
+    }
+
+    pub const fn xz(&self) -> Vec2<T> {
+        Vec2::new(self.x, self.z)
+    }
+
+    pub const fn yz(&self) -> Vec2<T> {
+        Vec2::new(self.y, self.z)
     }
 
     pub fn zero() -> Self {

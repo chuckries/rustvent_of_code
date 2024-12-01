@@ -135,3 +135,11 @@ pub fn map_points_to_string<T, U>(points: T) -> String
 
     s
 }
+
+pub fn bytes_to_hex_string(bytes: &[u8]) -> String {
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        s.push_str(&format!("{:02x}", b));
+    }
+    s
+}

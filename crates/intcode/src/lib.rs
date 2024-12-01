@@ -227,14 +227,14 @@ impl IntCodeAscii for IntCode {
     }
 
     fn read_line(&mut self) -> Result<String, IntCodeResult> {
-        let mut output = String::new();
+        let mut output: Vec<u8> = Vec::new();
         loop {
             match self.run() {
                 IntCodeResult::Output(o) => {
                     if o <= 0x7F {
-                        let o = o as u8 as char;
-                        if o == '\n' {
-                            return Ok(output);
+                        let o = o as u8;
+                        if o == b'\n' {
+                            return Ok(String::from_utf8(output).unwrap());
                         } else {
                             output.push(o);
                         }

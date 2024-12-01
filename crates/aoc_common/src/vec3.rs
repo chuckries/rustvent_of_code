@@ -1,3 +1,5 @@
+use std::iter::Sum;
+
 use num_traits::{PrimInt, Signed};
 
 use crate::Vec2;
@@ -182,6 +184,11 @@ impl<T: PrimInt> std::ops::SubAssign for Vec3<T> {
     }
 }
 
+impl<T:PrimInt> Sum for Vec3<T> {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::zero(), |acc, v| acc + v)
+    }
+}
 
 impl<T: PrimInt> From<(T, T, T)> for Vec3<T> {
     fn from(v: (T, T, T)) -> Self {
@@ -189,7 +196,7 @@ impl<T: PrimInt> From<(T, T, T)> for Vec3<T> {
     }
 }
 
-impl <T: PrimInt> From<Vec3<T>> for (T, T, T) {
+impl<T: PrimInt> From<Vec3<T>> for (T, T, T) {
     fn from(v: Vec3<T>) -> Self {
         (v.x, v.y, v.z)
     }

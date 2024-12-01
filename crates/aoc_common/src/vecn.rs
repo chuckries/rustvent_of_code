@@ -5,6 +5,16 @@ pub struct VecN<const N: usize, T> {
     vec: [T; N]
 }
 
+impl<const N: usize, T> VecN<N, T> {
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.vec.iter()
+    }
+
+    pub fn into_iter(self) -> impl Iterator<Item = T> {
+        self.vec.into_iter()
+    }
+}
+
 impl<const N: usize, T: Copy + Add<Output = T>> Add for VecN<N, T> {
     type Output = Self;
 

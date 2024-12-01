@@ -138,11 +138,25 @@ fn part2() {
     // floating point error certainly has the potential to be a problem here but 
     // doesn't get in the way for my input
 
+    fn print_matrix(mat: &[VecN<7, f64>; 6]) {
+        for row in mat {
+            for f in row.iter() {
+                print!("{:>30.4}", f)
+            }
+            println!();
+        }
+        println!();
+    }
+
+    print_matrix(&matrix);
+
     for row in 0..5 {
         if matrix[row][row] == 0.0 {
             for i in row + 1 .. matrix.len() {
                 if matrix[i][row] != 0.0 {
                     matrix.swap(row, i);
+                    println!("swap {} {}", row, i);
+                    print_matrix(&matrix);
                     break;
                 }
             }
@@ -153,6 +167,8 @@ fn part2() {
                     let factor = matrix[i][row] / matrix[row][row];
                     let to_add = matrix[row] * -factor;
                     matrix[i] = matrix[i] + to_add;
+                    println!("sub {} times {} from {}", factor, row, i);
+                    print_matrix(&matrix);
                 }
             }
         }

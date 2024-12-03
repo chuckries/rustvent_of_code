@@ -1,39 +1,15 @@
 use std::collections::HashMap;
 use rand::Rng;
 
-use aoc_common::{file_lines, IteratorExt};
-
-struct NodeCache {
-    nodes: HashMap<String, usize>
-}
-
-impl NodeCache {
-    fn new() -> Self {
-        Self { nodes: HashMap::new() }
-    }
-
-    fn get(&mut self, s: &str) -> usize {
-        if let Some(idx) = self.nodes.get(s) {
-            *idx
-        } else {
-            let idx = self.nodes.len();
-            self.nodes.insert(s.to_string(), idx);
-            idx
-        }
-    }
-
-    fn len(&self) -> usize {
-        self.nodes.len()
-    }
-}
+use aoc_common::{file_lines, IdMap, IteratorExt};
 
 fn input() -> (usize, Vec<(usize, usize)>) {
-    let mut nodes = NodeCache::new();
+    let mut id_map = IdMap::new();
     let mut tranformed: Vec<(usize, Vec<usize>)> = Vec::new();
     for l in file_lines("inputs/day25.txt") {
         let mut split = l.split(": ");
-        let src = nodes.get(split.next().unwrap());
-        let dsts = split.next().unwrap().split(' ').map(|dst| nodes.get(dst)).to_vec();
+        let src = id_map.get_or_insert(split.next().unwrap());
+        let dsts = split.next().unwrap().split(' ').map(|dst| id_map.get_or_insert(dst)).to_vec();
         tranformed.push((src, dsts));
     }
 
@@ -49,7 +25,7 @@ fn input() -> (usize, Vec<(usize, usize)>) {
         }
     }
 
-    (nodes.len(), edges)
+    (id_map.len(), edges)
 }
 
 #[test]

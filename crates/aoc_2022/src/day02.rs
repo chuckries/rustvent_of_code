@@ -19,8 +19,8 @@ enum Result {
 
 fn input() -> impl Iterator<Item = (char, char)> {
     file_lines("inputs/day02.txt").map(|l| {
-        let mut split = l.split(' ');
-        (split.next().unwrap().chars().nth(0).unwrap(), split.next().unwrap().chars().nth(0).unwrap())
+        let bytes = l.as_bytes();
+        (bytes[0] as char, bytes[2] as char)
     })
 }
 

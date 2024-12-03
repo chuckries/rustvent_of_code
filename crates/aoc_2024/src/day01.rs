@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::ops::Mul;
 
 use aoc_common::{file_lines, IteratorExt};
 
@@ -27,11 +27,7 @@ fn part1() {
 #[test]
 fn part2() {
     let (left, right) = input();
-    let mut counts: HashMap<i32, i32> = HashMap::new();
-    for i in right.into_iter() {
-        *counts.entry(i).or_default() += 1;
-    }
-
-    let total = left.into_iter().map(|l| l * counts.get(&l).unwrap_or(&0)).sum::<i32>();
+    let counts = right.iter().cloned().counts::<i32>();
+    let total = left.into_iter().map(|l| l.mul(counts.get(&l).unwrap_or(&0))).sum::<i32>();
     assert_eq!(total, 19457120);
 }

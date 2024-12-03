@@ -1,4 +1,6 @@
-use std::{collections::{HashSet, VecDeque}, cmp::Ordering, hash::Hash};
+use std::{cmp::Ordering, collections::{HashMap, HashSet, VecDeque}, hash::Hash, ops::AddAssign};
+
+use num_traits::PrimInt;
 
 pub trait IteratorExt: Iterator
 {
@@ -70,6 +72,21 @@ pub trait IteratorExt: Iterator
         Self::Item: Eq + Hash
     {
         self.to_set().into_iter()
+    }
+
+    fn counts<T>(self) -> std::collections::HashMap<Self::Item, T>
+    where
+        Self: Sized,
+        Self::Item: Copy + Eq + Hash,
+        T: PrimInt + AddAssign
+    {
+        let mut map: HashMap<Self::Item, T> = HashMap::new();
+
+        for i in self {
+            map.entry(i).or_insert(T::zero()).add_assign(T::one());
+        }
+
+        map
     }
 }
 

@@ -20,42 +20,38 @@ fn input() -> (HashSet<Vec2us>, Vec<Vec<usize>>) {
     (rules, updates)
 }
 
+fn is_sorted(list: &[usize], rules: &HashSet<Vec2us>) -> bool {
+    list.is_sorted_by(|lhs, rhs| {
+        rules.contains(&(*lhs, *rhs).into())
+    })
+}
+
 #[test]
 fn part1() {
     let (rules, updates) = input();
-
-    let mut total = 0;
-    'update: for update in updates {
-        for i in 0..update.len() - 1 {
-            for j in i + 1 .. update.len() {
-                if rules.contains(&(update[j], update[i]).into()) {
-                    continue 'update;
-                }
-            }
-        }
-        total += update[update.len() / 2];
-    }
-
-    assert_eq!(total, 4662);
+    let answer: usize = updates.into_iter()
+        .filter(|l| is_sorted(&l, &rules))
+        .map(|l| l[l.len() / 2])
+        .sum();
+    assert_eq!(answer, 4662);
 }
 
 #[test]
 fn part2() {
     let (rules, updates) = input();
 
-    let mut total = 0;
-    for update in updates {
-        let sorted = update.iter().copied().sorted_by(|lhs, rhs| {
-            if rules.contains(&(*lhs, *rhs).into()) {
-                Ordering::Less
-            } else {
-                Ordering::Greater
-            }
-        }).to_vec();
-        if sorted != update {
-            total += sorted[sorted.len() / 2];
-        }
-    }
+    let answer: usize = updates.into_iter()
+        .filter(|l| !is_sorted(&l, &rules))
+        .map(|mut l| {
+            l.sort_by(|lhs, rhs| {
+                if rules.contains(&(*lhs, *rhs).into()) {
+                    Ordering::Less
+                } else {
+                    Ordering::Greater
+                }
+            });
+            l[l.len() / 2]
+        }).sum();
 
-    assert_eq!(total, 5900);
+    assert_eq!(answer, 5900);
 }

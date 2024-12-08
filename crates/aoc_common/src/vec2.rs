@@ -183,6 +183,14 @@ impl<T:PrimInt + Signed> Vec2<T> {
     pub fn east_of(&self) -> Self {
         *self + Self::unit_x()
     }
+
+    pub fn cardinal_dirs() -> impl Iterator<Item = Self> {
+        Self::zero().adjacent().into_iter()
+    }
+
+    pub fn cardinal_dirs_and_diags() -> impl Iterator<Item = Self> {
+        Self::zero().surrounding_unbounded().into_iter()
+    }
 }
 
 macro_rules! manhattan_unsigned {

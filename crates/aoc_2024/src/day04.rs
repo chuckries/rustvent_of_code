@@ -8,26 +8,21 @@ fn input() -> Vec<Vec<u8>> {
 fn part1() {
     let map = input();
     let bounds = Vec2i32::new(map.len() as i32, map[0].len() as i32);
-    let dirs = Vec2i32::zero().surrounding_unbounded().to_vec();
-    let target = b"XMAS";
+    let dirs = Vec2i32::cardinal_dirs_and_diags().to_vec();
+    const TARGET: &[u8] = b"XMAS";
 
     let mut total = 0;
     for j in 0..map.len() {
         for i in 0..map[j].len() {
-            if map[j][i] == target[0] {
+            if map[j][i] == TARGET[0] {
                 let p = Vec2i32::new(i as i32, j as i32);
                 'dir: for dir in dirs.iter().copied() {
                     let mut p = p + dir;
-                    for i in 1..target.len() {
-                        if p.is_in_bounds(bounds) {
-                            if map[p.y as usize][p.x as usize] == target[i] {
-                                p += dir;
-                            } else {
-                                continue 'dir;
-                            }
-                        } else {
+                    for i in 1..TARGET.len() {
+                        if !p.is_in_bounds(bounds) || map[p.y as usize][p.x as usize] != TARGET[i] {
                             continue 'dir;
                         }
+                        p += dir;
                     }
                     total += 1;
                 }

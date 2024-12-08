@@ -30,9 +30,13 @@ fn is_sorted(list: &[usize], rules: &HashSet<Vec2us>) -> bool {
 fn part1() {
     let (rules, updates) = input();
     let answer: usize = updates.into_iter()
-        .filter(|l| is_sorted(&l, &rules))
-        .map(|l| l[l.len() / 2])
-        .sum();
+        .filter_map(|l| {
+            if is_sorted(&l, &rules) {
+                Some(l[l.len() / 2])
+            } else {
+                None
+            }
+        }).sum();
     assert_eq!(answer, 4662);
 }
 
@@ -41,16 +45,19 @@ fn part2() {
     let (rules, updates) = input();
 
     let answer: usize = updates.into_iter()
-        .filter(|l| !is_sorted(&l, &rules))
-        .map(|mut l| {
-            l.sort_by(|lhs, rhs| {
-                if rules.contains(&(*lhs, *rhs).into()) {
-                    Ordering::Less
-                } else {
-                    Ordering::Greater
-                }
-            });
-            l[l.len() / 2]
+        .filter_map(|mut l| {
+            if !is_sorted(&l, &rules) {
+                l.sort_by(|lhs, rhs| {
+                    if rules.contains(&(*lhs, *rhs).into()) {
+                        Ordering::Less
+                    } else {
+                        Ordering::Greater
+                    }
+                });
+                Some(l[l.len() / 2])
+            } else {
+                None
+            }
         }).sum();
 
     assert_eq!(answer, 5900);

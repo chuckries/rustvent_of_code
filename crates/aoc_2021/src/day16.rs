@@ -1,4 +1,4 @@
-use aoc_common::file_string;
+use aoc_common::{file_string, IteratorExt};
 
 struct PacketReader {
     bytes: Vec<u8>,
@@ -9,13 +9,9 @@ struct PacketReader {
 
 impl PacketReader {
     fn new(input: &str) -> PacketReader {
-        let mut bytes: Vec<u8> = Vec::with_capacity(input.len() / 2);
-
-        for chunk in input.as_bytes().chunks(2) {
-            let byte = (Self::hex_to_byte(chunk[0]) << 4) |
-                (Self::hex_to_byte(chunk[1]));
-            bytes.push(byte);
-        }
+        let bytes = input.as_bytes().chunks(2).map(|c| {
+            (Self::hex_to_byte(c[0]) << 4) | Self::hex_to_byte(c[1])
+        }).to_vec();
 
         PacketReader {
             bytes,
@@ -80,7 +76,7 @@ impl PacketReader {
         let mut result: usize = 0;
 
         for _ in 0..count {
-            result = (result << 1) | ((self.bytes[self.data_idx] as usize & (1 << self.bit_idx)) >> self.bit_idx);
+            result = (result << 1) | ((self.bytes[self.data_idx] as usize >> self.bit_idx) & 1);
             if self.bit_idx == 0 {
                 self.data_idx += 1;
                 self.bit_idx = 7;

@@ -11,7 +11,7 @@ fn input() -> Vec<(i64, Vec<i64>)> {
     }).to_vec()
 }
 
-fn test<F: Fn(i64, &[i64], i64) -> bool>(acc: i64, remaining: &[i64], target: i64, f: &F) -> bool {
+fn test<const N: u8>(acc: i64, remaining: &[i64], target: i64) -> bool {
     if acc > target {
         return false;
     }
@@ -20,20 +20,34 @@ fn test<F: Fn(i64, &[i64], i64) -> bool>(acc: i64, remaining: &[i64], target: i6
         return acc == target;
     }
 
-    if test(acc * remaining[0], &remaining[1..], target, f) {
+    if test::<N>(acc * remaining[0], &remaining[1..], target) {
         return true;
     }
 
-    if test(acc + remaining[0], &remaining[1..], target, f) {
+    if test::<N>(acc + remaining[0], &remaining[1..], target) {
         return true;
     }
 
-    f(acc, remaining, target)
+    if N != 0 {
+        let mut mul = 1;
+        let mut num = remaining[0];
+        while num > 0 {
+            mul *= 10;
+            num /= 10;
+        }
+        let next = acc * mul + remaining[0];
+
+        if test::<N>(next, &remaining[1..], target) {
+            return true;
+        }
+    }
+
+    false
 }
 
-fn run<F: Fn(i64, &[i64], i64) -> bool>(f: &F) -> i64 {
+fn run<const N: u8>() -> i64 {
     input().into_iter().filter_map(|(total, nums)| {
-        if test(nums[0], &nums[1..], total, f) {
+        if test::<N>(nums[0], &nums[1..], total) {
             Some(total)
         } else {
             None
@@ -44,34 +58,12 @@ fn run<F: Fn(i64, &[i64], i64) -> bool>(f: &F) -> i64 {
 
 #[test]
 fn part1 () {
-    #[inline(always)]
-    fn nop(_: i64, _: &[i64], _: i64) -> bool {
-        false
-    }
-
-    let answer = run(&nop);
+    let answer = run::<0>();
     assert_eq!(answer, 6083020304036);
 }
 
 #[test]
 fn part2 () {
-    #[inline(always)]
-    fn concat(acc: i64, remaining: &[i64], target: i64) -> bool {
-        let mut mul = 1;
-        let mut num = remaining[0];
-        while num > 0 {
-            mul *= 10;
-            num /= 10;
-        }
-        let next = acc * mul + remaining[0];
-
-        if test(next, &remaining[1..], target, &concat) {
-            return true;
-        }
-
-        false
-    }
-
-    let answer = run(&concat);
+    let answer = run::<1>();
     assert_eq!(answer, 59002246504791);
 }

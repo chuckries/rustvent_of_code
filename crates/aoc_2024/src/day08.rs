@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, hash::Hash};
+use std::collections::{HashMap, HashSet};
 
 use aoc_common::{file_lines, gcf, IteratorExt, Vec2i32};
 
@@ -55,9 +55,13 @@ fn part2() {
                 let b = v[j];
 
                 let mut delta = b - a;
-                if delta.x != 0 && delta.y != 0 {
+                if delta.x == 0 {
+                    delta.y = 1;
+                } else if delta.y == 0 {
+                    delta.x = 1;
+                } else {
                     let gcf = gcf(delta.x, delta.y);
-                    delta = delta / gcf;
+                    delta /= gcf;
                 }
 
                 let mut p = a;

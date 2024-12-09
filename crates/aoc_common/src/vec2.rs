@@ -1,4 +1,4 @@
-use std::{iter::Sum, ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign}};
+use std::{iter::Sum, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}};
 use num_traits::{PrimInt, Signed};
 
 pub type Vec2us = Vec2<usize>;
@@ -361,6 +361,13 @@ impl <T: PrimInt> Div<T> for Vec2<T> {
 
     fn div(self, rhs: T) -> Self::Output {
         Self { x: self.x / rhs, y: self.y / rhs }
+    }
+}
+
+impl <T: PrimInt> DivAssign<T> for Vec2<T> {
+    fn div_assign(&mut self, rhs: T) {
+        self.x = self.x / rhs;
+        self.y = self.y / rhs;
     }
 }
 

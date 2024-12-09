@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use aoc_common::{file_lines, IteratorExt, Vec2i32};
 
 fn input() -> (Vec<Vec<u8>>, Vec2i32) {
@@ -13,19 +15,30 @@ fn input() -> (Vec<Vec<u8>>, Vec2i32) {
     panic!();
 }
 
-fn march(pos: &mut Vec2i32, dir: &mut Vec2i32, map: &[Vec<u8>]) -> bool {
+use MarchResult::*;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum MarchResult {
+    Forward,
+    Turn,
+    OOB,
+}
+
+fn march(pos: &mut Vec2i32, dir: &mut Vec2i32, map: &[Vec<u8>]) -> MarchResult {
+    let mut result = Forward;
     loop {
         let next = *pos + *dir;
 
         if !next.is_in_bounds((map.len() as i32, map[0].len() as i32).into()) {
-            return false;
+            return OOB;
         }
 
         if map[next.y as usize][next.x as usize] == b'#' {
             dir.rotate_right();
+            result = Turn;
         } else {
             *pos = next;
-            return true;
+            return result;
         }
     }
 }
@@ -34,7 +47,7 @@ fn find_visited(mut pos: Vec2i32, mut dir: Vec2i32, map: &Vec<Vec<u8>>) -> Vec<V
     let mut visited = vec![vec![false; map[0].len() as usize]; map.len() as usize];
     visited[pos.y as usize][pos.x as usize] = true;
 
-    while march(&mut pos, &mut dir, &map) {
+    while march(&mut pos, &mut dir, &map) != OOB {
         visited[pos.y as usize][pos.x as usize] = true;
     }
 
@@ -42,16 +55,18 @@ fn find_visited(mut pos: Vec2i32, mut dir: Vec2i32, map: &Vec<Vec<u8>>) -> Vec<V
 }
 
 fn check_cycle(mut pos: Vec2i32, mut dir: Vec2i32, map: &[Vec<u8>]) -> bool {
-    let mut visited: Vec<Vec<Option<Vec<Vec2i32>>>> = vec![vec![None; map[0].len()]; map.len()];
-    visited[pos.y as usize][pos.x as usize] = Some(vec![dir]);
+    let mut visited: HashSet<(Vec2i32, Vec2i32)> = HashSet::new();
 
-    while march(&mut pos, &mut dir, &map) {
-        let dirs = &mut visited[pos.y as usize][pos.x as usize].get_or_insert(Default::default());
-
-        if dirs.contains(&dir) {
-            return true;
+    loop {
+        let result = march(&mut pos, &mut dir, map);
+        if result == OOB {
+            break;
+        } else if result == Turn {
+            if visited.contains(&(pos, dir)) {
+                return true;
+            }
+            visited.insert((pos, dir));
         }
-        dirs.push(dir);
     }
 
     false

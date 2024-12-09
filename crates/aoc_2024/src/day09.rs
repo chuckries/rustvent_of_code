@@ -1,128 +1,143 @@
+
 use aoc_common::{file_string, IteratorExt};
 
-fn input() -> Vec<i32> {
-    file_string("inputs/day09.txt").into_bytes().into_iter().map(|b| (b - b'0') as i32).to_vec()
+fn input() -> Vec<i64> {
+    file_string("inputs/day09.txt").into_bytes().into_iter().map(|b| (b - b'0') as i64).to_vec()
 }
 
 #[test]
 fn part1() {
     let nums = input();
-    let mut blocks: Vec<i32> = Vec::new();
+    let mut total: i64 = 0;
 
-    let mut id = 0;
-    let mut iter = nums.into_iter();
+    let mut front_idx = 0;
+    let mut back_idx = nums.len() - 1;
 
-    while let Some(block_size) = iter.next() {
-        for _ in 0..block_size {
-            blocks.push(id);
-        }
-        id += 1;
+    // ensure we start on even idx (file)
+    if back_idx & 1 == 1 {
+        back_idx -= 1;
+    }
 
-        if let Some(empty_size) = iter.next() {
-            for _ in 0..empty_size {
-                blocks.push(-1);
+    let mut back_remaining = nums[back_idx];
+
+    let mut pos = 0;
+    let mut back_pos = nums[0..=back_idx].iter().sum::<i64>() - 1;
+    'outer: while pos <= back_pos {
+        // add current file to total
+        let id = front_idx as i64 / 2;
+        for _ in 0..nums[front_idx] {
+            total += pos * id;
+            pos += 1;
+            if pos > back_pos {
+                break 'outer;
             }
         }
-    }
 
-    let mut next = 0;
-    let mut end = blocks.len() - 1;
-    while next < end {
-        if blocks[next] != -1 {
-            next += 1;
-        } else if blocks[end] == -1 {
-            end -= 1;
-        } else {
-            blocks[next] = blocks[end];
-            blocks[end] = -1;
-            next += 1;
-            end -= 1;
+        front_idx += 1;
+
+        let mut id = back_idx as i64 / 2;
+        // read num[front_idx] number of blocks from the back to fill the empty slot
+        for _ in 0..nums[front_idx] {
+            total += pos * id;
+
+            pos += 1;
+            back_pos -= 1;
+            if pos > back_pos {
+                break 'outer;
+            }
+
+            back_remaining -= 1;
+            if back_remaining == 0 {
+                back_pos -= nums[back_idx - 1];
+                if pos > back_pos {
+                    break 'outer;
+                }
+                back_idx -= 2;
+                back_remaining = nums[back_idx];
+                id -= 1;
+            }
         }
+
+        front_idx += 1;
     }
 
-    let answer = blocks
-        .iter()
-        .copied()
-        .take_while(|c| *c != -1)
-        .enumerate()
-        .map(|(idx, id)| idx as i64 * id as i64)
-        .sum::<i64>();
-
-    assert_eq!(answer, 6337367222422);
+    assert_eq!(total, 6337367222422);
 }
 
-use Entry::*;
-enum Entry {
-    File(i32, usize),
-    Empty(i32),
+struct File {
+    size: i64,
+    id: i64,
+    pos: i64,
 }
 
-impl Entry {
-    fn is_file(&self) -> bool {
-        matches!(self, File(_, _))
-    }
-
-    fn is_empty(&self) -> bool {
-        matches!(self, Empty(_))
-    }
+struct Emtpy {
+    size: i64,
+    pos: i64,
 }
 
 #[test]
 fn part2() {
-    let mut iter = input().into_iter();
+    let input = input();
+    let mut files: Vec<File> = Vec::with_capacity(input.len() / 2  + 1);
+    let mut empties: Vec<Emtpy> = Vec::with_capacity(input.len() / 2 + 1);
+    let mut iter = input.into_iter();
     let mut id = 0;
-    let mut entries: Vec<Entry> = Vec::new();
-
-    while let Some(file_size) = iter.next() {
-        entries.push(File(file_size, id));
-        id += 1;
-        if let Some(empty_size) = iter.next() {
-            entries.push(Empty(empty_size));
-        }
-    }
-
-    let mut front = 0;
-    let mut back = entries.len() - 1;
-
-    while back > 0 {
-        match entries[back] {
-            File(file_size, id) => {
-                for i in 0..back {
-                    if let Empty(empty_size) = entries[i] {
-                        if empty_size >= file_size {
-                            entries[i] = File(file_size, id);
-                            if empty_size > file_size {
-                                entries.insert(i + 1, Empty(empty_size - file_size));
-                                back += 1;
-                            }
-                            entries[back] = Empty(file_size);
-                            break;
-                        }
-                    }
-                }
-                back -= 1;
-            }
-            Empty(_) => {
-                back -=1;
-            }
-        }
-    }
-
     let mut pos = 0;
-    let mut total = 0;
-    for e in entries {
-        match e {
-            File(size, id) => {
-                for _ in 0..size {
-                    total += pos as i64 * id as i64;
-                    pos += 1;
-                }
-            }
-            Empty(size) => {
-                pos += size
-            }
+    while let Some(size) = iter.next() {
+        files.push(File {
+            size,
+            id,
+            pos
+        });
+
+        id += 1;
+        pos += size;
+
+        if let Some(size) = iter.next() {
+            empties.push(Emtpy {
+                size,
+                pos,
+            });
+
+            pos += size;
         }
     }
 
+    let mut file_idx = files.len() - 1;
+    loop {
+        let file = &mut files[file_idx];
+
+        if file.pos <= empties[0].pos {
+            break;
+        }
+
+        for i in 0..empties.len() {
+            let empty = &mut empties[i];
+            if empty.pos > file.pos {
+                break;
+            }
+
+            if empty.size >= file.size {
+                file.pos = empty.pos;
+                empty.size -= file.size;
+                if empty.size == 0 {
+                    empties.remove(i);
+                } else {
+                    empty.pos += file.size;
+                }
+
+                break;
+            }
+        }
+
+        file_idx -= 1;
+    }
+
+    let mut total: i64 = 0;
+    for f in files {
+        for i in 0 .. f.size {
+            total += f.id * (f.pos + i);
+        }
+    }
     assert_eq!(total, 6361380647183);
 }

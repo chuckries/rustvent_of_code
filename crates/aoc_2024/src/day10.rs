@@ -6,48 +6,48 @@ fn input() -> Vec<Vec<i32>> {
     file_lines("inputs/day10.txt").map(|l| l.into_bytes().into_iter().map(|b| (b - b'0') as i32).to_vec()).to_vec()
 }
 
-trait Trailer: Default {
+trait Hiker: Default {
     fn after_trailhead(&mut self);
     fn end_found(&mut self, p: Vec2i32);
     fn total(&self) -> i32;
 }
 
-fn run<T: Trailer>() -> i32 {
-    let map = input();
-    let bounds: Vec2i32 = Vec2i32::new(map[0].len() as i32, map.len() as i32);
-    let mut trailer = T::default();
-
-    fn test<T: Trailer>(p: Vec2i32, map: &Vec<Vec<i32>>, bounds: Vec2i32, n: i32, t: &mut T) {
+fn run<T: Hiker>() -> i32 {
+    fn test<T: Hiker>(p: Vec2i32, map: &Vec<Vec<i32>>, bounds: Vec2i32, n: i32, hiker: &mut T) {
         if n == 9 {
-            t.end_found(p);
+            hiker.end_found(p);
         } else {
             for adj in p.adjacent_bounded(&bounds) {
                 if map[adj.y as usize][adj.x as usize] == n + 1 {
-                    test(adj, map, bounds, n + 1, t);
+                    test(adj, map, bounds, n + 1, hiker);
                 }
             };
         }
     }
 
+    let map = input();
+    let bounds: Vec2i32 = Vec2i32::new(map[0].len() as i32, map.len() as i32);
+    let mut hiker = T::default();
+
     for j in 0..bounds.y {
         for i in 0..bounds.x {
             if map[j as usize][i as usize] == 0 {
-                test((i, j).into(), &map, bounds, 0, &mut trailer);
-                trailer.after_trailhead();
+                test((i, j).into(), &map, bounds, 0, &mut hiker);
+                hiker.after_trailhead();
             }
         }
     }
 
-    trailer.total()
+    hiker.total()
 }
 
 #[derive(Default)]
-struct Trailer1 {
+struct Hiker1 {
     positions: HashSet<Vec2i32>,
     total: i32,
 }
 
-impl Trailer for Trailer1 {
+impl Hiker for Hiker1 {
     fn after_trailhead(&mut self) {
         self.total += self.positions.len() as i32;
         self.positions.clear();
@@ -64,16 +64,16 @@ impl Trailer for Trailer1 {
 
 #[test]
 fn part1() {
-    let answer = run::<Trailer1>();
+    let answer = run::<Hiker1>();
     assert_eq!(answer, 482);
 }
 
 #[derive(Default)]
-struct Trailer2 {
+struct Hiker2 {
     total: i32
 }
 
-impl Trailer for Trailer2 {
+impl Hiker for Hiker2 {
     fn after_trailhead(&mut self) { }
 
     fn end_found(&mut self, _: Vec2i32) {
@@ -87,6 +87,6 @@ impl Trailer for Trailer2 {
 
 #[test]
 fn part2() {
-    let answer = run::<Trailer2>();
+    let answer = run::<Hiker2>();
     assert_eq!(answer, 1094);
 }

@@ -20,12 +20,7 @@ fn run(iterations: usize) -> usize {
             if i == 0 {
                 *next.entry(1).or_default() += count;
             } else {
-                let mut tmp = i;
-                let mut digits = 0;
-                while tmp > 0 {
-                    digits += 1;
-                    tmp /= 10;
-                }
+                let digits = f64::floor(f64::log10(i as f64) + 1.0) as i64;
                 if digits & 1 == 0 {
                     let div = i64::pow(10, digits as u32 / 2);
                     let left = i / div;

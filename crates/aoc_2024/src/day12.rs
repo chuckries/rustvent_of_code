@@ -186,5 +186,5 @@ fn part2() {
         }
     }
 
-    assert_eq!(total, 0);
+    assert_eq!(total, 862486);
 }

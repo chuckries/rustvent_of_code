@@ -1,4 +1,4 @@
-use std::{iter::Sum, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}};
+use std::{cmp::Ordering, iter::Sum, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}};
 use num_traits::{PrimInt, Signed};
 
 pub type Vec2us = Vec2<usize>;
@@ -160,6 +160,15 @@ impl<T: PrimInt> Vec2<T> {
     /// self (exclusive). Only yields points in the first quadrant.
     pub fn iter(&self) -> Iter<T> {
         Iter::new(Self::zero(), *self)
+    }
+
+    // sorts top to bottom, left to right for standard grid coords
+    pub fn grid_ordering(&self, rhs: &Self) -> Ordering {
+        let mut ord = self.y.cmp(&rhs.y);
+        if ord == Ordering::Equal {
+            ord = self.x.cmp(&rhs.x);
+        }
+        ord
     }
 }
 

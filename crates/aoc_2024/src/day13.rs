@@ -1,8 +1,7 @@
-use std::i32;
+#![allow(non_snake_case)]
+use aoc_common::{file_lines, IteratorExt, Vec2i64};
 
-use aoc_common::{file_lines, IteratorExt, Vec2i32, Vec2i64};
-
-fn input() -> Vec<(Vec2i32, Vec2i32, Vec2i32)> {
+fn input() -> Vec<(Vec2i64, Vec2i64, Vec2i64)> {
     let mut lines = file_lines("inputs/day13.txt");
 
     let mut inputs = Vec::new();
@@ -32,38 +31,7 @@ fn input() -> Vec<(Vec2i32, Vec2i32, Vec2i32)> {
     inputs
 }
 
-#[test]
-fn part1() {
-    let input = input();
-
-    let mut total = 0;
-    for (a, b, target) in input {
-        // A * a + B * b == target
-        // minimize 3 * A + B
-        // A <= 100, B <= 100
-
-        let mut min = i32::MAX;
-        for A in 0..=100 {
-            for B in 0..=100 {
-                if a * A + b * B == target {
-                    let cand = 3 * A + B;
-                    if cand < min {
-                        min = cand;
-                    }
-                }
-            }
-        }
-
-        if min != i32::MAX {
-            total += min;
-        }
-    }
-
-    assert_eq!(total, 29388);
-}
-
-#[test]
-fn part2() {
+fn run(input: &[(Vec2i64, Vec2i64, Vec2i64)]) -> i64 {
     // A * ax + B * bx = tx
     // A * ay + B * by = ty
 
@@ -76,13 +44,6 @@ fn part2() {
     // B * by - B * bx * (ay / ax) = ty - tx * (ay / ax)
     // B * (by - bx * (ay /ax)) = ty - tx * (ay / ax)
     // B = (ty - tx * (ay / ax)) / (by - bx * (ay / ax))
-}
-
-#[test]
-fn part2_2() {
-    let input = input().into_iter().map(|(a, b, t)| {
-        (a.cast::<i64>(), b.cast::<i64>(), Vec2i64::new(t.x as i64 + 10000000000000, t.y as i64 + 10000000000000))
-    }).to_vec();
 
     let mut total = 0;
     for (a, b, t) in input {
@@ -94,12 +55,31 @@ fn part2_2() {
         let A = (t.x as f64 - B * b.x as f64) / a.x as f64;
         let A = A.round();
 
-        if a * A as i64 + b * B as i64 != t {
+        if *a * A as i64 + *b * B as i64 != *t {
             continue;
         }
 
         total += 3 * A as i64 + B as i64;
     }
 
-    assert_eq!(total, 99548032866004);
+    total
+}
+
+#[test]
+fn part1() {
+    let input = input();
+    let answer = run(&input);
+    assert_eq!(answer, 29388);
+}
+
+#[test]
+fn part2() {
+    const ADD: i64 = 10000000000000;
+    let mut input = input();
+    for (_, _, t) in input.iter_mut() {
+        t.x += ADD;
+        t.y += ADD;
+    }
+    let answer: i64 = run(&input);
+    assert_eq!(answer, 99548032866004);
 }

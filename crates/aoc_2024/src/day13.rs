@@ -1,6 +1,6 @@
 use std::i32;
 
-use aoc_common::{file_lines, IteratorExt, Vec2i32};
+use aoc_common::{file_lines, IteratorExt, Vec2i32, Vec2i64};
 
 fn input() -> Vec<(Vec2i32, Vec2i32, Vec2i32)> {
     let mut lines = file_lines("inputs/day13.txt");
@@ -60,4 +60,46 @@ fn part1() {
     }
 
     assert_eq!(total, 29388);
+}
+
+#[test]
+fn part2() {
+    // A * ax + B * bx = tx
+    // A * ay + B * by = ty
+
+    // A * ax = tx - B * bx
+    // A = (tx - B * bx) / ax
+
+    // ((tx - B * bx) / ax) * ay + B * by = ty
+    // (ay / ax) * (tx - B * bx) + B * by = ty
+    // tx * (ay / ax) - (B * bx) * (ay /ax) + B * by = ty
+    // B * by - B * bx * (ay / ax) = ty - tx * (ay / ax)
+    // B * (by - bx * (ay /ax)) = ty - tx * (ay / ax)
+    // B = (ty - tx * (ay / ax)) / (by - bx * (ay / ax))
+}
+
+#[test]
+fn part2_2() {
+    let input = input().into_iter().map(|(a, b, t)| {
+        (a.cast::<i64>(), b.cast::<i64>(), Vec2i64::new(t.x as i64 + 10000000000000, t.y as i64 + 10000000000000))
+    }).to_vec();
+
+    let mut total = 0;
+    for (a, b, t) in input {
+        let ay_ax: f64 = a.y as f64 / a.x as f64;
+
+        let B = (t.y as f64 - t.x as f64 * ay_ax) / (b.y as f64 - b.x as f64 * ay_ax);
+        let B = B.round();
+
+        let A = (t.x as f64 - B * b.x as f64) / a.x as f64;
+        let A = A.round();
+
+        if a * A as i64 + b * B as i64 != t {
+            continue;
+        }
+
+        total += 3 * A as i64 + B as i64;
+    }
+
+    assert_eq!(total, 99548032866004);
 }

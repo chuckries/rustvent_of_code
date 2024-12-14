@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, iter::Sum, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}};
+use std::{cmp::Ordering, fmt::Debug, iter::Sum, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}, str::FromStr};
 use num_traits::{PrimInt, Signed};
 
 pub type Vec2us = Vec2<usize>;
@@ -22,7 +22,7 @@ pub struct Vec2<T> {
 
 impl<T: PrimInt> Vec2<T> {
     pub const fn new(x: T, y: T) -> Self {
-        Vec2 { x, y }
+        Self { x, y }
     }
 
     pub fn zero() -> Self {
@@ -199,6 +199,18 @@ impl<T:PrimInt + Signed> Vec2<T> {
 
     pub fn cardinal_dirs_and_diags() -> impl Iterator<Item = Self> {
         Self::zero().surrounding_unbounded().into_iter()
+    }
+}
+
+impl<T: PrimInt + FromStr> Vec2<T>
+where 
+    <T as FromStr>::Err: Debug
+{
+    pub fn parse<S: AsRef<str>>(x: S, y: S) -> Self {
+        Self {
+            x: x.as_ref().parse::<T>().unwrap(),
+            y: y.as_ref().parse::<T>().unwrap()
+        }
     }
 }
 

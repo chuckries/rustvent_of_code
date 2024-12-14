@@ -1,5 +1,4 @@
-#![allow(non_snake_case)]
-use aoc_common::{file_lines, IteratorExt, Vec2i64};
+use aoc_common::{file_lines, IteratorExt, Vec2, Vec2i64};
 
 fn input() -> Vec<(Vec2i64, Vec2i64, Vec2i64)> {
     let mut lines = file_lines("inputs/day13.txt");
@@ -31,6 +30,7 @@ fn input() -> Vec<(Vec2i64, Vec2i64, Vec2i64)> {
     inputs
 }
 
+#[allow(non_snake_case)]
 fn run(input: &[(Vec2i64, Vec2i64, Vec2i64)]) -> i64 {
     // A * ax + B * bx = tx
     // A * ay + B * by = ty
@@ -46,16 +46,15 @@ fn run(input: &[(Vec2i64, Vec2i64, Vec2i64)]) -> i64 {
     // B = (ty - tx * (ay / ax)) / (by - bx * (ay / ax))
 
     let mut total = 0;
-    for (a, b, t) in input {
+    for (a, b, t) in input.iter().cloned() {
         let ay_ax: f64 = a.y as f64 / a.x as f64;
 
         let B = (t.y as f64 - t.x as f64 * ay_ax) / (b.y as f64 - b.x as f64 * ay_ax);
-        let B = B.round();
-
         let A = (t.x as f64 - B * b.x as f64) / a.x as f64;
-        let A = A.round();
-
-        if *a * A as i64 + *b * B as i64 != *t {
+        
+        let A = A.round() as i64;
+        let B = B.round() as i64;
+        if a * A + b * B != t {
             continue;
         }
 
@@ -74,7 +73,7 @@ fn part1() {
 
 #[test]
 fn part2() {
-    const ADD: i64 = 10000000000000;
+    const ADD: i64 = 10_000_000_000_000;
     let mut input = input();
     for (_, _, t) in input.iter_mut() {
         t.x += ADD;

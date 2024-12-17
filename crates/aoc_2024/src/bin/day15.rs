@@ -1,4 +1,7 @@
+
 use aoc_common::{file_lines, IteratorExt, Vec2i32};
+use console::{Key, Style, Term};
+use std::io::Write;
 
 use Dir::*;
 
@@ -21,7 +24,7 @@ impl Dir {
 }
 
 fn input() -> (Vec<Vec<u8>>, Vec<Dir>) {
-    let mut lines = file_lines("inputs/day15.txt");
+    let mut lines = file_lines(r"crates\aoc_2024\inputs\day15.txt");
 
     let mut map: Vec<Vec<u8>> = Vec::new();
     loop {
@@ -46,70 +49,11 @@ fn input() -> (Vec<Vec<u8>>, Vec<Dir>) {
     (map, dirs)
 }
 
-#[test]
-fn part1() {
-    let (mut map, dirs) = input();
+fn main() -> std::io::Result<()> {
+    let mut term = Term::buffered_stdout();
 
-    let mut pos = Vec2i32::default();
-    'outer: for j in 0.. map.len() {
-        for i in 0..map[0].len() {
-            if map[j][i] == b'@' {
-                pos = Vec2i32::new(i as i32, j as i32);
-                break 'outer;
-            }
-        }
-    }
+    term.hide_cursor()?;
 
-    for dir in dirs {
-        let dir = dir.unit_vec();
-
-        let cand = pos + dir;
-        match map[cand.y as usize][cand.x as usize] {
-            b'#' => (),
-            b'.' => {
-                map[cand.y as usize][cand.x as usize] = b'@';
-                map[pos.y as usize][pos.x as usize] = b'.';
-                pos = cand;
-            }
-            b'O' => {
-                let mut check = cand;
-                loop {
-                    check += dir;
-                    match map[check.y as usize][check.x as usize] {
-                        b'O' => (),
-                        b'#' => break,
-                        b'.' => {
-                            map[check.y as usize][check.x as usize] = b'O';
-                            map[cand.y as usize][cand.x as usize] = b'@';
-                            map[pos.y as usize][pos.x as usize] = b'.';
-                            pos = cand;
-                            break;
-                        }
-                        _ => panic!(),
-                    }
-                }
-            }
-            _ => panic!(),
-        }
-    }
-
-    let mut total = 0;
-    for j in 0..map.len() {
-        for i in 0..map[0].len() {
-            if map[j as usize][i as usize] == b'O' {
-                total += 100 * j + i;
-            }
-            //print!("{}", map[j as usize][i as usize] as char);
-        }
-        //println!();
-    }
-    //println!();
-
-    assert_eq!(total, 1538871);
-}
-
-#[test]
-fn part2() {
     let (map, dirs) = input();
     let mut pos = Vec2i32::default();
     let mut modified: Vec<Vec<u8>> = Vec::with_capacity(map.len());
@@ -131,12 +75,30 @@ fn part2() {
     }
     let mut map = modified;
 
-    for dir in dirs {
+    term.clear_screen()?;
+    for row in map.iter() {
+        for c in row.iter() {
+            write!(term, "{}", *c as char)?;
+        }
+        writeln!(term)?;
+    }
+    term.flush()?;
+
+    loop {
+        let key = term.read_key()?;
+        let dir = match key {
+            Key::ArrowUp => U,
+            Key::ArrowDown => D,
+            Key::ArrowLeft => L,
+            Key::ArrowRight => R,
+            _ => continue
+        };
+
         let unit = dir.unit_vec();
         let cand = pos + unit;
 
         match map[cand.y as usize][cand.x as usize] {
-            b'#' => (),
+            b'#' => continue,
             b'.' => {
                 map[cand.y as usize][cand.x as usize] = b'@';
                 map[pos.y as usize][pos.x as usize] = b'.';
@@ -205,6 +167,8 @@ fn part2() {
                             map[cand.y as usize][cand.x as usize] = b'@';
                             map[pos.y as usize][pos.x as usize] = b'.';
                             pos = cand;
+                        } else {
+                            continue;
                         }
                     }
                     L | R => {
@@ -234,6 +198,8 @@ fn part2() {
 
                             map[pos.y as usize][pos.x as usize] = b'.';
                             pos = cand;
+                        } else {
+                            continue;
                         }
                     }
                 }
@@ -241,23 +207,21 @@ fn part2() {
             _ => panic!()
         }
 
-        // for row in map.iter() {
-        //     for c in row.iter() {
-        //         print!("{}", *c as char)
-        //     }
-        //     println!();
-        // }
-        // println!();
-    }
-
-    let mut total = 0;
-    for j in 0..map.len() {
-        for i in 0..map[0].len() {
-            if map[j][i] == b'[' {
-                total += 100 * j + i;
+        term.clear_screen()?;
+        for row in map.iter() {
+            for c in row.iter() {
+                let style = match *c {
+                    b'.' => Style::new().dim(),
+                    b'@' => Style::new().cyan().bold(),
+                    b'#' => Style::new().green(),
+                    _ => Style::new().black().on_white(),
+                };
+                write!(term, "{}", style.apply_to(*c as char))?;
             }
+            writeln!(term)?;
         }
+        term.flush()?;
     }
 
-    assert_eq!(total, 1543338);
+    Ok(())
 }

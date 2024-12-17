@@ -1,4 +1,4 @@
-use aoc_common::{file_lines, IteratorExt, Vec2, Vec2i64};
+use aoc_common::{file_lines, IteratorExt, Vec2i64};
 
 fn input() -> Vec<(Vec2i64, Vec2i64, Vec2i64)> {
     let mut lines = file_lines("inputs/day13.txt");

@@ -1,8 +1,5 @@
 
 use std::i64;
-use std::{fs::File, usize};
-use std::io::Write;
-
 use aoc_common::{file_lines, IteratorExt, Vec2i64};
 
 fn input() -> Vec<(Vec2i64, Vec2i64)> {

@@ -161,7 +161,7 @@ fn by_hand() {
         let mut a;
         let mut b;
         let mut c;
-        // find the first 3 bit number that produces i based on the current pending answer
+        // find the first 3 bit number that produces the target output based on the current partial answer
         for i in 0..8 {
             a = partial | i;
             b = a & 7;
@@ -184,5 +184,5 @@ fn by_hand() {
     target.reverse();
 
     let answer = recurse(&target, 0, 0).unwrap();
-    assert_eq!(answer, 0);
+    assert_eq!(answer, 47910079998866);
 }

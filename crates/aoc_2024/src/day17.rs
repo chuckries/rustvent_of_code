@@ -73,84 +73,9 @@ fn part1() {
 
 #[test]
 fn part2() {
-    let (regs, code) = input();
-    let mut output: Vec<i32> = Vec::new();
-
-    // len(output) = 2 ^ (3 * (x - 1))
-
-    let start = i64::pow(2, 3 * (code.len() as u32 - 1));
-    let end = i64::pow(2, 3 * code.len() as u32);
-
-    let mid = start + (end - start) / 2;
-
-    let mut answer= 0;
-    'outer: for i in 0..=100 {
-        let mut ip = 0;
-        let mut regs = regs.clone();
-        regs[0] = i;
-        output.clear();
-
-        while ip < code.len() {
-            let op = code[ip];
-            ip += 1;
-            let operand = code[ip];
-            ip += 1;
-    
-            let literal = operand as i64;
-            let combo = match operand {
-                0..=3 => operand as i64,
-                4..=6 => regs[operand as usize - 4],
-                _ => 0,
-            };
-    
-            match op {
-                0 => {
-                    regs[0] = regs[0] / i64::pow(2, combo as u32)
-                }
-                1 => {
-                    regs[1] = regs[1] ^ literal;
-                }
-                2 => {
-                    regs[1] = combo % 8;
-                }
-                3 => {
-                    if regs[0] != 0 {
-                        ip = literal as usize;
-                    }
-                }
-                4 => {
-                    regs[1] = regs[1] ^ regs[2];
-                }
-                5 => {
-                    let out = (combo % 8) as i32;
-                    // if code[output.len()] != out {
-                    //     continue 'outer;
-                    // }
-                    output.push(out);
-                }
-                6 => {
-                    regs[1] = regs[0] / i64::pow(2, combo as u32)
-                }
-                7 => {
-                    regs[2] = regs[0] / i64::pow(2, combo as u32)
-                }
-                _ => panic!(),
-            }
-        }
-
-        println!("{}\t{:?}", i, output);
-
-        if output == code {
-            answer = i;
-            break;
-        }
-    }
-
-    assert_eq!(answer, 0);
-}
-
-#[test]
-fn by_hand() {
+    // this is all just hard coded by hand for my input; this could be made to be generic but would require big assumptions such as all inputs are
+    // hashing 3 bits at a time and shifting them in the specific way. This could be validated as part of the problem but whatever.
+    // This worked.
 
     fn recurse(nums: &[i64], idx: usize, mut partial: i64) -> Option<i64> {
         if idx == nums.len() {

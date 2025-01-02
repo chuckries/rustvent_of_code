@@ -410,6 +410,16 @@ impl<T: PrimInt> From<Vec2<T>> for (T, T) {
     }
 }
 
+impl<T: PrimInt> FromIterator<T> for Vec2<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut iter = iter.into_iter();
+        Self {
+            x: iter.next().unwrap(),
+            y: iter.next().unwrap(),
+        }
+    }
+}
+
 pub struct Iter<T: PrimInt> {
     start: Vec2<T>,
     end: Vec2<T>,

@@ -17,18 +17,18 @@ fn part1() {
 
     const BOUNDS: Vec2i64 = Vec2i64::new(101, 103);
 
-    let counts = input.iter().map(|(p, _)| p).cloned().counts::<i64>();
-    for j in 0..BOUNDS.y {
-        for i in 0..BOUNDS.x {
-            if let Some(count) = counts.get(&(i, j).into()) {
-                print!("{}", count)
-            } else {
-                print!(".");
-            }
-        }
-        println!();
-    }
-    println!();
+    // let counts = input.iter().map(|(p, _)| p).cloned().counts::<i64>();
+    // for j in 0..BOUNDS.y {
+    //     for i in 0..BOUNDS.x {
+    //         if let Some(count) = counts.get(&(i, j).into()) {
+    //             print!("{}", count)
+    //         } else {
+    //             print!(".");
+    //         }
+    //     }
+    //     println!();
+    // }
+    // println!();
 
     for _ in 0..100 {
         for (p, v) in input.iter_mut() {
@@ -49,18 +49,18 @@ fn part1() {
         }
     }
 
-    let counts = input.iter().map(|(p, _)| p).cloned().counts::<i64>();
-    for j in 0..BOUNDS.y {
-        for i in 0..BOUNDS.x {
-            if let Some(count) = counts.get(&(i, j).into()) {
-                print!("{}", count)
-            } else {
-                print!(".");
-            }
-        }
-        println!();
-    }
-    println!();
+    // let counts = input.iter().map(|(p, _)| p).cloned().counts::<i64>();
+    // for j in 0..BOUNDS.y {
+    //     for i in 0..BOUNDS.x {
+    //         if let Some(count) = counts.get(&(i, j).into()) {
+    //             print!("{}", count)
+    //         } else {
+    //             print!(".");
+    //         }
+    //     }
+    //     println!();
+    // }
+    // println!();
 
     let mut quads = [0; 4];
     for (p, _) in input {
@@ -77,7 +77,7 @@ fn part1() {
     }
 
     let answer = quads.into_iter().product::<i64>();
-    assert_eq!(answer, 0);
+    assert_eq!(answer, 216027840);
 }
 
 #[test]

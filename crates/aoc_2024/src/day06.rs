@@ -1,18 +1,18 @@
 use std::collections::HashSet;
 
-use aoc_common::{file_lines, IteratorExt, Vec2i32};
+use aoc_common::{file_as_byte_grid, Grid, Vec2i32};
 
-fn input() -> (Vec<Vec<u8>>, Vec2i32) {
-    let map = file_lines("inputs/day06.txt").map(|l| l.into_bytes().to_vec()).to_vec();
+fn input() -> (Grid<u8>, Vec2i32) {
+    let map = file_as_byte_grid("inputs/day06.txt");
 
-    for j in 0..map.len() {
-        for i in 0..map[j].len() {
-            if map[j][i] == b'^' {
-                return (map, (i as i32, j as i32).into());
-            }
+    let mut start = Vec2i32::default();
+    for (p, c) in map.enumerate() {
+        if *c == b'^' {
+            start = p.cast();
+            break;
         }
     }
-    panic!();
+    (map, start)
 }
 
 use MarchResult::*;
@@ -24,16 +24,16 @@ enum MarchResult {
     OOB,
 }
 
-fn march(pos: &mut Vec2i32, dir: &mut Vec2i32, map: &[Vec<u8>]) -> MarchResult {
+fn march(pos: &mut Vec2i32, dir: &mut Vec2i32, map: &Grid<u8>) -> MarchResult {
     let mut result = Forward;
     loop {
         let next = *pos + *dir;
 
-        if !next.is_in_bounds((map.len() as i32, map[0].len() as i32).into()) {
+        if !next.is_in_bounds(map.bounds().cast()) {
             return OOB;
         }
 
-        if map[next.y as usize][next.x as usize] == b'#' {
+        if map[next] == b'#' {
             dir.rotate_right();
             result = Turn;
         } else {
@@ -43,18 +43,18 @@ fn march(pos: &mut Vec2i32, dir: &mut Vec2i32, map: &[Vec<u8>]) -> MarchResult {
     }
 }
 
-fn find_visited(mut pos: Vec2i32, mut dir: Vec2i32, map: &Vec<Vec<u8>>) -> Vec<Vec<bool>> {
-    let mut visited = vec![vec![false; map[0].len() as usize]; map.len() as usize];
-    visited[pos.y as usize][pos.x as usize] = true;
+fn find_visited(mut pos: Vec2i32, mut dir: Vec2i32, map: &Grid<u8>) -> Grid<bool> {
+    let mut visited = map.same_of_type::<bool>();
+    visited[pos] = true;
 
     while march(&mut pos, &mut dir, &map) != OOB {
-        visited[pos.y as usize][pos.x as usize] = true;
+        visited[pos] = true;
     }
 
     visited
 }
 
-fn check_cycle(mut pos: Vec2i32, mut dir: Vec2i32, map: &[Vec<u8>]) -> bool {
+fn check_cycle(mut pos: Vec2i32, mut dir: Vec2i32, map: &Grid<u8>) -> bool {
     let mut visited: HashSet<(Vec2i32, Vec2i32)> = HashSet::new();
 
     loop {
@@ -76,7 +76,7 @@ fn check_cycle(mut pos: Vec2i32, mut dir: Vec2i32, map: &[Vec<u8>]) -> bool {
 fn part1() {
     let (map, start) = input();
     let visited = find_visited(start, -Vec2i32::unit_y(), &map);
-    let answer = visited.iter().flatten().filter(|b| **b).count();
+    let answer = visited.iter().filter(|b| **b).count();
     assert_eq!(answer, 4580);
 }
 
@@ -88,15 +88,13 @@ fn part2() {
     visited[start.y as usize][start.x as usize] = false;
 
     let mut total = 0;
-    for j in 0..visited.len() as usize {
-        for i in 0..visited[j].len() as usize {
-            if visited[j][i] {
-                map[j][i] = b'#';
-                if check_cycle(start, dir, &map) {
-                    total += 1;
-                }
-                map[j][i] = b'.';
+    for (p, v) in visited.enumerate() {
+        if *v {
+            map[p] = b'#';
+            if check_cycle(start, dir, &map) {
+                total += 1;
             }
+            map[p] = b'.';
         }
     }
 

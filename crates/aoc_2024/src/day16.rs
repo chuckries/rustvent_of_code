@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::{HashMap, HashSet, VecDeque}, i32};
 
-use aoc_common::{file_lines, PriorityQueue, Vec2i32};
+use aoc_common::{file_lines, Grid, PriorityQueue, Vec2i32};
 
-fn input() -> (Vec<Vec<u8>>, Vec2i32, Vec2i32) {
+fn input() -> (Grid<u8>, Vec2i32, Vec2i32) {
     let mut start = Vec2i32::default();
     let mut end = Vec2i32::default();
     let mut map: Vec<Vec<u8>> = Vec::new();
@@ -16,7 +16,7 @@ fn input() -> (Vec<Vec<u8>>, Vec2i32, Vec2i32) {
         }
         map.push(line.into_bytes());
     }
-    (map, start, end)
+    (Grid::new(map), start, end)
 }
 
 const DIRS: [Vec2i32; 4] = [
@@ -34,18 +34,16 @@ const fn is_opposite(dir_0: usize, dir_1: usize) -> bool {
     }
 }
 
-type Graph = Vec<[Option<(usize, usize, i32)>; 4]>;
+type Graph = Vec<[Option<(usize, usize, i32, i32)>; 4]>;
 
 fn reduce_map() -> Graph {
     let (map, start, end) = input();
 
     let mut intersections: Vec<Vec2i32> = vec![start, end];
-    for j in 1..map.len() - 1 {
-        for i in 1..map[0].len() - 1 {
-            if map[j][i] == b'.' {
-                if Vec2i32::new(i as i32, j as i32).adjacent().filter(|adj| map[adj.y as usize][adj.x as usize] == b'.').count() >= 3 {
-                    intersections.push((i as i32, j as i32).into());
-                }
+    for (p, c) in map.enumerate() {
+        if *c == b'.' {
+            if p.adjacent().filter(|adj| map[*adj] == b'.').count() >= 3 {
+                intersections.push(p.cast());
             }
         }
     }
@@ -60,21 +58,23 @@ fn reduce_map() -> Graph {
             let mut dir_idx = adj_dir_idx;
 
             pos += dir;
-            if map[pos.y as usize][pos.x as usize] == b'#' {
+            if map[pos] == b'#' {
                 continue;
             }
 
             let mut count = 1;
+            let mut tile_count = 1;
 
             loop {
                 let next = pos + dir;
                 if let Some(sink) = lookup.get(&next) {
                     count += 1;
-                    graph[i][adj_dir_idx] = Some((*sink, dir_idx, count));
+                    tile_count += 1;
+                    graph[i][adj_dir_idx] = Some((*sink, dir_idx, count, tile_count));
                     break;
                 }
 
-                if map[next.y as usize][next.x as usize] == b'#' {
+                if map[next] == b'#' {
                     let left_dir_idx = if dir_idx == 0 { 
                         3
                     } else {
@@ -82,7 +82,7 @@ fn reduce_map() -> Graph {
                     };
                     let left_dir = DIRS[left_dir_idx];
                     let left = pos + left_dir;
-                    if map[left.y as usize][left.x as usize] != b'#' {
+                    if map[left] != b'#' {
                         dir_idx = left_dir_idx;
                         dir = left_dir;
                         count += 1000;
@@ -92,7 +92,7 @@ fn reduce_map() -> Graph {
                     let right_dir_idx = (dir_idx + 1) % 4;
                     let right_dir = DIRS[right_dir_idx];
                     let right = pos + right_dir;
-                    if map[right.y as usize][right.x as usize] != b'#' {
+                    if map[right] != b'#' {
                         dir_idx = right_dir_idx;
                         dir = right_dir;
                         count += 1000;
@@ -102,6 +102,7 @@ fn reduce_map() -> Graph {
                     break;
                 } else {
                     count += 1;
+                    tile_count += 1;
                     pos = next;
                 }
             }
@@ -131,7 +132,7 @@ fn get_min(graph: &Graph, start_idx: usize, start_dir_idx: usize, end_idx: usize
                 continue;
             }
 
-            if let Some((adj_idx, adj_dir_idx, mut adj_len)) = graph[current_idx][src_dir_idx] {
+            if let Some((adj_idx, adj_dir_idx, mut adj_len, _)) = graph[current_idx][src_dir_idx] {
                 if visited[adj_idx] {
                     continue;
                 }
@@ -148,47 +149,95 @@ fn get_min(graph: &Graph, start_idx: usize, start_dir_idx: usize, end_idx: usize
     panic!();
 }
 
-// fn get_mulit_min(graph: &Graph, start_idx: usize, start_dir_idx: usize, end_idx: usize) -> i32 {
-//     let mut queue: PriorityQueue<(usize, usize, i32, Vec<bool>), i32> = PriorityQueue::new();
-//     queue.enqueue((start_idx, start_dir_idx, 0, vec![false; graph.len()]), 0);
+#[derive(Default, Clone)]
+struct NodeData
+{
+    dist: i32,
+    previous: Vec<(usize, usize, usize)>,
+    visisted: bool,
+}
 
-//     let mut min = i32::MAX;
-//     while let Some((current_idx, current_dir_idx, current_len, mut visited)) = queue.dequeue() {
-//         if current_idx == end_idx {
-//             min = current_len;
-//             continue;
-//         }
+fn get_min2(graph: &Graph, start_idx: usize, start_dir_idx: usize, end_idx: usize) -> i32 {
+    let mut node_data = vec![vec![NodeData::default(); 4]; graph.len()];
+    for node in node_data.iter_mut().flatten() {
+        node.dist = i32::MAX;
+    }
+    node_data[start_idx][start_dir_idx].dist = 0;
 
-//         if current_len > min {
-//             break;
-//         }
+    let mut queue: PriorityQueue<(usize, usize, i32), i32> = PriorityQueue::new();
+    queue.enqueue((start_idx, start_dir_idx, 0), 0);
 
-//         if visited[current_idx] {
-//             continue;
-//         }
-//         visited[current_idx] = true;
+    let mut min = i32::MAX;
+    let mut end_dirs: Vec<usize> = Vec::new();
+    while let Some((current_idx, current_dir_idx, current_len)) = queue.dequeue() {
+         if current_len > min {
+            break;
+        }
+        
+        if current_idx == end_idx {
+            end_dirs.push(current_dir_idx);
+            min = current_len;
+        }
 
-//         for adj_dir_idx in 0..4 {
-//             if is_opposite(current_dir_idx, adj_dir_idx) {
-//                 continue;
-//             }
+        if node_data[current_idx][current_dir_idx].visisted {
+            continue;
+        }
+        node_data[current_idx][current_dir_idx].visisted = true;
 
-//             if let Some((adj_idx, mut adj_len)) = graph[current_idx][adj_dir_idx] {
-//                 if visited[adj_idx] {
-//                     continue;
-//                 }
+        for src_dir_idx in 0..4 {
+            if is_opposite(current_dir_idx, src_dir_idx) {
+                continue;
+            }
 
-//                 if adj_dir_idx != current_dir_idx {
-//                     adj_len += 1000;
-//                 }
+            if let Some((adj_idx, adj_dir_idx, mut adj_len, _)) = graph[current_idx][src_dir_idx] {
+                if src_dir_idx != current_dir_idx {
+                    adj_len += 1000;
+                }
 
-//                 queue.enqueue((adj_idx, adj_dir_idx, current_len + adj_len, visited.clone()), current_len + adj_len);
-//             }
-//         }
-//     }
+                let new_len = current_len + adj_len;
+                if new_len <= node_data[adj_idx][adj_dir_idx].dist {
+                    if new_len < node_data[adj_idx][adj_dir_idx].dist {
+                        node_data[adj_idx][adj_dir_idx].previous.clear();
+                        node_data[adj_idx][adj_dir_idx].dist = new_len;
+                        queue.enqueue((adj_idx, adj_dir_idx, new_len), new_len);
+                    }
+                    node_data[adj_idx][adj_dir_idx].previous.push((current_idx, current_dir_idx, src_dir_idx));
+                }
+            }
+        }
+    }
 
-//     panic!();
-// }
+    let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
+    let mut visited = vec![vec![false; 4]; node_data.len()];
+    for dir in end_dirs {
+        queue.push_back((1, dir));
+    }
+    let mut edges: HashSet<(usize, usize)> = HashSet::new();
+    while let Some((node_idx, dir_idx)) = queue.pop_front() {
+        if visited[node_idx][dir_idx] {
+            continue;
+        }
+        visited[node_idx][dir_idx] = true;
+
+        for (prev_idx, prev_dir, taken_dir) in node_data[node_idx][dir_idx].previous.iter() {
+            edges.insert((*prev_idx, *taken_dir));
+            queue.push_back((*prev_idx, *prev_dir));
+        }
+    }
+
+    let mut sunked_nodes = vec![false; node_data.len()];
+    let mut total = 0;
+    for (src, dir) in edges {
+        let (adj_idx, _, _, mut adj_len) = graph[src][dir].unwrap();
+        if sunked_nodes[adj_idx] {
+            adj_len -= 1;
+        }
+        sunked_nodes[adj_idx] = true;
+        total += adj_len;
+    }
+
+    total + 1
+}
 
 #[test]
 fn part1() {
@@ -197,55 +246,9 @@ fn part1() {
     assert_eq!(answer, 106512);
 }
 
-// #[test]
-// fn scratch() {
-//     let graph = reduce_map();
-//     let answer = get_mulit_min(&graph, 0, 1, 1);
-// }
-
-// #[test]
-// fn part2() {
-//     let graph = reduce_map();
-
-//     let mut queue: PriorityQueue<(usize, i32, usize), i32> = PriorityQueue::new();
-//     queue.enqueue((0, 0, 1), 0);
-
-//     fn dfs(graph: &Graph, current_idx: usize, current_dir_idx: usize, len: i32, visited: &mut [bool]) {
-//         if len > 106512 {
-//             return;
-//         }
-        
-//         if current_idx == 1 {
-//             println!("found end: {}", len);
-//             return;
-//         }
-
-//         visited[current_idx] = true;
-//         for adj_dir_idx in 0..4 {
-//             // don't go backwards
-//             if is_opposite(adj_dir_idx, current_dir_idx) {
-//                 continue;
-//             }
-
-//             if let Some((adj_idx, mut adj_len)) = graph[current_idx][adj_dir_idx] {
-//                 if !visited[adj_idx] {
-
-//                     if adj_dir_idx != current_dir_idx {
-//                         adj_len += 1000;
-//                     }
-
-//                     let new_len = len + adj_len;
-
-//                     dfs(graph, adj_idx, adj_dir_idx, new_len, visited);
-
-//                     visited[adj_idx] = false;
-//                 }
-//             }
-//         }
-//         visited[current_idx] = false;
-//     }
-
-//     dfs(&graph, 0, 1, 0, &mut vec![false; graph.len()]);
-
-//     //assert_eq!(answer, 106512);
-// }
+#[test]
+fn part2() {
+    let graph = reduce_map();
+    let answer = get_min2(&graph, 0, 0, 1);
+    assert_eq!(answer, 563);
+}

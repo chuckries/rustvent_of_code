@@ -193,11 +193,67 @@ impl<T:PrimInt + Signed> Vec2<T> {
         *self + Self::unit_x()
     }
 
-    pub fn cardinal_dirs() -> impl Iterator<Item = Self> {
+    pub fn north_east_of(&self) -> Self {
+        Self {
+            x: self.x - T::one(),
+            y: self.y - T::one(),
+        }
+    }
+
+    pub fn north_west_of(&self) -> Self {
+        Self {
+            x: self.x + T::one(),
+            y: self.y - T::one(),
+        }
+    }
+
+    pub fn south_east_of(&self) -> Self {
+        Self {
+            x: self.x - T::one(),
+            y: self.y + T::one(),
+        }
+    }
+
+    pub fn south_west_of(&self) -> Self {
+        Self {
+            x: self.x + T::one(),
+            y: self.y + T::one(),
+        }
+    }
+
+    pub fn north_by(&self, dist: T) -> Self {
+        Self {
+            x: self.x,
+            y: self.y - dist,
+        }
+    }
+
+    pub fn south_by(&self, dist: T) -> Self {
+        Self {
+            x: self.x,
+            y: self.y + dist,
+        }
+    }
+
+    pub fn west_by(&self, dist: T) -> Self {
+        Self {
+            x: self.x - dist,
+            y: self.y,
+        }
+    }
+
+    pub fn east_by(&self, dist: T) -> Self {
+        Self {
+            x: self.x + dist,
+            y: self.y,
+        }
+    }
+
+    pub fn unit_dirs() -> impl Iterator<Item = Self> {
         Self::zero().adjacent().into_iter()
     }
 
-    pub fn cardinal_dirs_and_diags() -> impl Iterator<Item = Self> {
+    pub fn unit_dirs_and_diags() -> impl Iterator<Item = Self> {
         Self::zero().surrounding_unbounded().into_iter()
     }
 }

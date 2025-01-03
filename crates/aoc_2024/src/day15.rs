@@ -1,4 +1,4 @@
-use aoc_common::{file_lines, IteratorExt, Vec2i32};
+use aoc_common::{file_lines, Grid, IteratorExt, Vec2i32};
 
 use Dir::*;
 
@@ -20,7 +20,7 @@ impl Dir {
     }
 }
 
-fn input() -> (Vec<Vec<u8>>, Vec<Dir>) {
+fn input() -> (Grid<u8>, Vec<Dir>) {
     let mut lines = file_lines("inputs/day15.txt");
 
     let mut map: Vec<Vec<u8>> = Vec::new();
@@ -43,7 +43,7 @@ fn input() -> (Vec<Vec<u8>>, Vec<Dir>) {
         }
     }).to_vec();
 
-    (map, dirs)
+    (map.into(), dirs)
 }
 
 #[test]
@@ -51,12 +51,10 @@ fn part1() {
     let (mut map, dirs) = input();
 
     let mut pos = Vec2i32::default();
-    'outer: for j in 0.. map.len() {
-        for i in 0..map[0].len() {
-            if map[j][i] == b'@' {
-                pos = Vec2i32::new(i as i32, j as i32);
-                break 'outer;
-            }
+    for (p, c) in map.enumerate() {
+        if *c == b'@' {
+            pos = p.cast();
+            break;
         }
     }
 
@@ -64,24 +62,24 @@ fn part1() {
         let dir = dir.unit_vec();
 
         let cand = pos + dir;
-        match map[cand.y as usize][cand.x as usize] {
+        match map[cand] {
             b'#' => (),
             b'.' => {
-                map[cand.y as usize][cand.x as usize] = b'@';
-                map[pos.y as usize][pos.x as usize] = b'.';
+                map[cand] = b'@';
+                map[pos] = b'.';
                 pos = cand;
             }
             b'O' => {
                 let mut check = cand;
                 loop {
                     check += dir;
-                    match map[check.y as usize][check.x as usize] {
+                    match map[check] {
                         b'O' => (),
                         b'#' => break,
                         b'.' => {
-                            map[check.y as usize][check.x as usize] = b'O';
-                            map[cand.y as usize][cand.x as usize] = b'@';
-                            map[pos.y as usize][pos.x as usize] = b'.';
+                            map[check] = b'O';
+                            map[cand] = b'@';
+                            map[pos] = b'.';
                             pos = cand;
                             break;
                         }
@@ -94,16 +92,11 @@ fn part1() {
     }
 
     let mut total = 0;
-    for j in 0..map.len() {
-        for i in 0..map[0].len() {
-            if map[j as usize][i as usize] == b'O' {
-                total += 100 * j + i;
-            }
-            //print!("{}", map[j as usize][i as usize] as char);
+    for (p, c) in map.enumerate() {
+        if *c == b'O' {
+            total += 100 * p.y + p.x;
         }
-        //println!();
     }
-    //println!();
 
     assert_eq!(total, 1538871);
 }
@@ -112,8 +105,9 @@ fn part1() {
 fn part2() {
     let (map, dirs) = input();
     let mut pos = Vec2i32::default();
-    let mut modified: Vec<Vec<u8>> = Vec::with_capacity(map.len());
-    for (j, row) in map.iter().enumerate() {
+
+    let mut modified: Vec<Vec<u8>> = Vec::with_capacity(map.height());
+    for (j, row) in map.rows().enumerate() {
         let mut new_row: Vec<u8> = Vec::with_capacity(row.len() * 2);
         for (i, b) in row.iter().enumerate() {
             match b {
@@ -129,26 +123,26 @@ fn part2() {
         }
         modified.push(new_row);
     }
-    let mut map = modified;
+    let mut map = Grid::new(modified);
 
     for dir in dirs {
         let unit = dir.unit_vec();
         let cand = pos + unit;
 
-        match map[cand.y as usize][cand.x as usize] {
+        match map[cand] {
             b'#' => (),
             b'.' => {
-                map[cand.y as usize][cand.x as usize] = b'@';
-                map[pos.y as usize][pos.x as usize] = b'.';
+                map[cand] = b'@';
+                map[pos] = b'.';
                 pos = cand;
             }
             c@ b'[' | c @ b']' => {
                 match dir {
                     U | D => {
-                        fn can_move_up_or_down(pos: Vec2i32, dir: Vec2i32, map: &Vec<Vec<u8>>) -> bool {
+                        fn can_move_up_or_down(pos: Vec2i32, dir: Vec2i32, map: &Grid<u8>) -> bool {
                             let next_left = pos + dir;
-                            let c_left = map[next_left.y as usize][next_left.x as usize];
-                            let c_right = map[next_left.y as usize][next_left.x as usize + 1];
+                            let c_left = map[next_left];
+                            let c_right = map[next_left.east_of()];
 
                             if c_left == b'#' || c_right == b'#' {
                                 return false;
@@ -175,10 +169,10 @@ fn part2() {
                             }
                         }
 
-                        fn move_up_or_down(pos: Vec2i32, dir: Vec2i32, map: &mut Vec<Vec<u8>>) {
+                        fn move_up_or_down(pos: Vec2i32, dir: Vec2i32, map: &mut Grid<u8>) {
                             let next_left = pos + dir;
-                            let c_left = map[next_left.y as usize][next_left.x as usize];
-                            let c_right = map[next_left.y as usize][next_left.x as usize + 1];
+                            let c_left = map[next_left];
+                            let c_right = map[next_left.east_of()];
 
                             if c_left == b'[' {
                                 move_up_or_down(next_left, dir, map);
@@ -192,18 +186,18 @@ fn part2() {
                                 }
                             }
 
-                            map[next_left.y as usize][next_left.x as usize] = b'[';
-                            map[next_left.y as usize][next_left.x as usize + 1] = b']';
-                            map[pos.y as usize][pos.x as usize] = b'.';
-                            map[pos.y as usize][pos.x as usize + 1] = b'.';
+                            map[next_left] = b'[';
+                            map[next_left.east_of()] = b']';
+                            map[pos] = b'.';
+                            map[pos.east_of()] = b'.';
                         }
 
                         let mut box_pos = cand;
                         if c == b']' { box_pos.x -= 1; }
                         if can_move_up_or_down(box_pos, unit, &map) {
                             move_up_or_down(box_pos, unit, &mut map);
-                            map[cand.y as usize][cand.x as usize] = b'@';
-                            map[pos.y as usize][pos.x as usize] = b'.';
+                            map[cand] = b'@';
+                            map[pos] = b'.';
                             pos = cand;
                         }
                     }
@@ -212,7 +206,7 @@ fn part2() {
                         let mut current = cand;
                         loop {
                             current += unit;
-                            match map[current.y as usize][current.x as usize] {
+                            match map[current] {
                                 b'.' => {
                                     can_move = true;
                                     break;
@@ -228,11 +222,11 @@ fn part2() {
                                 if current == pos {
                                     break;
                                 }
-                                map[current.y as usize][current.x as usize] = map[current.y as usize][(current.x - unit.x) as usize];
+                                map[current] = map[((current.x - unit.x), current.y)];
                                 current -= unit;
                             }
 
-                            map[pos.y as usize][pos.x as usize] = b'.';
+                            map[pos] = b'.';
                             pos = cand;
                         }
                     }
@@ -240,22 +234,12 @@ fn part2() {
             }
             _ => panic!()
         }
-
-        // for row in map.iter() {
-        //     for c in row.iter() {
-        //         print!("{}", *c as char)
-        //     }
-        //     println!();
-        // }
-        // println!();
     }
 
     let mut total = 0;
-    for j in 0..map.len() {
-        for i in 0..map[0].len() {
-            if map[j][i] == b'[' {
-                total += 100 * j + i;
-            }
+    for (p, c) in map.enumerate() {
+        if *c == b'[' {
+            total += 100 * p.y + p.x;
         }
     }
 

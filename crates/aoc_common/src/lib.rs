@@ -6,6 +6,7 @@ use std::str::FromStr;
 use num_traits::PrimInt;
 
 pub use aabb::*;
+pub use grid::*;
 pub use id_map::*;
 pub use iterator_ext::*;
 pub use priority_queue::*;
@@ -16,6 +17,7 @@ pub use vecn::*;
 pub use virtual_grid::*;
 
 mod aabb;
+mod grid;
 mod id_map;
 mod iterator_ext;
 mod priority_queue;

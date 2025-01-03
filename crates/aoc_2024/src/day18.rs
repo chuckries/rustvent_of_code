@@ -1,6 +1,6 @@
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
-use aoc_common::{file_lines, IteratorExt, PriorityQueue, Vec2us};
+use aoc_common::{file_lines, Grid, PriorityQueue, Vec2us};
 
 const BOUNDS: Vec2us = Vec2us::new(71, 71);
 const END: Vec2us = Vec2us::new(70, 70);
@@ -13,12 +13,12 @@ fn input() -> Vec<Vec2us> {
 
 #[test]
 fn part1() {
-    let mut map = vec![vec![false; BOUNDS.x]; BOUNDS.y];
+    let mut map: Grid<bool> = Grid::with_dimensions(BOUNDS);
     for p in input().into_iter().take(1024) {
-        map[p.y][p.x] = true;
+        map[p] = true;
     }
 
-    let mut visisted = vec![vec![false; BOUNDS.x]; BOUNDS.y];
+    let mut visisted: Grid<bool> = Grid::with_dimensions(BOUNDS);
     let mut queue: PriorityQueue<(Vec2us, usize), usize> = PriorityQueue::new();
     queue.enqueue((Vec2us::zero(), 0), 0);
 
@@ -29,13 +29,13 @@ fn part1() {
             break;
         }
 
-        if visisted[current.y][current.x] {
+        if visisted[current] {
             continue;
         }
-        visisted[current.y][current.x] = true;
+        visisted[current] = true;
 
         for p in current.adjacent_bounded(&BOUNDS) {
-            if !visisted[p.y][p.x] && !map[p.y][p.x] {
+            if !visisted[p] && !map[p] {
                 queue.enqueue((p, dist + 1), dist + 1 + p.manhattan_from(END));
             }
         }
@@ -44,26 +44,33 @@ fn part1() {
     assert_eq!(answer, 438);
 }
 
-fn try_find_path(map: &Vec<Vec<bool>>) -> Option<Vec<Vec2us>> {
-    let mut visited = vec![vec![false; BOUNDS.x]; BOUNDS.y];
-    let mut queue: VecDeque<(Vec2us, Vec<Vec2us>)> = VecDeque::new();
-    queue.push_back((Vec2us::zero(), vec![Vec2us::zero()]));
+fn try_find_path(map: &Grid<bool>) -> Option<HashSet<Vec2us>> {
+    let mut visited: Grid<Option<Vec2us>> = Grid::with_dimensions(map.bounds());
+    let mut queue: VecDeque<Vec2us> = VecDeque::new();
+    queue.push_back(Vec2us::zero());
+    visited[Vec2us::zero()] = Some(Vec2us::zero());
 
-    while let Some((p, path)) = queue.pop_front() {
+    while let Some(p) = queue.pop_front() {
         if p == END {
-            return Some(path);
-        }
+            let mut set: HashSet<Vec2us> = HashSet::new();
+            set.insert(p);
 
-        if visited[p.y][p.x] {
-            continue;
+            let mut current = p;
+            loop {
+                let prev = visited[current].unwrap();
+                set.insert(prev);
+                if prev.is_zero() {
+                    break;
+                }
+                current = prev;
+            }
+            return Some(set);
         }
-        visited[p.y][p.x] = true;
 
         for adj in p.adjacent_bounded(&BOUNDS) {
-            if !visited[adj.y][adj.x] && !map[adj.y][adj.x] {
-                let mut next_path = path.clone();
-                next_path.push(adj);
-                queue.push_back((adj, next_path));
+            if visited[adj].is_none() && !map[adj] {
+                visited[adj] = Some(p);
+                queue.push_back(adj);
             }
         }
     }
@@ -73,22 +80,21 @@ fn try_find_path(map: &Vec<Vec<bool>>) -> Option<Vec<Vec2us>> {
 
 #[test]
 fn part2() {
-    let mut map = vec![vec![false; BOUNDS.x]; BOUNDS.y];
+    let mut map: Grid<bool> = Grid::with_dimensions(BOUNDS);
     let input = input();
 
     for p in input[0..1024].iter() {
-        map[p.y][p.x] = true;
+        map[*p] = true;
     }
 
-    let path = try_find_path(&map).unwrap();
-    let mut path_set = path.into_iter().to_set();
+    let mut path = try_find_path(&map).unwrap();
     let mut answer = Vec2us::default();
     for p in input[1024..].iter() {
-        map[p.y][p.x] = true;
+        map[*p] = true;
 
-        if path_set.contains(p) {
-            if let Some(path) = try_find_path(&map) {
-                path_set = path.into_iter().to_set();
+        if path.contains(p) {
+            if let Some(new_path) = try_find_path(&map) {
+                path = new_path;
             } else {
                 answer = *p;
                 break;

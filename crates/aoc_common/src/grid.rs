@@ -1,4 +1,4 @@
-use std::ops::{Index, IndexMut};
+use std::{fmt::Display, ops::{Index, IndexMut}};
 
 use num_traits::NumCast;
 
@@ -16,6 +16,25 @@ pub struct Grid<T> {
 impl<T> Grid<T> {
     pub fn new(grid: Vec<Vec<T>>) -> Self {
         Self { grid }
+    }
+
+    pub fn file_as_grid<F>(path: &str, f: &mut F) -> Grid<T> 
+    where
+        F: FnMut(u8, Vec2us) -> T
+    {
+        let mut rows: Vec<Vec<T>> = Vec::new();
+        let mut j = 0;
+        for line in file_lines(path) {
+            let mut cells: Vec<T> = Vec::new();
+            let mut i = 0;
+            for b in line.bytes() {
+                cells.push(f(b, (i, j).into()));
+                i += 1;
+            }
+            j += 1;
+            rows.push(cells);
+        }
+        Grid::new(rows)
     }
 
     #[inline]
@@ -126,6 +145,18 @@ impl<T> From<Vec<Vec<T>>> for Grid<T> {
         Self {
             grid: value
         }
+    }
+}
+
+impl<T: Display> Display for Grid<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for rows in self.grid.iter() {
+            for c in rows.iter() {
+                write!(f, "{}", c)?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
 

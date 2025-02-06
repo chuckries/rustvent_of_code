@@ -120,7 +120,7 @@ fn run(robots: usize) -> i64 {
         keymap = calc_output_keystrokes(&dir_pad, &keymap);
     }
 
-    let keymap = calc_output_keystrokes(&num_pad, &keymap);
+    keymap = calc_output_keystrokes(&num_pad, &keymap);
 
     let mut total = 0;
     for code in input() {

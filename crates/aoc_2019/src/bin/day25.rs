@@ -1,7 +1,7 @@
 use intcode::*;
 
 fn main() {
-    let mut computer = IntCode::from_file("inputs/day25.txt");
+    let mut computer = IntCode::from_file("crates/aoc_2019/inputs/day25.txt");
     let mut output = String::new();
     loop {
         match computer.run() {
@@ -18,7 +18,6 @@ fn main() {
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input).unwrap();
                 computer.write_line(input.trim());
-
             }
             IntCodeResult::Halt => break
         }

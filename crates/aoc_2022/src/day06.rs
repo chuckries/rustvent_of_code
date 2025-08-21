@@ -35,11 +35,16 @@ fn find(n: usize) -> usize {
     let mut back = n;
 
     loop {
-        if map.values().all(|v| *v == 0 || *v == 1) {
+        if map.len() == n {
             break;
         }
 
-        *map.get_mut(&chars[front]).unwrap() -= 1;
+        let front_entry = map.get_mut(&chars[front]).unwrap();
+        *front_entry -= 1;
+        if *front_entry == 0 {
+            map.remove(&chars[front]);
+        }
+
         *map.entry(chars[back]).or_default() += 1;
 
         front += 1;

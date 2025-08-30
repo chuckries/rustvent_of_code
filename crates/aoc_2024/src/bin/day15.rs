@@ -54,7 +54,7 @@ fn main() -> std::io::Result<()> {
 
     term.hide_cursor()?;
 
-    let (map, dirs) = input();
+    let (map, _dirs) = input();
     let mut pos = Vec2i32::default();
     let mut modified: Vec<Vec<u8>> = Vec::with_capacity(map.len());
     for (j, row) in map.iter().enumerate() {
@@ -222,6 +222,4 @@ fn main() -> std::io::Result<()> {
         }
         term.flush()?;
     }
-
-    Ok(())
 }

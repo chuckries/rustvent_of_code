@@ -88,6 +88,38 @@ pub trait IteratorExt: Iterator
 
         map
     }
+
+    /// it's always driven me crazy that there's no min method that gives the min of the 
+    /// selected key itself, just the item when compared using the keys
+    /// this finally does it, it took years
+    /// (this is just the std lib function copy/pasted with the different item of the tuple returned)
+    #[inline]
+    fn min_of<B: Ord, F>(self, f: F) -> Option<B>
+    where
+        Self: Sized,
+        F: FnMut(&Self::Item) -> B,
+    {
+        #[inline]
+        fn key<T, B>(mut f: impl FnMut(&T) -> B) -> impl FnMut(T) -> (B, T) {
+            move |x| (f(&x), x)
+        }
+
+        #[inline]
+        fn compare<T, B: Ord>((x_p, _): &(B, T), (y_p, _): &(B, T)) -> Ordering {
+            x_p.cmp(y_p)
+        }
+
+        let (x, _) = self.map(key(f)).min_by(compare)?;
+        Some(x)
+    }
+
+    // given a cloneable iteraTor, will repeat the elemnents of the iterator foreve
+    fn repeat<U>(self) -> impl Iterator<Item = U>
+    where
+        Self: Sized + Clone + Iterator<Item = U> 
+    {
+        std::iter::repeat(self).flatten()
+    }
 }
 
 impl<T: ?Sized> IteratorExt for T where T: Iterator { }

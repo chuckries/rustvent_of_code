@@ -18,8 +18,8 @@ struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    fn new(input: &'a str) -> Lexer {
-        Lexer {
+    fn new(input: &'a str) -> Self {
+        Self {
             input,
             chars: input.char_indices().peekable(),
         }
@@ -71,8 +71,8 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(input: &'a str) -> Parser {
-        Parser { 
+    fn new(input: &'a str) -> Self {
+        Self { 
             lexer: Lexer::new(input).peekable()
         }
     }
@@ -188,6 +188,7 @@ impl MapBuilder
                 _ => panic!()
             };
 
+            // add edges to map from current room to next and vice versa
             self.map.entry(pos).or_default().insert(pos + dir);
             pos += dir;
             self.map.entry(pos).or_default().insert(pos - dir);

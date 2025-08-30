@@ -10,7 +10,7 @@ fn increasing_digits() -> impl Iterator<Item = Vec<i32>> {
         digits
     })
     .filter(|digits| {
-        digits.windows(2).all(|w| w[0] >= w[1])
+        !digits.windows(2).any(|w| w[0] < w[1])
     })
 }
 

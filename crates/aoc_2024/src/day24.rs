@@ -1,4 +1,4 @@
-use std::{cell::Cell, default};
+use std::cell::Cell;
 
 use aoc_common::{file_lines, IdMap, IteratorExt};
 

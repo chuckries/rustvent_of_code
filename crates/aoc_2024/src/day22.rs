@@ -33,6 +33,7 @@ fn run_seed(seed: u64, idx: u16, seen: &mut [u16], totals: &mut [i32]) {
     let mut previous_digit = (seed % 10) as i8;
     let mut current;
     let mut digit;
+
     for _ in 0..3 {
         current = next_secret_number(previous);
         digit = (current % 10) as i8;
@@ -42,12 +43,12 @@ fn run_seed(seed: u64, idx: u16, seen: &mut [u16], totals: &mut [i32]) {
         previous_digit = digit;
     }
 
-    for _ in 0..1997 {
+    for _ in 3..2000 {
         current = next_secret_number(previous);
         digit = (current % 10) as i8;
         encoded <<= 5;
-        encoded &= 0x000FFFFF;
         encoded |= (digit - previous_digit + 9) as u8 as u32;
+        encoded &= 0x000FFFFF;
 
         if seen[encoded as usize] != idx {
             seen[encoded as usize] = idx;

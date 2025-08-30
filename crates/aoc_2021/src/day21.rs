@@ -1,35 +1,11 @@
+use aoc_common::IteratorExt;
+
 const A_START: usize = 8;
 const B_START: usize = 5;
 
-struct Dice {
-    current: usize
-}
-
-impl Dice {
-    fn new() ->Dice {
-        Dice {
-            current: 1
-        }
-    }
-}
-
-impl Iterator for Dice {
-    type Item = usize;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let result = self.current;
-        self.current += 1;
-        if self.current > 100 {
-            self.current = 1;
-        }
-
-        Some(result)
-    }
-}
-
 #[test] 
 fn part1() {
-    let mut dice = Dice::new();
+    let mut dice = (1..=100).repeat();
     let mut state = [(0usize, 0usize); 2];
     state[0] = (A_START - 1, 0);
     state[1] = (B_START - 1, 0);
@@ -58,7 +34,7 @@ fn part1() {
 
 #[test]
 fn part2() {
-    let mut wins = [0usize; 2];
+    let mut wins = [0; 2];
     let mut positions = [[[[[0usize; 2]; 10] ; 10]; 21]; 21];
     positions[0][0][A_START - 1][B_START - 1][0] = 1;
 
@@ -75,17 +51,22 @@ fn part2() {
                                         continue;
                                     }
 
+                                    // make mutable local copies of the data we will change
                                     let (mut a_pos, mut a_score, mut b_pos, mut b_score) = (a_pos, a_score, b_pos, b_score);
+                                    
+                                    // select which players turn it is
                                     let (pos, score) = if turn == 0 {
                                         (&mut a_pos, &mut a_score)
                                     } else {
                                         (&mut b_pos, &mut b_score)
                                     };
 
+                                    // apply game logic to select player
                                     *pos += i + j + k;
                                     *pos %= 10;
-
                                     *score += *pos + 1;
+
+                                    // update dynamic table
                                     if *score >= 21 {
                                         wins[turn] += count;
                                     } else {

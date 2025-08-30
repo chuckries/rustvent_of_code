@@ -26,4 +26,5 @@ fn part1() {
     }
 
     
+    // find the bounding box of all the points
 }

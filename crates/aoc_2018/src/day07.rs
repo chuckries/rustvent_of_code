@@ -93,7 +93,7 @@ fn part2() {
         }
 
         // determine next time slice
-        let run_time = workers.iter().flatten().min_by_key(|w| w.time_remaining).unwrap().time_remaining;
+        let run_time = workers.iter().flatten().min_of(|w| w.time_remaining).unwrap();
 
         // accrue the time
         total += run_time;

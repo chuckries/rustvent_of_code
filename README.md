@@ -1,4 +1,4 @@
-Advent of Code solutiosn implemented in rust.
+Advent of Code solutions implemented in rust.
 
 - Organized as a test project
 - Each year is a crate

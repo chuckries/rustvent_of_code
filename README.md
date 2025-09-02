@@ -7,3 +7,6 @@ Advent of Code solutions implemented in rust.
 - Constantly tinkering
 - Hoping to complete some day
 - Some problems aren't worth doing twice
+
+
+This is a test.

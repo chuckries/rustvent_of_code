@@ -454,6 +454,12 @@ impl<T: PrimInt> Sum for Vec2<T> {
     }
 }
 
+impl<'a, T: PrimInt> Sum<&'a Self> for Vec2<T> {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
+        iter.fold(Self::zero(), |acc, v| acc + v)
+    }
+}
+
 impl<T: PrimInt> From<(T, T)> for Vec2<T> {
     fn from(v: (T, T)) -> Self {
         Vec2 { x: v.0, y: v.1 }

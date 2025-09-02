@@ -1,5 +1,6 @@
 #![cfg(test)]
 
+mod day01;
 mod day09;
 mod day10;
 mod day14;

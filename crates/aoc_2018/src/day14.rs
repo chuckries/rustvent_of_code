@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, ops::Index};
+use std::{collections::VecDeque, ops::Index, slice::SliceIndex};
 
 use aoc_common::IteratorExt;
 
@@ -43,10 +43,10 @@ impl Recipes {
     }
 }
 
-impl Index<usize> for Recipes {
-    type Output = usize;
+impl<I: SliceIndex<[usize]>> Index<I> for Recipes {
+    type Output = I::Output;
 
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, index: I) -> &Self::Output {
         &self.recipes[index]
     }
 }
@@ -83,7 +83,7 @@ fn part2() {
         }
 
         while current_idx < recipes.len() - target.len() {
-            if recipes.recipes[current_idx .. current_idx + target.len()] == target {
+            if recipes[current_idx .. current_idx + target.len()] == target {
                 break 'outer;
             }
             current_idx += 1;

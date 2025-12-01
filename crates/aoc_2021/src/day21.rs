@@ -1,11 +1,9 @@
-use aoc_common::IteratorExt;
-
 const A_START: usize = 8;
 const B_START: usize = 5;
 
 #[test] 
 fn part1() {
-    let mut dice = (1..=100).repeat();
+    let mut dice = (1..=100).cycle();
     let mut state = [(0usize, 0usize); 2];
     state[0] = (A_START - 1, 0);
     state[1] = (B_START - 1, 0);

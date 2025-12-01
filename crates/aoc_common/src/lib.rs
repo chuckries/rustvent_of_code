@@ -44,6 +44,24 @@ pub fn file_lines_as<T>(path: &str) -> impl Iterator<Item = T>
     file_lines(path).map(|l| l.parse().expect("failed to parse line from file"))
 }
 
+pub fn file_line_blocks(path: &str) -> Vec<Vec<String>> {
+    let mut iter = file_lines(path);
+    let mut blocks: Vec<Vec<String>> = Vec::new();
+    let mut current: Vec<String> = Vec::new();
+
+    while let Some(line) = iter.next() {
+        if line.is_empty() {
+            blocks.push(current.clone());
+            current.clear();
+        } else {
+            current.push(line);
+        }
+    }
+    blocks.push(current);
+
+    blocks
+}
+
 pub fn file_2d_map(path: &str) -> Vec<Vec<char>> {
     file_lines(path).map(|l| l.chars().to_vec()).to_vec()
 }

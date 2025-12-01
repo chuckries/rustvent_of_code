@@ -1,6 +1,6 @@
 use std::{collections::HashSet};
 
-use aoc_common::{file_lines_as, IteratorExt};
+use aoc_common::{file_lines_as};
 
 fn input() -> Vec<i32> {
     file_lines_as("inputs/day01.txt").collect()
@@ -18,7 +18,7 @@ fn part2() {
     let mut set: HashSet<i32> = HashSet::new();
 
     let mut total = 0;
-    for i in input.iter().repeat(){
+    for i in input.iter().cycle(){
         total += i;
         if !set.insert(total) {
             break;

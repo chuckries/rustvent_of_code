@@ -112,14 +112,6 @@ pub trait IteratorExt: Iterator
         let (x, _) = self.map(key(f)).min_by(compare)?;
         Some(x)
     }
-
-    // given a cloneable iteraTor, will repeat the elemnents of the iterator foreve
-    fn repeat<U>(self) -> impl Iterator<Item = U>
-    where
-        Self: Sized + Clone + Iterator<Item = U> 
-    {
-        std::iter::repeat(self).flatten()
-    }
 }
 
 impl<T: ?Sized> IteratorExt for T where T: Iterator { }

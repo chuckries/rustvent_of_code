@@ -49,13 +49,8 @@ impl<T: PrimInt> Vec2<T> {
         self.x >= T::zero() && self.x < bounds.x && self.y >= T::zero() && self.y < bounds.y
     }
 
-    pub fn adjacent(&self) -> impl Iterator<Item = Self> {
-        [
-            Self { x: self.x - T::one(), y: self.y            },
-            Self { x: self.x + T::one(), y: self.y            },
-            Self { x: self.x           , y: self.y - T::one() },
-            Self { x: self.x           , y: self.y + T::one() },
-        ].into_iter()
+    pub fn adjacent(&self) -> AdjIter<T> {
+        AdjIter::new(*self)
     }
 
     pub fn adjacent_non_negative(&self) -> impl Iterator<Item = Self> {
@@ -69,42 +64,16 @@ impl<T: PrimInt> Vec2<T> {
         adj.into_iter()
     }
 
-    pub fn adjacent_bounded(&self, bounds: &Self) -> impl Iterator<Item = Self> {
-        let mut adj = Vec::with_capacity(4);
-
-        if self.x > T::zero()               { adj.push(Self { x: self.x - T::one(), y: self.y            }) }
-        if self.x < bounds.x - T::one()     { adj.push(Self { x: self.x + T::one(), y: self.y            }) }
-        if self.y > T::zero()               { adj.push(Self { x: self.x           , y: self.y - T::one() }) }
-        if self.y < bounds.y - T::one()     { adj.push(Self { x: self.x           , y: self.y + T::one() }) }
-
-        adj.into_iter()
+    pub fn adjacent_bounded(&self, bounds: &Self) -> AdjBoundIter<T> {
+        AdjBoundIter::new(*self, *bounds)
     }
 
-    pub fn surrounding_unbounded(&self) -> impl Iterator<Item = Self> {
-        [
-            Self { x: self.x - T::one(), y: self.y - T::one() },
-            Self { x: self.x - T::one(), y: self.y            },
-            Self { x: self.x - T::one(), y: self.y + T::one() },
-            Self { x: self.x           , y: self.y - T::one() },
-            Self { x: self.x           , y: self.y + T::one() },
-            Self { x: self.x + T::one(), y: self.y - T::one() },
-            Self { x: self.x + T::one(), y: self.y            },
-            Self { x: self.x + T::one(), y: self.y + T::one() },
-        ].into_iter()
+    pub fn surrounding_unbounded(&self) -> SurrIter<T> {
+        SurrIter::new(*self)
     }
 
-    pub fn surrouding_bounded(&self, bounds: &Self) -> impl Iterator<Item = Self> {
-        let mut sur = Vec::with_capacity(8);
-    
-        if self.x > T::zero() && self.y > T::zero()                         { sur.push(Self { x: self.x - T::one(), y: self.y - T::one() }); }
-        if self.x > T::zero()                                               { sur.push(Self { x: self.x - T::one(), y: self.y            }); }
-        if self.x > T::zero() && self.y < bounds.y - T::one()               { sur.push(Self { x: self.x - T::one(), y: self.y + T::one() }); }
-        if self.y > T::zero()                                               { sur.push(Self { x: self.x           , y: self.y - T::one() }); }
-        if self.y < bounds.y - T::one()                                     { sur.push(Self { x: self.x           , y: self.y + T::one() }); }
-        if self.x < bounds.x - T::one() && self.y > T::zero()               { sur.push(Self { x: self.x + T::one(), y: self.y - T::one() }); }
-        if self.x < bounds.x - T::one()                                     { sur.push(Self { x: self.x + T::one(), y: self.y            }); }
-        if self.x < bounds.x - T::one() && self.y < bounds.y - T::one()     { sur.push(Self { x: self.x + T::one(), y: self.y + T::one() }); }
-        sur.into_iter()
+    pub fn surrouding_bounded(&self, bounds: &Self) -> SurrBoundIter<T> {
+        SurrBoundIter::new(*self, *bounds)
     }
 
     pub fn bounds_from_zero_inclusive<I: Iterator<Item = Self>>(it: I) -> Self {
@@ -520,5 +489,203 @@ impl<T: PrimInt> Iterator for Iter<T> {
         }
 
         Some(result)
+    }
+}
+
+pub struct AdjIter<T>
+{
+    p: Vec2<T>,
+    state: usize,
+}
+
+impl<T> AdjIter<T>
+{
+    fn new(p: Vec2<T>) -> Self {
+        Self {
+            p,
+            state: 0
+        }
+    }
+}
+
+impl<T: PrimInt> Iterator for AdjIter<T> {
+    type Item = Vec2<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.state > 3 {
+            return None;
+        }
+
+        let state = self.state;
+        self.state = state + 1;
+        match state {
+            0 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y            }),
+            1 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y            }),
+            2 => Some(Vec2 { x: self.p.x           , y: self.p.y - T::one() }),
+            3 => Some(Vec2 { x: self.p.x           , y: self.p.y + T::one() }),
+            _ => panic!(),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (4 - self.state, Some(4 - self.state))
+    }
+}
+
+impl<T: PrimInt> ExactSizeIterator for AdjIter<T> { }
+
+pub struct AdjBoundIter<T> {
+    p: Vec2<T>,
+    b: Vec2<T>,
+    state: usize,
+}
+
+impl<T> AdjBoundIter<T> {
+    fn new(p: Vec2<T>, b: Vec2<T>) -> Self {
+        Self {
+            p,
+            b,
+            state: 0,
+        }
+    }
+}
+
+impl<T: PrimInt> Iterator for AdjBoundIter<T> {
+    type Item = Vec2<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.state > 3 {
+            return None;
+        }
+
+        let mut state = self.state;
+        while state < 4 {
+            match state {
+                0 if self.p.x > T:: zero() => break,
+                1 if self.p.x < self.b.x - T::one() => break,
+                2 if self.p.y > T::zero() => break,
+                3 if self.p.y < self.b.y - T::one() => break,
+                _ => state += 1,
+            }
+        }
+
+        self.state = state + 1;
+
+        match state {
+            0 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y            }),
+            1 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y            }),
+            2 => Some(Vec2 { x: self.p.x           , y: self.p.y - T::one() }),
+            3 => Some(Vec2 { x: self.p.x           , y: self.p.y + T::one() }),
+            _ => None,
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(8 - self.state))
+    }
+}
+
+pub struct SurrIter<T>
+{
+    p: Vec2<T>,
+    state: usize,
+}
+
+impl<T> SurrIter<T>
+{
+    fn new(p: Vec2<T>) -> Self {
+        Self {
+            p,
+            state: 0,
+        }
+    }
+}
+
+impl <T: PrimInt> Iterator for SurrIter<T> {
+    type Item = Vec2<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.state > 7 {
+            return None;
+        }
+
+        let state = self.state;
+        self.state = state + 1;
+        match state {
+            0 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y - T::one() }),
+            1 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y            }),
+            2 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y + T::one() }),
+            3 => Some(Vec2 { x: self.p.x           , y: self.p.y - T::one() }),
+            4 => Some(Vec2 { x: self.p.x           , y: self.p.y + T::one() }),
+            5 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y - T::one() }),
+            6 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y            }),
+            7 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y + T::one() }),
+            _ => panic!(),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (8 - self.state, Some(8 - self.state))
+    }
+}
+
+impl<T:PrimInt> ExactSizeIterator for SurrIter<T> { }
+
+pub struct SurrBoundIter<T> {
+    p: Vec2<T>,
+    b: Vec2<T>,
+    state: usize,
+}
+
+impl<T> SurrBoundIter<T> {
+    fn new(p: Vec2<T>, b: Vec2<T>) -> Self {
+        Self {
+            p,
+            b,
+            state: 0,
+        }
+    }
+}
+
+impl<T: PrimInt> Iterator for SurrBoundIter<T> {
+    type Item = Vec2<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.state > 7 {
+            return None;
+        }
+
+        let mut state = self.state;
+        while state < 8 {
+            match state {
+                0 if self.p.x > T::zero() && self.p.y > T::zero()                       => break,
+                1 if self.p.x > T::zero()                                               => break,
+                2 if self.p.x > T::zero() && self.p.y < self.b.y - T::one()             => break,
+                3 if self.p.y > T::zero()                                               => break,
+                4 if self.p.y < self.b.y - T::one()                                     => break,
+                5 if self.p.x < self.b.x - T::one() && self.p.y > T::zero()             => break,
+                6 if self.p.x < self.b.x - T::one()                                     => break,
+                7 if self.p.x < self.b.x - T::one() && self.p.y < self.b.y - T::one()   => break,
+                _ => state += 1,
+            }
+        }
+
+        self.state = state + 1;
+
+        match state {
+            0 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y - T::one() }),
+            1 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y            }),
+            2 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y + T::one() }),
+            3 => Some(Vec2 { x: self.p.x           , y: self.p.y - T::one() }),
+            4 => Some(Vec2 { x: self.p.x           , y: self.p.y + T::one() }),
+            5 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y - T::one() }),
+            6 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y            }),
+            7 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y + T::one() }),
+            _ => None,
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(8 - self.state))
     }
 }

@@ -44,6 +44,9 @@ fn count<F>(f: F) -> u64
 #[test]
 fn part1() {
     let answer = count(|b| {
+        if b.len() & 1 == 1 {
+            return false;
+        }
         let mid = b.len() / 2;
         b[..mid] == b[mid..]
     });

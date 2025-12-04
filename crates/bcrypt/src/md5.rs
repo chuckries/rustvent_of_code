@@ -21,11 +21,11 @@ impl Md5 {
             let mut cbResult: u32 = 0;
             let mut bOutput: [u8; 4] = [0; 4];
             BCryptGetProperty(provider_handle, BCRYPT_OBJECT_LENGTH, Some(&mut bOutput), &mut cbResult, 0).ok().unwrap();
-            let hash_size: u32 = std::mem::transmute(bOutput);
+            let hash_size: u32 = u32::from_le_bytes(bOutput);
 
             let mut bOutput: [u8; 4] = [0; 4];
             BCryptGetProperty(provider_handle, BCRYPT_HASH_LENGTH, Some(&mut bOutput), &mut cbResult, 0).ok().unwrap();
-            hash_length = std::mem::transmute::<[u8; 4], u32>(bOutput) as usize;
+            hash_length = u32::from_le_bytes(bOutput) as usize;
 
             hash_bytes = vec![0; hash_size as usize];
             hash_handle = Default::default();

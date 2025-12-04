@@ -1,5 +1,4 @@
 use std::{fmt::Display, ops::{Index, IndexMut}};
-
 use num_traits::NumCast;
 
 use crate::{file_lines, Vec2, Vec2us};
@@ -73,6 +72,22 @@ impl<T> Grid<T> {
         U: Default + Clone
     {
         Grid::with_dimensions(self.bounds())
+    }
+
+    pub fn adjacent(&self, p: Vec2us) -> impl Iterator<Item = &T> {
+        if !p.is_in_bounds(self.bounds()) {
+            panic!("out of bounds");
+        }
+
+        p.adjacent_bounded(&self.bounds()).map(|adj| &self[adj])
+    }
+
+    pub fn surrounding(&self, p: Vec2us) -> impl Iterator<Item = &T> {
+        if !p.is_in_bounds(self.bounds()) {
+            panic!("out of bounds");
+        }
+
+        p.surrouding_bounded(&self.bounds()).map(|adj| &self[adj])
     }
 }
 

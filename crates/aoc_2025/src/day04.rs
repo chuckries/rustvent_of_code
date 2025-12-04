@@ -7,19 +7,11 @@ fn input() -> Grid<u8> {
 fn find_available(map: &Grid<u8>) -> Vec<Vec2us> {
         map.enumerate().filter_map(|(p, c)| {
         if *c == b'@' {
-            let count = p.surrouding_bounded(&map.bounds()).filter_map(|adj| {
-                if map[adj] == b'@' {
-                    Some(())
-                } else {
-                    None
-                }
-            }).count();
-
+            let count = map.surrounding(p).filter(|c| **c == b'@').count();
             if count < 4 {
-                return Some(p)
+                return Some(p);
             }
         }
-
         None
     }).collect()
 }

@@ -24,7 +24,7 @@ impl<T> VirtualGrid<T> {
         self[idx].replace(item)
     }
 
-    pub fn entry(&mut self, idx: Vec2us) -> Entry<T> {
+    pub fn entry<'a>(&'a mut self, idx: Vec2us) -> Entry<'a, T> {
         self.ensure_size(idx);
         Entry { entry: &mut self[idx] }
     }

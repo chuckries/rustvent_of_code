@@ -7,7 +7,7 @@ type Graph<'a> = HashMap<&'a str, (&'a str, &'a str)>;
 struct GraphData(Vec<String>);
 
 impl GraphData {
-    fn graph(&self) -> Graph {
+    fn graph(&self) -> Graph<'_> {
         self.0.iter().map(|l| {
             let source = &l[0..3];
             let left = &l[7..10];

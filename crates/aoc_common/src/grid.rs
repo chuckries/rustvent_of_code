@@ -7,7 +7,7 @@ pub fn file_as_byte_grid(path: &str) -> Grid<u8> {
     Grid::new(file_lines(path).map(|l| l.into_bytes()).collect())
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Eq, PartialEq)]
 pub struct Grid<T> {
     grid: Vec<Vec<T>>
 }
@@ -55,8 +55,8 @@ impl<T> Grid<T> {
         self.enumerate().map(|(_, t)| t)
     }
 
-    pub fn rows(&self) -> impl Iterator<Item = &[T]> {
-        self.grid.iter().map(|r| r.as_slice())
+    pub fn rows(&self) -> RowsIter<'_, T> {
+        RowsIter::new(self)
     }
 
     pub fn enumerate(&self) -> impl Iterator<Item = (Vec2us, &T)> {
@@ -174,6 +174,102 @@ impl<T: Display> Display for Grid<T> {
         Ok(())
     }
 }
+
+pub struct RowsIter<'a, T> {
+    col: usize,
+    grid: &'a Grid<T>
+}
+
+impl<'a, T> RowsIter<'a, T> {
+    fn new(grid: &'a Grid<T>) -> Self {
+        Self {
+            col: 0,
+            grid
+        }
+    }
+}
+
+impl<'a, T> Iterator for RowsIter<'a, T> {
+    type Item = Row<'a, T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.col >= self.grid.height() {
+            return None;
+        }
+
+        let col = self.col;
+        self.col = col + 1;
+        Some(Row::new(col, self.grid))
+    }
+}
+
+pub struct Row<'a, T> {
+    col: usize,
+    grid: &'a Grid<T>
+}
+
+impl<'a, T> Row<'a, T> {
+    fn new(col: usize, grid: &'a Grid<T>) -> Self {
+        Self {
+            col,
+            grid
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.grid.width()
+    }
+
+    pub fn iter(&self) -> RowIter<'a, T> {
+        RowIter::new(self.col, self.grid)
+    }
+}
+
+impl<'a, T> Index<usize> for Row<'a, T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.grid.grid[self.col][index]
+    }
+}
+
+pub struct RowIter<'a, T> {
+    idx: usize,
+    col: usize,
+    grid: &'a Grid<T>,
+}
+
+impl<'a, T> RowIter<'a, T> {
+    fn new(col: usize, grid: &'a Grid<T>) -> Self {
+        Self {
+            idx: 0,
+            col,
+            grid
+        }
+    }
+}
+
+impl<'a, T> Iterator for RowIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx >= self.grid.width() {
+            return None;
+        }
+
+        let idx = self.idx;
+        self.idx = idx + 1;
+
+        Some(&self.grid.grid[self.col][idx])
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let size = self.grid.width() - self.idx;
+        (size, Some(size))
+    }
+}
+
+impl<'a, T> ExactSizeIterator for RowIter<'a, T> { }
 
 // pub struct GridIter<'a, T> {
 //     grid: &'a Vec<Vec<T>>,

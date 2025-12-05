@@ -1,6 +1,6 @@
 use std::collections::{VecDeque, HashMap, HashSet};
 
-use aoc_common::{file_lines, IteratorExt, Vec2us};
+use aoc_common::{Grid, IteratorExt, Vec2us};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum Cell {
@@ -17,7 +17,7 @@ struct Adj {
     keys_required: u32
 }
 
-type Map = Vec<Vec<Cell>>;
+type Map = Grid<Cell>;
 type Graph = Vec<Vec<Adj>>;
 
 struct Maze {
@@ -31,18 +31,17 @@ impl Maze {
         let mut entrances: Vec<Vec2us> = Vec::new();
         let mut keys: Vec<Vec2us> = Vec::new();
 
-        for j in 0..map.len() {
-            for i in 0..map[j].len() {
-                match map[j][i] {
-                    Cell::Entry => entrances.push((i, j).into()),
-                    Cell::Key(key) => {
-                        if key >= keys.len() {
-                            keys.resize(key + 1, Vec2us::default());
-                        }
-                        keys[key] = (i, j).into();
+        for (p, b) in map.enumerate() {
+            match b {
+                Cell::Entry => entrances.push(p),
+                Cell::Key(key) => {
+                    let key = *key;
+                    if key >= keys.len() {
+                        keys.resize(key + 1, Vec2us::default());
                     }
-                    _ => ()
+                    keys[key] = p;
                 }
+                _ => (),
             }
         }
 
@@ -61,7 +60,7 @@ impl Maze {
                     continue;
                 }
 
-                match map[current.y][current.x] {
+                match map[current]{
                     Cell::Door(door) => {
                         required_keys |= 1 << door;
                     }
@@ -75,7 +74,7 @@ impl Maze {
                 }
 
                 for adj in current.adjacent() {
-                    if map[adj.y][adj.x] == Cell::Wall {
+                    if map[adj] == Cell::Wall {
                         continue;
                     }
                     to_visit.push_back((adj, dist + 1, required_keys));
@@ -159,29 +158,29 @@ impl Maze {
 }
 
 fn parse_map() -> Map {
-    let map = file_lines("inputs/day18.txt").map(|l| l.bytes().map(|c| {
-        match c {
+    Map::file_as_grid("inputs/day18.txt", &mut |b, _| {
+        match b {
             b'@' => Cell::Entry,
             b'#' => Cell::Wall,
             b'.' => Cell::Space,
             key @ b'a'..=b'z' => Cell::Key((key - b'a') as usize),
             door @ b'A'..=b'Z' => Cell::Door((door - b'A') as usize),
             _ => panic!()
-        }}).to_vec()).to_vec();
-    map
+        }
+    })
 }
 
-fn _print_map(map: &Map, bounds: (Vec2us, Vec2us)) {
+fn _print_map(map: &Map) {
     let mut string = String::new();
 
-    for j in bounds.0.y..bounds.1.y {
-        for i in bounds.0.x..bounds.1.x {
-            let c = match map[j][i] {
+    for row in map.rows() {
+        for cell in row.iter() {
+            let c = match cell {
                 Cell::Wall => '#',
                 Cell::Entry => '@',
                 Cell::Space => '.',
-                Cell::Key(key) => (key as u8 + b'a') as char,
-                Cell::Door(door) => (door as u8 + b'A') as char
+                Cell::Key(key) => (*key as u8 + b'a') as char,
+                Cell::Door(door) => (*door as u8 + b'A') as char
             };
             string.push(c);
         }
@@ -201,26 +200,17 @@ fn part1() {
 #[test]
 fn part2() {
     let mut map = parse_map();
-    let mut origin = Vec2us::zero();
-    for j in 0..map.len() {
-        for i in 0..map[0].len() {
-            if let Cell::Entry = map[j][i] {
-                origin = (i, j).into();
-                break;
-            }
-        }
+
+    let (origin, _) = map.enumerate().filter(|(_, b)| { matches!(b, Cell::Entry) }).next().unwrap();
+
+    map[origin] = Cell::Wall;
+    for p in origin.adjacent() {
+        map[p] = Cell::Wall;
     }
 
-    map[origin.y    ][origin.x    ] = Cell::Wall;
-    map[origin.y + 1][origin.x    ] = Cell::Wall;
-    map[origin.y - 1][origin.x    ] = Cell::Wall;
-    map[origin.y    ][origin.x + 1] = Cell::Wall;
-    map[origin.y    ][origin.x - 1] = Cell::Wall;
-
-    map[origin.y + 1][origin.x + 1] = Cell::Entry;
-    map[origin.y - 1][origin.x + 1] = Cell::Entry;
-    map[origin.y + 1][origin.x - 1] = Cell::Entry;
-    map[origin.y - 1][origin.x - 1] = Cell::Entry;
+    for p in origin.diags() {
+        map[p] = Cell::Entry;
+    }
 
     let maze = Maze::new(&map);
     let answer = maze.shortest_path();

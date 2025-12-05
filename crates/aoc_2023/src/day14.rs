@@ -1,22 +1,24 @@
-use aoc_common::{file_lines, IteratorExt, Vec2us, Vec2i32};
+use aoc_common::{Grid, Vec2i32, Vec2us };
 
-fn input() -> Vec<Vec<char>> {
-    file_lines("inputs/day14.txt").map(|l| l.chars().to_vec()).to_vec()
+type Map = Grid<char>;
+
+fn input() -> Map {
+    Grid::file_as_grid("inputs/day14.txt", &mut |b, _| b as char)
 }
 
-fn roll<I>(map: &mut Vec<Vec<char>>, start_iter: I, increment: Vec2i32)
+fn roll<I>(map: &mut Map, start_iter: I, increment: Vec2i32)
     where I: Iterator<Item = Vec2us>
 {
     for p in start_iter {
         let mut open: Vec2i32 = p.cast();
         let mut current: Vec2i32 = p.cast();
 
-        while current.x >= 0 && current.x < map[0].len() as i32 && current.y >= 0 && current.y < map.len() as i32 {
-            match map[current.y as usize][current.x as usize] {
+        while current.is_in_bounds(map.bounds().cast()) {
+            match map[current] {
                 'O' => {
-                    map[open.y as usize][open.x as usize] = 'O';
+                    map[open] = 'O';
                     if current != open {
-                        map[current.y as usize][current.x as usize] = '.'
+                        map[current] = '.'
                     }
                     open += increment;
                 }
@@ -31,32 +33,35 @@ fn roll<I>(map: &mut Vec<Vec<char>>, start_iter: I, increment: Vec2i32)
     }
 }
 
-fn roll_north(map: &mut Vec<Vec<char>>)
+fn roll_north(map: &mut Map)
 {
-    let start_iter = Vec2us::new(0, 0).area(Vec2us::new(map[0].len() - 1, 0));
+    let start_iter = Vec2us::new(0, 0).area(Vec2us::new(map.width() - 1, 0));
     roll(map, start_iter, Vec2i32::unit_y());
 }
 
-fn roll_south(map: &mut Vec<Vec<char>>)
+fn roll_south(map: &mut Map)
 {
-    let start_iter = Vec2us::new(0, map.len() - 1).area(Vec2us::new(map[0].len() - 1, map.len() - 1));
+    let start_iter = Vec2us::new(0, map.height() - 1).area(Vec2us::new(map.width() - 1, map.height() - 1));
     roll(map, start_iter, -Vec2i32::unit_y());
 }
 
-fn roll_east(map: &mut Vec<Vec<char>>)
+fn roll_east(map: &mut Map)
 {
-    let start_iter = Vec2us::new(map[0].len() - 1, 0).area(Vec2us::new(map[0].len() - 1, map.len() - 1));
+    let start_iter = Vec2us::new(map.width() - 1, 0).area(Vec2us::new(map.width() - 1, map.height() - 1));
     roll(map, start_iter, -Vec2i32::unit_x());
 }
 
-fn roll_west(map: &mut Vec<Vec<char>>)
+fn roll_west(map: &mut Map)
 {
-    let start_iter = Vec2us::new(0, 0).area(Vec2us::new(0, map.len() - 1));
+    let start_iter = Vec2us::new(0, 0).area(Vec2us::new(0, map.height() - 1));
     roll(map, start_iter, Vec2i32::unit_x());
 }
 
-fn calc_load(map: &Vec<Vec<char>>) -> usize {
-    map.iter().rev().enumerate().map(|(idx, row)| (idx + 1) * row.iter().filter(|c| **c == 'O').count()).sum()
+fn calc_load(map: &Map) -> usize {
+    let height = map.height();
+    map.enumerate().filter_map(|(p, c)| {
+        if *c == 'O' { Some(height - p.y) } else { None }
+    }).sum()
 }
 
 #[test]
@@ -71,7 +76,7 @@ fn part1() {
 fn part2()
 {
     let mut map = input();
-    let mut states: Vec<Vec<Vec<char>>> = Vec::new();
+    let mut states: Vec<Map> = Vec::new();
 
     states.push(map.clone());
 

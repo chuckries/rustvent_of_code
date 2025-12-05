@@ -91,6 +91,10 @@ impl<T: PrimInt> Vec2<T> {
         bounds
     }
 
+    pub fn diags(&self) -> DiagIter<T> {
+        DiagIter::new(*self)
+    }
+
     pub fn bounds_from_zero_exclusive<I: Iterator<Item = Self>>(it: I) -> Self {
         Self::bounds_from_zero_inclusive(it) + Self { x: T::one(), y: T::one() }
     }
@@ -584,6 +588,48 @@ impl<T: PrimInt> Iterator for AdjBoundIter<T> {
         (0, Some(8 - self.state))
     }
 }
+
+pub struct DiagIter<T>
+{
+    p: Vec2<T>,
+    state: usize,
+}
+
+impl<T> DiagIter<T>
+{
+    fn new(p: Vec2<T>) -> Self {
+        Self {
+            p,
+            state: 0
+        }
+    }
+}
+
+impl<T: PrimInt> Iterator for DiagIter<T> {
+    type Item = Vec2<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.state > 3 {
+            return None;
+        }
+
+        let state = self.state;
+        self.state = state + 1;
+        match state {
+            0 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y - T::one() }),
+            1 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y - T::one() }),
+            2 => Some(Vec2 { x: self.p.x - T::one(), y: self.p.y + T::one() }),
+            3 => Some(Vec2 { x: self.p.x + T::one(), y: self.p.y + T::one() }),
+            _ => panic!(),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (4 - self.state, Some(4 - self.state))
+    }
+}
+
+impl<T: PrimInt> ExactSizeIterator for DiagIter<T> { }
 
 pub struct SurrIter<T>
 {

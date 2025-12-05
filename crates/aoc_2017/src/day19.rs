@@ -1,15 +1,17 @@
-use aoc_common::{file_lines, IteratorExt, Vec2i32};
+use aoc_common::{Grid, Vec2i32};
 
-fn input() -> (Vec<Vec<u8>>, Vec2i32, Vec2i32) {
-    let map = file_lines("inputs/day19.txt").map(|l| l.as_bytes().to_vec()).to_vec();
+type Map = Grid<u8>;
+
+fn input() -> (Map, Vec2i32, Vec2i32) {
+    let map = Map::file_as_grid("inputs/day19.txt", &mut |b, _| b);
 
     let mut pos = Vec2i32::zero();
     let mut dir = Vec2i32::zero();
 
-    for i in 0..map[0].len() {
-        if map[0][i] == b'|' {
-            pos = (i as i32, 0).into();
-            dir = (0, 1).into();
+    for (col, b) in map.row(0).iter().enumerate() {
+        if *b == b'|' {
+            pos = Vec2i32::new(col as i32, 0);
+            dir = Vec2i32::unit_y();
             break;
         }
     }
@@ -21,7 +23,6 @@ fn input() -> (Vec<Vec<u8>>, Vec2i32, Vec2i32) {
 
 fn run() -> (String, i32) {
     let (map, start, mut dir) = input();
-    let bounds = Vec2i32::new(map[0].len() as i32, map.len() as i32);
     let mut letters: Vec<u8> = Vec::new();
     let mut count= 0;
 
@@ -30,20 +31,21 @@ fn run() -> (String, i32) {
         let next = pos + dir;
         count += 1;
 
-        match map[next.y as usize][next.x as usize] {
+        match map[next] {
             b'-' | b'|' => (),
             c @ b'A'..=b'Z' => letters.push(c),
             b'+' => {
-                for adj in next.adjacent_bounded(&bounds) {
-                    if adj == pos {
+                for (adj_p, adj) in map.adjacent_enumerate(next.cast()) {
+                    let adj_p = adj_p.cast::<i32>();
+                    if adj_p == pos {
                         continue;
                     }
 
-                    if matches!(map[adj.y as usize][adj.x as usize], b'+' | b' ') {
+                    if matches!(adj, b'+' | b' ') {
                         continue;
                     }
 
-                    dir = adj - next;
+                    dir = adj_p - next;
                     break;
                 }
             }

@@ -55,6 +55,10 @@ impl<T> Grid<T> {
         self.enumerate().map(|(_, t)| t)
     }
 
+    pub fn row(&self, idx: usize) -> Row<'_, T> {
+        Row::new(idx, self)
+    }
+
     pub fn rows(&self) -> RowsIter<'_, T> {
         RowsIter::new(self)
     }
@@ -80,6 +84,14 @@ impl<T> Grid<T> {
         }
 
         p.adjacent_bounded(&self.bounds()).map(|adj| &self[adj])
+    }
+
+    pub fn adjacent_enumerate(&self, p: Vec2us) -> impl Iterator<Item = (Vec2us, &T)> {
+        if !p.is_in_bounds(self.bounds()) {
+            panic!("out of bounds");
+        }
+
+        p.adjacent_bounded(&self.bounds()).map(|adj| (adj, &self[adj]))
     }
 
     pub fn surrounding(&self, p: Vec2us) -> impl Iterator<Item = &T> {
@@ -234,7 +246,8 @@ impl<'a, T> Index<usize> for Row<'a, T> {
 }
 
 pub struct RowIter<'a, T> {
-    idx: usize,
+    front: usize,
+    back: usize,
     col: usize,
     grid: &'a Grid<T>,
 }
@@ -242,7 +255,8 @@ pub struct RowIter<'a, T> {
 impl<'a, T> RowIter<'a, T> {
     fn new(col: usize, grid: &'a Grid<T>) -> Self {
         Self {
-            idx: 0,
+            front: 0,
+            back: grid.width(),
             col,
             grid
         }
@@ -253,34 +267,63 @@ impl<'a, T> Iterator for RowIter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.idx >= self.grid.width() {
+        if self.front >= self.back {
             return None;
         }
 
-        let idx = self.idx;
-        self.idx = idx + 1;
+        let idx = self.front;
+        self.front = idx + 1;
 
         Some(&self.grid.grid[self.col][idx])
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let size = self.grid.width() - self.idx;
+        let size = self.back - self.front;
         (size, Some(size))
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for RowIter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.back <= self.front {
+            return None;
+        }
+
+        self.back -= 1;
+        Some(&self.grid.grid[self.col][self.back])
     }
 }
 
 impl<'a, T> ExactSizeIterator for RowIter<'a, T> { }
 
-// pub struct GridIter<'a, T> {
-//     grid: &'a Vec<Vec<T>>,
-//     i: usize,
-//     j: usize,
-// }
+#[cfg(test)]
+mod test {
+    use crate::{Grid, IteratorExt};
 
-// impl<'a, T> Iterator for GridIter<'a, T> {
-//     type Item = &'a T;
+    #[test]
+    fn row_iter_rev() {
+        let grid = Grid::new(vec![
+            vec![1, 2, 3],
+            vec![4, 5, 6],
+            vec![7, 8, 9],
+        ]);
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         None
-//     }
-// }
+        let mut rows = grid.rows();
+        assert_eq!(rows.next().unwrap().iter().rev().copied().to_vec(), vec![3, 2, 1]);
+        assert_eq!(rows.next().unwrap().iter().rev().copied().to_vec(), vec![6, 5, 4]);
+        assert_eq!(rows.next().unwrap().iter().rev().copied().to_vec(), vec![9, 8, 7]);
+        assert!(rows.next().is_none());
+        
+        let grid = Grid::new(vec![
+            vec![1, 2, 3],
+            vec![4, 5, 6],
+            vec![7, 8, 9],
+        ]);
+
+        let mut row = grid.rows().next().unwrap().iter();
+        assert_eq!(Some(&1), row.next());
+        assert_eq!(Some(&3), row.next_back());
+        assert_eq!(Some(&2), row.next_back());
+        assert_eq!(None, row.next());
+    }
+}

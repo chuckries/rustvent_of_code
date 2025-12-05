@@ -68,18 +68,19 @@ fn part2_canonical() {
         }
         ord
     });
-    
+
+    let mut total = 0;
     let mut ranges = ranges.into_iter();
-    let mut merged = vec![ranges.next().unwrap()];
+    let mut current = ranges.next().unwrap();
     for range in ranges {
-        let last = merged.last_mut().unwrap();
-        if last.y + 1 < range.x {
-            merged.push(range);
+        if range.x > current.y + 1 {
+            total += current.y - current.x + 1;
+            current = range;
         } else {
-            last.y = last.y.max(range.y);
+            current.y = current.y.max(range.y);
         }
     }
+    total += current.y - current.x + 1;
 
-    let answer: u64 = merged.into_iter().map(|r| r.y - r.x + 1).sum();
-    assert_eq!(357485433193284, answer);
+    assert_eq!(357485433193284, total);
 }

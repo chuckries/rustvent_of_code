@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
-use aoc_common::{file_as_byte_grid, Grid, Vec2i32};
+use aoc_common::{Grid, Vec2i32};
 
 fn input() -> (Grid<u8>, Vec2i32) {
-    let map = file_as_byte_grid("inputs/day06.txt");
+    let map = Grid::file_as_grid("inputs/day06.txt", &mut |b, _| b);
 
     let mut start = Vec2i32::default();
     for (p, c) in map.enumerate() {

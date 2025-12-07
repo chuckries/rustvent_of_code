@@ -29,7 +29,7 @@ fn part1() {
         total += result;
     }
 
-    assert_eq!(0, total);
+    assert_eq!(4722948564882, total);
 }
 
 #[test]

@@ -1,7 +1,7 @@
 use aoc_common::{Grid, IteratorExt, Vec2i32};
 
 fn input() -> Grid<u8> {
-    Grid::file_as_grid("inputss/day04.txt", &mut |b, _| b)
+    Grid::file_as_grid("inputs/day04.txt", &mut |b, _| b)
 }
 
 #[test]

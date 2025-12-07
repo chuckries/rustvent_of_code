@@ -39,15 +39,16 @@ fn part2() {
     }).to_vec();
 
     let mut total: u64 = 0;
-    let mut nums: Vec<u64> = Vec::with_capacity(grid.len());
+    let mut bytes: Vec<u8> = Vec::with_capacity(grid.len() - 1);
+    let mut nums: Vec<u64> = Vec::with_capacity(grid.len() - 1);
+    
     for i in (0..grid[0].len()).rev() {
-        let mut bytes: Vec<u8> = Vec::with_capacity(grid.len());
         for j in 0..grid.len() {
             match grid[j][i] {
                 b if b.is_ascii_whitespace() => (),
                 b@ b'*' | b@ b'+' => {
-                    nums.push(String::from_utf8(bytes).unwrap().parse().unwrap());
-                    bytes = Vec::with_capacity(grid.len());
+                    nums.push(String::from_utf8(bytes.clone()).unwrap().parse().unwrap());
+                    bytes.clear();
 
                     match b {
                         b'*' => total += nums.iter().product::<u64>(),
@@ -66,5 +67,5 @@ fn part2() {
         }
     }
 
-    assert_eq!(0, total);
+    assert_eq!(9581313737063, total);
 }

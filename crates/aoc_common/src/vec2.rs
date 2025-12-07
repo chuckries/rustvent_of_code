@@ -143,27 +143,33 @@ impl<T: PrimInt> Vec2<T> {
         }
         ord
     }
-}
-
-impl<T:PrimInt + Signed> Vec2<T> {
-    pub fn signum(&self) -> Self {
-        Self { x: self.x.signum(), y: self.y.signum() }
-    }
 
     pub fn north_of(&self) -> Self {
-        *self - Self::unit_y()
+        Self {
+            x: self.x,
+            y: self.y - T::one()
+        }
     }
 
     pub fn south_of(&self) -> Self {
-        *self + Self::unit_y()
+        Self {
+            x: self.x,
+            y: self.y + T::one()
+        }
     }
 
     pub fn west_of(&self) -> Self {
-        *self - Self::unit_x()
+        Self {
+            x: self.x - T::one(),
+            y: self.y,
+        }
     }
 
     pub fn east_of(&self) -> Self {
-        *self + Self::unit_x()
+        Self {
+            x: self.x + T::one(),
+            y: self.y,
+        }
     }
 
     pub fn north_east_of(&self) -> Self {
@@ -220,6 +226,12 @@ impl<T:PrimInt + Signed> Vec2<T> {
             x: self.x + dist,
             y: self.y,
         }
+    }
+}
+
+impl<T:PrimInt + Signed> Vec2<T> {
+    pub fn signum(&self) -> Self {
+        Self { x: self.x.signum(), y: self.y.signum() }
     }
 
     pub fn unit_dirs() -> impl Iterator<Item = Self> {

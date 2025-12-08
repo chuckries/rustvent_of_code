@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use aoc_common::{file_lines, IdMap, IteratorExt};
 
-fn input() -> (IdMap, Vec<Vec<usize>>, Vec<Vec<bool>>) {
+fn input() -> (IdMap<String>, Vec<Vec<usize>>, Vec<Vec<bool>>) {
     let mut id_map = IdMap::new();
     let mut adj_list: Vec<Vec<usize>> = Vec::new();
     let mut adj_matrix: Vec<Vec<bool>> = Vec::new();

@@ -1,8 +1,8 @@
-use aoc_common::{IteratorExt, Vec2u64, file_lines};
+use aoc_common::{Vec2u64, file_lines};
 
 fn input() -> Vec<Vec2u64>{
     file_lines("inputs/day20.txt").map(|l| {
-        l.split('-').map(|s| s.parse().unwrap()).to_vec2()
+        l.split('-').map(|s| s.parse().unwrap()).collect()
     }).collect()
 }
 

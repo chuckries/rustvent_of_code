@@ -11,7 +11,7 @@ fn input() -> (Vec<Vec2u64>, Vec<u64>) {
             break;
         }
 
-        ranges.push(line.split('-').map(|s| s.parse().unwrap()).to_vec2());
+        ranges.push(line.split('-').map(|s| s.parse().unwrap()).collect());
     }
 
     let ids = lines.map(|l| l.parse().unwrap()).collect();

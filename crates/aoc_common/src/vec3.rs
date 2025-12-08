@@ -201,3 +201,14 @@ impl<T: PrimInt> From<Vec3<T>> for (T, T, T) {
         (v.x, v.y, v.z)
     }
 }
+
+impl<T: PrimInt> FromIterator<T> for Vec3<T> {
+    fn from_iter<U: IntoIterator<Item = T>>(iter: U) -> Self {
+        let mut iter = iter.into_iter();
+        Self {
+            x: iter.next().unwrap(),
+            y: iter.next().unwrap(),
+            z: iter.next().unwrap(),
+        }
+    }
+}

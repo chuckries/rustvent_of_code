@@ -2,8 +2,6 @@ use std::{cmp::Ordering, collections::{HashMap, HashSet, VecDeque}, hash::Hash, 
 
 use num_traits::PrimInt;
 
-use crate::Vec2;
-
 pub trait IteratorExt: Iterator
 {
     fn to_vec(self) -> Vec<Self::Item>
@@ -113,14 +111,6 @@ pub trait IteratorExt: Iterator
 
         let (x, _) = self.map(key(f)).min_by(compare)?;
         Some(x)
-    }
-
-    fn to_vec2(mut self) -> Vec2<Self::Item> 
-        where
-            Self: Sized,
-            Self::Item: PrimInt,
-    {
-        Vec2::new(self.next().unwrap(), self.next().unwrap())
     }
 }
 

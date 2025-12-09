@@ -144,3 +144,32 @@ impl<T, P: Ord> Iterator for IntoIterSorted<T, P> {
 impl<T, P: Ord> ExactSizeIterator for IntoIterSorted<T, P> { }
 
 impl<T, P: Ord> FusedIterator for IntoIterSorted<T, P> { }
+
+pub struct PriorityQueueBuilder<T, P>
+{
+    inner: Vec<Wrapper<T, P>>,
+}
+
+impl<T, P> PriorityQueueBuilder<T, P> {
+    pub fn new() -> Self {
+        Self {
+            inner: Vec::new()
+        }
+    }
+
+    pub fn with_capacity(cap: usize) -> Self {
+        Self {
+            inner: Vec::with_capacity(cap)
+        }
+    }
+
+    pub fn push(&mut self, item: T, priority: P) {
+        self.inner.push(Wrapper { item, priority });
+    }
+}
+
+impl<T, P: Ord> PriorityQueueBuilder<T, P> {
+    pub fn build(self) -> PriorityQueue<T, P> {
+        PriorityQueue { heap: self.inner.into() }
+    }
+}

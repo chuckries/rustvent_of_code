@@ -1,5 +1,5 @@
 use std::{fmt::Display, ops::{Index, IndexMut}};
-use num_traits::NumCast;
+use num_traits::{NumCast, PrimInt};
 
 use crate::{Vec2, Vec2us, file_lines, grid::row::{Row, RowsIter}};
 
@@ -50,7 +50,11 @@ impl<T> Grid<T> {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
-        self.enumerate().map(|(_, t)| t)
+        self.grid.iter().map(|i| i.iter()).flatten()
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.grid.iter_mut().map(|i| i.iter_mut()).flatten()
     }
 
     pub fn row(&self, idx: usize) -> Row<'_, T> {
@@ -84,7 +88,9 @@ impl<T> Grid<T> {
         p.adjacent_bounded(&self.bounds()).map(|adj| &self[adj])
     }
 
-    pub fn adjacent_enumerate(&self, p: Vec2us) -> impl Iterator<Item = (Vec2us, &T)> {
+    pub fn adjacent_enumerate<U: PrimInt>(&self, p: Vec2<U>) -> impl Iterator<Item = (Vec2us, &T)> {
+        let p = p.cast();
+        
         if !p.is_in_bounds(self.bounds()) {
             panic!("out of bounds");
         }

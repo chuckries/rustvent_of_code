@@ -1,4 +1,4 @@
-use std::iter::Sum;
+use std::{iter::Sum, fmt::Debug, str::{FromStr}};
 
 use num_traits::{PrimInt, Signed};
 
@@ -90,6 +90,15 @@ impl<T: PrimInt> Vec3<T> {
             Self { x: self.x - T::one(), y: self.y           , z: self.z            },
             Self { x: self.x + T::one(), y: self.y           , z: self.z            },
         ].into_iter()
+    }
+}
+
+impl <T: PrimInt + FromStr> Vec3<T> 
+where
+    <T as FromStr>::Err: Debug
+{
+    pub fn from_split<S: AsRef<str>>(s: S, p: &str) -> Self {
+        s.as_ref().split(p).map(|s| s.parse::<T>().unwrap()).collect()
     }
 }
 

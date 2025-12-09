@@ -1,9 +1,11 @@
 use std::collections::VecDeque;
 
-use aoc_common::{file_2d_map, Vec2i32, Vec2us, IteratorExt};
+use aoc_common::{Grid, IteratorExt, Vec2i32};
 
-fn input() -> Vec<Vec<char>> {
-    file_2d_map("inputs/day23.txt")
+type Map = Grid<char>;
+
+fn input() -> Map {
+    Map::file_as_grid("inputs/day23.txt", &mut |b, _| b as char)
 }
 
 #[test]
@@ -13,7 +15,7 @@ fn part1() {
     let start = Vec2i32::new(1, 0);
     let dir = Vec2i32::unit_y();
 
-    let target = Vec2i32::new(map[0].len() as i32 - 2, map.len() as i32 - 1);
+    let target = Vec2i32::new(map.width() as i32 - 2, map.height() as i32 - 1);
 
     let mut queue: VecDeque<(Vec2i32, Vec2i32, usize)> = VecDeque::new();
     queue.push_back((start, dir, 0));
@@ -30,7 +32,7 @@ fn part1() {
         for dir in [dir, dir.rotated_left(), dir.rotated_right()] {
             let adj = p + dir;
 
-            let c = map[adj.y as usize][adj.x as usize];
+            let c = map[adj];
             if c == '.' || 
                 (c == '<' && dir == -Vec2i32::unit_x()) ||
                 (c == '>' && dir == Vec2i32::unit_x()) ||
@@ -47,34 +49,32 @@ fn part1() {
 #[test]
 fn part2() {
     let mut input = input();
-    for row in input.iter_mut() {
-        for c in row.iter_mut() {
-            if *c != '#' {
-                *c = '.';
-            }
+    for c in input.iter_mut() {
+        if *c != '#' {
+            *c = '.';
         }
     }
     let input = input;
 
     let start = Vec2i32::new(1, 0);
-    let end = Vec2i32::new(input[0].len() as i32 - 2, input.len() as i32 - 1);
+    let end = Vec2i32::new(input.width() as i32 - 2, input.height() as i32 - 1);
 
     let mut intersections: Vec<Vec2i32> = Vec::new();
-    for j in 1..input.len() - 1 {
-        for i in 1..input[0].len() - 1 {
-            if input[j][i] == '.' {
-                if Vec2us::new(i, j).adjacent().filter(|adj| input[adj.y][adj.x] == '.').count() > 2 {
-                    intersections.push((i as i32, j as i32).into());
-                }
+    for (p, c) in input.enumerate() {
+        if *c == '.' {
+            if input.adjacent(p).filter(|adj| **adj == '.').count() > 2 {
+                intersections.push(p.cast());
             }
         }
     }
 
-    fn bfs(p: Vec2i32, map: &Vec<Vec<char>>, intersections: &[Vec2i32]) -> Vec<(usize, i32)> {
-        let bounds = Vec2i32::new(map[0].len() as i32, map.len() as i32);
+    fn bfs(p: Vec2i32, map: &Map, intersections: &[Vec2i32]) -> Vec<(usize, i32)> {
+        let bounds = map.bounds().cast::<i32>();
         let mut queue: VecDeque<(Vec2i32, Vec2i32, usize)> = VecDeque::new();
-        for adj in p.adjacent_bounded(&bounds) {
-            if map[adj.y as usize][adj.x as usize] == '.' {
+        
+        for (adj_p, adj) in map.adjacent_enumerate(p) {
+            if *adj == '.' {
+                let adj = adj_p.cast();
                 queue.push_back((adj, adj - p, 1));
             }
         }
@@ -92,7 +92,7 @@ fn part2() {
             } else {
                 for next_dir in [dir, dir.rotated_left(), dir.rotated_right()] {
                     let next = current + next_dir;
-                    if next.is_in_bounds(bounds) && map[next.y as usize][next.x as usize] == '.' {
+                    if next.is_in_bounds(bounds) && map[next] == '.' {
                         queue.push_back((next, next_dir, len + 1));
                     }
                 }

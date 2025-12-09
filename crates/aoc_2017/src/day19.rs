@@ -35,7 +35,7 @@ fn run() -> (String, i32) {
             b'-' | b'|' => (),
             c @ b'A'..=b'Z' => letters.push(c),
             b'+' => {
-                for (adj_p, adj) in map.adjacent_enumerate(next.cast()) {
+                for (adj_p, adj) in map.adjacent_enumerate(next) {
                     let adj_p = adj_p.cast::<i32>();
                     if adj_p == pos {
                         continue;

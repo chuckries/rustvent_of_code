@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use aoc_common::{Grid, Vec2us};
+use aoc_common::{Grid2, Grid2Builder, Vec2us};
 
-fn input() -> (Grid<u8>, Vec2us) {
-    let grid = Grid::file_as_grid("inputs/day07.txt", &mut |b, _| b);
+fn input() -> (Grid2<u8>, Vec2us) {
+    let grid = Grid2Builder::from_file_as_bytes("inputs/day07.txt");
     let row = grid.row(0);
     let mut start = Vec2us::zero();
     for i in 0 .. row.len() {
@@ -45,7 +45,7 @@ fn part1() {
 fn part2() {
     let (map, start) = input();
 
-    fn backtrack(p: Vec2us, map: &Grid<u8>, count: &mut u64, cache: &mut HashMap<Vec2us, u64>) {
+    fn backtrack(p: Vec2us, map: &Grid2<u8>, count: &mut u64, cache: &mut HashMap<Vec2us, u64>) {
         if p.y >= map.height() {
             *count += 1;
         } else if matches!(map[p], b'.' | b'S') {

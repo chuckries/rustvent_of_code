@@ -1,11 +1,11 @@
-use aoc_common::{OrdWrapper, PriorityQueue, Vec3i64, file_lines};
+use aoc_common::{OrdWrapper, PriorityQueue, PriorityQueueBuilder, Vec3i64, file_lines};
 
 fn input() -> (Vec<Vec3i64>, PriorityQueue<(usize, usize), OrdWrapper<f64>>) {
     let points: Vec<Vec3i64> = file_lines("inputs/day08.txt").map(|l| {
         l.split(',').map(|s| s.parse().unwrap()).collect()
     }).collect();
 
-    let mut distances: Vec<((usize, usize), OrdWrapper<f64>)> = Vec::with_capacity(points.len() * points.len() - 1);
+    let mut builder: PriorityQueueBuilder<(usize, usize), OrdWrapper<f64>> = PriorityQueueBuilder::with_capacity(points.len()  * points.len() - 1);
     for i in 0..points.len() - 1 {
         for j in i + 1 .. points.len() {
             let p0 = points[i];
@@ -13,11 +13,11 @@ fn input() -> (Vec<Vec3i64>, PriorityQueue<(usize, usize), OrdWrapper<f64>>) {
             let diff = p0 - p1;
             let squared = Vec3i64::new(diff.x * diff.x, diff.y * diff.y, diff.z * diff.z);
             let dist = f64::sqrt(squared.x as f64 + squared.y as f64 + squared.z as f64);
-            distances.push(((i, j), OrdWrapper(dist)));
+            builder.push((i, j), OrdWrapper(dist));
         }
     }
 
-    let queue: PriorityQueue<(usize, usize), OrdWrapper<f64>> = distances.into();
+    let queue: PriorityQueue<(usize, usize), OrdWrapper<f64>> = builder.build();
     (points, queue)
 }
 

@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use aoc_common::{IteratorExt, Vec2u64, file_lines};
+use aoc_common::{IteratorExt, Vec2, Vec2u64, file_lines};
 
 fn input() -> (Vec<Vec2u64>, Vec<u64>) {
     let mut lines = file_lines("inputs/day05.txt");
@@ -11,7 +11,7 @@ fn input() -> (Vec<Vec2u64>, Vec<u64>) {
             break;
         }
 
-        ranges.push(line.split('-').map(|s| s.parse().unwrap()).collect());
+        ranges.push(Vec2::from_split(line, "-"));
     }
 
     let ids = lines.map(|l| l.parse().unwrap()).collect();

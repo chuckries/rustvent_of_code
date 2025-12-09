@@ -7,6 +7,7 @@ use num_traits::PrimInt;
 
 pub use aabb::*;
 pub use grid::*;
+pub use grid2::*;
 pub use id_map::*;
 pub use iterator_ext::*;
 pub use ord_wrapper::*;
@@ -19,6 +20,7 @@ pub use virtual_grid::*;
 
 mod aabb;
 mod grid;
+mod grid2;
 mod id_map;
 mod iterator_ext;
 mod ord_wrapper;
@@ -62,10 +64,6 @@ pub fn file_line_blocks(path: &str) -> Vec<Vec<String>> {
     blocks.push(current);
 
     blocks
-}
-
-pub fn file_2d_map(path: &str) -> Vec<Vec<char>> {
-    file_lines(path).map(|l| l.chars().to_vec()).to_vec()
 }
 
 pub fn gcf<T: PrimInt>(mut a: T, mut b: T) -> T {

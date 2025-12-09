@@ -1,9 +1,11 @@
 use std::collections::VecDeque;
 
-use aoc_common::{file_2d_map, Vec2i32};
+use aoc_common::{Grid, Vec2i32};
 
-fn input() -> Vec<Vec<char>> {
-    file_2d_map("inputs/day16.txt")
+type Map = Grid<char>;
+
+fn input() -> Map {
+    Map::file_as_grid("inputs/day16.txt", &mut |b, _| b as char)
 }
 
 fn dir_char(dir: Vec2i32) -> char {
@@ -16,9 +18,9 @@ fn dir_char(dir: Vec2i32) -> char {
     }
 }
 
-fn run (mut map: Vec<Vec<char>>, start_pos: Vec2i32, start_dir: Vec2i32) -> i32 {
-    let mut energized = vec![vec!['.'; map[0].len()]; map.len()];
-    let bounds = Vec2i32::new(map[0].len() as i32, map.len() as i32);
+fn run (mut map: Map, start_pos: Vec2i32, start_dir: Vec2i32) -> i32 {
+    let mut energized = vec![vec!['.'; map.width()]; map.height()];
+    let bounds = Vec2i32::new(map.width() as i32, map.height() as i32);
     let mut queue: VecDeque<(Vec2i32, Vec2i32)> = VecDeque::new();
     queue.push_back((start_pos, start_dir));
 
@@ -97,28 +99,27 @@ fn part1() {
 #[test]
 fn part2() {
     let map = input();
-    let bounds = Vec2i32::new(map[0].len() as i32, map.len() as i32);
 
     let mut answer = 0;
-    for i in 0..bounds.x {
-        let cand = run(map.clone(), (i, -1).into(), (0, 1).into());
+    for i in 0..map.width() {
+        let cand = run(map.clone(), (i as i32, -1).into(), (0, 1).into());
         if cand > answer {
             answer = cand;
         }
 
-        let cand = run(map.clone(), (i, bounds.y).into(), (0, -1).into());
+        let cand = run(map.clone(), (i as i32, map.height() as i32).into(), (0, -1).into());
         if cand > answer {
             answer = cand;
         }
     }
 
-    for j in 0..bounds.y {
-        let cand = run(map.clone(), (-1, j).into(), (1, 0).into());
+    for j in 0..map.height() {
+        let cand = run(map.clone(), (-1, j as i32).into(), (1, 0).into());
         if cand > answer {
             answer = cand;
         }
 
-        let cand = run(map.clone(), (bounds.x, j).into(), (-1, 0).into());
+        let cand = run(map.clone(), (map.width() as i32, j as i32).into(), (-1, 0).into());
         if cand > answer {
             answer = cand;
         }

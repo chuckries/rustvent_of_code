@@ -1,5 +1,5 @@
-use std::{cmp::Ordering, fmt::Debug, iter::Sum, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}, str::FromStr};
-use num_traits::{PrimInt, Signed};
+use std::{cmp::Ordering, fmt::Debug, iter::{FusedIterator, Sum}, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign}, str::FromStr};
+use num_traits::{PrimInt, Signed, Unsigned};
 
 pub type Vec2us = Vec2<usize>;
 pub type Vec2u8 = Vec2<u8>;
@@ -14,7 +14,7 @@ pub type Vec2i32 = Vec2<i32>;
 pub type Vec2i64 = Vec2<i64>;
 pub type Vec2i128 = Vec2<i128>;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Default, Debug)]
 pub struct Vec2<T> {
     pub x: T,
     pub y: T,
@@ -229,7 +229,54 @@ impl<T: PrimInt> Vec2<T> {
     }
 }
 
+impl<T: PrimInt> PartialOrd for Vec2<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let mut ord = self.y.cmp(&other.y);
+        if ord == Ordering::Equal {
+            ord = self.x.cmp(&other.x);
+        }
+        Some(ord)
+    }
+}
+
+impl<T: PrimInt> Ord for Vec2<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+                let mut ord = self.y.cmp(&other.y);
+        if ord == Ordering::Equal {
+            ord = self.x.cmp(&other.x);
+        }
+        ord
+    }
+}
+
+impl<T: PrimInt + FromStr> Vec2<T> 
+where
+    <T as FromStr>::Err: Debug
+{
+    pub fn from_split<S: AsRef<str>>(s: S, p: &str) -> Self {
+        s.as_ref().split(p).map(|s| s.parse::<T>().unwrap()).collect()
+    }
+
+    pub fn from_split_comma<S: AsRef<str>>(s: S) -> Self {
+        s.as_ref().split(',').map(|s| s.parse().unwrap()).collect()
+    }
+}
+
 impl<T:PrimInt + Signed> Vec2<T> {
+    pub fn abs(&self) -> Self {
+        Self {
+            x: self.x.abs(),
+            y: self.y.abs()
+        }
+    }
+
+    pub fn abs_sub(&self, other: Self) -> Self {
+        Self {
+            x: self.x.abs_sub(&other.x),
+            y: self.y.abs_sub(&other.y),
+        }
+    }
+
     pub fn signum(&self) -> Self {
         Self { x: self.x.signum(), y: self.y.signum() }
     }
@@ -258,6 +305,13 @@ where
 macro_rules! manhattan_unsigned {
     ($unsigned:ty) => {
         impl Vec2<$unsigned> {
+            pub fn abs_diff(&self, other: Self) -> Self {
+                Self {
+                    x: self.x.abs_diff(other.x),
+                    y: self.y.abs_diff(other.y),
+                }
+            }
+
             pub fn manhattan(&self) -> $unsigned {
                 self.x + self.y
             }
@@ -468,20 +522,23 @@ impl<T: PrimInt> FromIterator<T> for Vec2<T> {
 }
 
 pub struct Iter<T: PrimInt> {
-    start: Vec2<T>,
-    end: Vec2<T>,
-    current: Vec2<T>,
-    finished: bool
+    x_start: T,
+    x_end: T,
+    front: Vec2<T>,
+    back: Vec2<T>,
 }
 
 impl<T: PrimInt> Iter<T> {
     fn new(start: Vec2<T>, end: Vec2<T>) -> Self {
+        if start.x >= end.x || start.y >= end.y {
+            panic!();
+        }
 
-        Iter {
-            start,
-            end,
-            current: start,
-            finished: false
+        Self {
+            x_start: start.x,
+            x_end: end.x,
+            front: start,
+            back: Vec2::new(start.x, end.y),
         }
     }
 }
@@ -490,23 +547,49 @@ impl<T: PrimInt> Iterator for Iter<T> {
     type Item = Vec2<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.finished {
-            return None
+        if self.front == self.back {
+            return None;
         }
 
-        let result = self.current;
-        self.current.x = self.current.x + T::one();
-        if self.current.x == self.end.x {
-            self.current.x = self.start.x;
-            self.current.y = self.current.y + T::one();
-            if self.current.y == self.end.y {
-                self.finished = true;
-            }
+        let p = self.front;
+        self.front.x = self.front.x + T::one();
+        if self.front.x == self.x_end {
+            self.front.y = self.front.y + T::one();
+            self.front.x = self.x_start;
         }
 
-        Some(result)
+        Some(p)
     }
 }
+
+mod test {
+    use crate::Vec2us;
+
+    #[test]
+    fn test() {
+        for p in Vec2us::new(3, 2).iter().rev() {
+            println!("{}", p);
+        }
+    }
+}
+
+impl<T:  PrimInt> DoubleEndedIterator for Iter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.front == self.back {
+            return None;
+        }
+
+        if self.back.x == self.x_start {
+            self.back.y = self.back.y - T::one();
+            self.back.x = self.x_end;
+        }
+        self.back.x = self.back.x - T::one();
+
+        Some(self.back)
+    }
+}
+
+impl<T: PrimInt> FusedIterator for Iter<T> { }
 
 pub struct AdjIter<T>
 {

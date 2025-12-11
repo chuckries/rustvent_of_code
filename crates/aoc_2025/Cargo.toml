@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 aoc_common = { path = "../aoc_common" }
+rustplex = "0.1.0"

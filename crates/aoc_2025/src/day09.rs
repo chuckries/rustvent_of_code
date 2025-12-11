@@ -1,6 +1,6 @@
-use std::{collections::{BTreeMap}, usize, ops::Bound};
+use std::{cmp::Reverse, collections::BTreeMap, ops::Bound, usize};
 
-use aoc_common::{Vec2, Vec2i64, file_lines};
+use aoc_common::{PriorityQueueBuilder, Vec2, Vec2i64, file_lines};
 
 use Dir::*;
 
@@ -181,59 +181,68 @@ fn part2() {
         true
     };
 
-    let mut max = 0;
-    for i in 0..input.len() - 1 {
-        'outer: for j in i + 1 .. input.len() {
-            let (p0, p1) = normalize(input[i], input[j]);
-
-            if p0.x == p1.x || p0.y == p1.y {
-                // line, figure it out later.
-                continue;
-            }
-
-            let r = (p0, p1);
-
-            // check for segments coincidental with the boundary
-
-            if !check_hori_matches(p0.y, r, North) {
-                continue;
-            }
-
-            if !check_hori_matches(p1.y, r, South) {
-                continue;
-            }
-
-            if !check_vert_matches(p0.x, r, West) {
-                continue;
-            }
-
-            if !check_vert_matches(p1.x, r, East) {
-                continue;
-            }
-
-            // check for any segment collision in the interior
-            for (_, horis) in hori_map.range((Bound::Excluded(p0.y), Bound::Excluded(p1.y))) {
-                for hori in horis {
-                    if overlaps_x(r, hori.range()) {
-                        continue 'outer;
-                    }
-                }
-            }
-
-            for (_, verts) in vert_map.range((Bound::Excluded(p0.x), Bound::Excluded(p1.x))) {
-                for vert in verts {
-                    if overlaps_y(r, vert.range()) {
-                        continue 'outer;
-                    }
-                }
-            }
-
-            let diff = p1 - p0 + Vec2::one();
+    let mut builder: PriorityQueueBuilder<(Vec2i64, Vec2i64), Reverse<i64>> = PriorityQueueBuilder::with_capacity(input.len() * input.len() - 1);
+    for i in 0 .. input.len() - 1 {
+        for j in i + 1 .. input.len() {
+            let p0 = input[i];
+            let p1 = input[j];
+            let diff = (p0 - p1).abs() + Vec2::one();
             let area = diff.x * diff.y;
-            if area > max {
-                max = area;
+            builder.push((p0, p1), Reverse(area));
+        }
+    }
+
+    let queue = builder.build();
+    let mut max = 0;
+    // for i in 0..input.len() - 1 {
+    //     'outer: for j in i + 1 .. input.len() {
+    'outer: for ((p0, p1), Reverse(area)) in queue.into_iter_sorted() {
+        let (p0, p1) = normalize(p0, p1);
+
+        if p0.x == p1.x || p0.y == p1.y {
+            // line, figure it out later.
+            continue;
+        }
+
+        let r = (p0, p1);
+
+        // check for segments coincidental with the boundary
+
+        if !check_hori_matches(p0.y, r, North) {
+            continue;
+        }
+
+        if !check_hori_matches(p1.y, r, South) {
+            continue;
+        }
+
+        if !check_vert_matches(p0.x, r, West) {
+            continue;
+        }
+
+        if !check_vert_matches(p1.x, r, East) {
+            continue;
+        }
+
+        // check for any segment collision in the interior
+        for (_, horis) in hori_map.range((Bound::Excluded(p0.y), Bound::Excluded(p1.y))) {
+            for hori in horis {
+                if overlaps_x(r, hori.range()) {
+                    continue 'outer;
+                }
             }
         }
+
+        for (_, verts) in vert_map.range((Bound::Excluded(p0.x), Bound::Excluded(p1.x))) {
+            for vert in verts {
+                if overlaps_y(r, vert.range()) {
+                    continue 'outer;
+                }
+            }
+        }
+
+        max = area;
+        break;
     }
 
     assert_eq!(1574717268, max);

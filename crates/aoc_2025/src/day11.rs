@@ -44,7 +44,7 @@ fn part1() {
     let mut count = 0;
     dfs(&adj_list, you, out, &mut count);
 
-    assert_eq!(0, count);
+    assert_eq!(566, count);
 }
 
 type Cache = Vec<Vec<Vec<Option<usize>>>>;
@@ -88,5 +88,5 @@ fn part2() {
     let mut count = 0;
     dfs(&adj_list, svr, out, dac, fft, false, false, &mut cache, &mut count);
 
-    assert_eq!(0, count);
+    assert_eq!(331837854931968, count);
 }

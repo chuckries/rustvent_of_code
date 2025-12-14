@@ -520,7 +520,6 @@ impl<T: PrimInt> FromIterator<T> for Vec2<T> {
         }
     }
 }
-
 pub struct Iter<T: PrimInt> {
     x_start: T,
     x_end: T,
